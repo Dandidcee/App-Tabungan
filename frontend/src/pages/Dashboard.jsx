@@ -113,14 +113,11 @@ const Dashboard = () => {
 
       if (fundSource === 'gaji') {
         if (spendAmount > gajiBalance) {
-          // Gunakan alert browser agar lebih terlihat jika toast bermasalah di mobile
-          alert('Saldo Gaji tidak cukup!');
           return showToast('Saldo Gaji tidak cukup!', 'error');
         }
       } else if (fundSource !== 'tabungan_utama') {
         const catBalance = getEnvelopeBalance(fundSource);
         if (spendAmount > catBalance) {
-          alert('Saldo Kategori ini tidak cukup!');
           return showToast('Saldo Kategori tidak cukup!', 'error');
         }
       }

@@ -1,5 +1,6 @@
-import { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
 import api from '../services/api';
+import Toast from '../components/ui/Toast';
+import { AnimatePresence } from 'framer-motion';
 
 export const ToastContext = createContext();
 
@@ -8,6 +9,7 @@ export const useToast = () => useContext(ToastContext);
 export const ToastProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [localToast, setLocalToast] = useState(null);
   const pollingRef = useRef(null);
 
   // ── Fetch all notifications from API ──────────────────────────────────────
@@ -47,7 +49,11 @@ export const ToastProvider = ({ children }) => {
 
   // ── Local toast (for instant feedback, also goes to notif list) ──────────
   const showToast = (message, type = 'success') => {
-    // Just trigger a refresh so real DB notification shows up immediately
+    setLocalToast({ message, type });
+    // Reset toast after 3s
+    setTimeout(() => setLocalToast(null), 3000);
+    
+    // Just trigger a refresh so real DB notification shows up immediately in the notification list
     setTimeout(fetchNotifications, 500);
   };
 
@@ -85,6 +91,15 @@ export const ToastProvider = ({ children }) => {
       stopPolling,
     }}>
       {children}
+      <AnimatePresence>
+        {localToast && (
+          <Toast 
+            message={localToast.message} 
+            type={localToast.type} 
+            onClose={() => setLocalToast(null)} 
+          />
+        )}
+      </AnimatePresence>
     </ToastContext.Provider>
   );
 };
