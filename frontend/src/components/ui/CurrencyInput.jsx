@@ -3,10 +3,12 @@
  * Contoh: 1500000 → "1.500.000"
  * Value yang dikembalikan ke onChange adalah string angka murni (tanpa titik) untuk kemudahan parsing
  */
+import { setIndonesianValidity } from '../../utils/validation';
+
 const CurrencyInput = ({ value, onChange, placeholder = '1.000.000', className = '', required = false, id }) => {
   // Format angka dengan titik ribuan
   const formatDisplay = (raw) => {
-    const digits = raw.replace(/\D/g, '');
+    const digits = String(raw).replace(/\D/g, '');
     if (!digits) return '';
     return Number(digits).toLocaleString('id-ID');
   };
@@ -24,6 +26,8 @@ const CurrencyInput = ({ value, onChange, placeholder = '1.000.000', className =
       required={required}
       value={formatDisplay(value)}
       onChange={handleChange}
+      onInvalid={setIndonesianValidity}
+      onInput={setIndonesianValidity}
       className={className}
       placeholder={placeholder}
     />

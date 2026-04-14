@@ -9,6 +9,7 @@ import { Modal } from '../components/ui/Modal';
 import CurrencyInput from '../components/ui/CurrencyInput';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, ArrowDownToLine, ArrowUpFromLine, PlusCircle, Activity, ChevronDown, Image as ImageIcon, X, ArrowRight, Settings, Wallet, ShoppingBag, Coffee, Plus, AlertTriangle, RefreshCcw } from 'lucide-react';
+import { setIndonesianValidity } from '../utils/validation';
 
 const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
 const getImageUrl = (path) => {
@@ -211,8 +212,8 @@ const Dashboard = () => {
             </div>
           )}
           <div className="flex flex-col">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Halo, {user?.name} {user?.emoji || '👋'}</h1>
-            <p className="italic text-sm md:text-base text-gray-500 mt-0.5">semangat nabungnya ya</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-slate-100">Halo, {user?.name} {user?.emoji || '👋'}</h1>
+            <p className="italic text-sm md:text-base text-gray-500 dark:text-slate-400 mt-0.5">semangat nabungnya ya</p>
           </div>
         </div>
       </div>
@@ -221,7 +222,7 @@ const Dashboard = () => {
         <Card className="col-span-1 md:col-span-2 bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600 text-white border-none relative overflow-hidden shadow-pink-200 shadow-xl">
           <div className="relative z-10 flex flex-col justify-between h-full">
             <div>
-              <p className="text-pink-100 font-medium opacity-90 text-sm tracking-wide uppercase">Tabungan Pernikahan</p>
+              <p className="text-pink-100 font-medium opacity-90 text-sm tracking-wide uppercase">Tabungan Bersama</p>
               <h2 className="text-4xl md:text-5xl font-extrabold mt-3 tracking-tight">Rp {totalTabungan.toLocaleString('id-ID')}</h2>
             </div>
             <div className="mt-8 flex justify-between items-end">
@@ -238,37 +239,37 @@ const Dashboard = () => {
         {/* Quick Actions */}
         <div className="col-span-1 flex flex-col gap-3">
           <div className="flex flex-row md:flex-col gap-3 flex-1">
-            <button onClick={() => openTransactionModal('deposit')} className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-emerald-100 group">
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white transition-transform">
+            <button onClick={() => openTransactionModal('deposit')} className="flex-1 glass bg-white/60 dark:bg-slate-800/60 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-emerald-100 dark:border-emerald-900/30 group">
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-900/20 dark:to-emerald-800/20 text-emerald-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white dark:border-slate-700 transition-transform">
                     <ArrowDownToLine size={20} />
                 </div>
-                <h3 className="font-bold text-gray-800 text-sm md:text-base">Nabung</h3>
+                <h3 className="font-bold text-gray-800 dark:text-slate-200 text-sm md:text-base">Nabung</h3>
             </button>
-
-            <button onClick={() => openTransactionModal('withdrawal')} className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-rose-100 group">
-                <div className="w-10 h-10 bg-gradient-to-br from-rose-100 to-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white transition-transform">
+ 
+            <button onClick={() => openTransactionModal('withdrawal')} className="flex-1 glass bg-white/60 dark:bg-slate-800/60 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-rose-100 dark:border-rose-900/30 group">
+                <div className="w-10 h-10 bg-gradient-to-br from-rose-100 to-rose-50 dark:from-rose-900/20 dark:to-rose-800/20 text-rose-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white dark:border-slate-700 transition-transform">
                     <ArrowUpFromLine size={20} />
                 </div>
-                <h3 className="font-bold text-gray-800 text-sm md:text-base">Pinjam/Pakai</h3>
+                <h3 className="font-bold text-gray-800 dark:text-slate-200 text-sm md:text-base">Pinjam/Pakai</h3>
             </button>
           </div>
-
-          <button onClick={() => openTransactionModal('income')} className="glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-blue-100 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white transition-transform">
+ 
+          <button onClick={() => openTransactionModal('income')} className="glass bg-white/60 dark:bg-slate-800/60 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-blue-100 dark:border-blue-900/30 group">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/20 dark:to-blue-800/20 text-blue-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white dark:border-slate-700 transition-transform">
                   <PlusCircle size={20} />
               </div>
-              <h3 className="font-bold text-gray-800 text-sm md:text-base">Pemasukan</h3>
+              <h3 className="font-bold text-gray-800 dark:text-slate-200 text-sm md:text-base">Pemasukan</h3>
           </button>
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-indigo-100 via-purple-50 to-purple-200 backdrop-blur-xl rounded-3xl shadow-lg border-2 border-white/80 overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-300/30 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-        <div className="bg-white/50 backdrop-blur-md border-b border-white/60 px-5 py-4 flex items-center justify-between relative z-10 flex-wrap gap-3">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <Wallet className="text-indigo-500" size={20} /> Budget Bulanan
+      <div className="bg-gradient-to-br from-indigo-100 via-purple-50 to-purple-200 dark:from-slate-800 dark:via-slate-900 dark:to-indigo-950/40 backdrop-blur-xl rounded-3xl shadow-lg border-2 border-white/80 dark:border-slate-800 overflow-hidden relative transition-colors duration-300">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-300/30 dark:bg-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+        <div className="bg-white/50 dark:bg-slate-900/60 backdrop-blur-md border-b border-white/60 dark:border-slate-800 px-5 py-4 flex items-center justify-between relative z-10 flex-wrap gap-3">
+          <h3 className="text-lg font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
+            <Wallet className="text-indigo-500 dark:text-indigo-400" size={20} /> Budget Bulanan
           </h3>
-          <button onClick={() => setIsCategoryModalOpen(true)} className="flex items-center gap-1.5 text-xs font-semibold bg-white border border-indigo-100 px-3 py-1.5 rounded-full text-indigo-600 hover:bg-indigo-50 hover:shadow-sm transition-all shadow-sm">
+          <button onClick={() => setIsCategoryModalOpen(true)} className="flex items-center gap-1.5 text-xs font-semibold bg-white dark:bg-slate-800 border border-indigo-100 dark:border-slate-700 px-3 py-1.5 rounded-full text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-700 hover:shadow-sm transition-all shadow-sm">
             <Plus size={14} /> Kategori Baru
           </button>
         </div>
@@ -299,7 +300,7 @@ const Dashboard = () => {
           {/* DYNAMIC ENVELOPES */}
           <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
              {categories.length === 0 && (
-                <div className="col-span-full border-2 border-dashed border-indigo-200/50 rounded-2xl p-6 flex flex-col items-center justify-center text-indigo-400 group cursor-pointer hover:bg-indigo-50/30 transition-colors" onClick={() => setIsCategoryModalOpen(true)}>
+                <div className="col-span-full border-2 border-dashed border-indigo-200/50 dark:border-slate-700 rounded-2xl p-6 flex flex-col items-center justify-center text-indigo-400 dark:text-indigo-500/60 group cursor-pointer hover:bg-indigo-50/30 dark:hover:bg-slate-800/30 transition-colors" onClick={() => setIsCategoryModalOpen(true)}>
                    <PlusCircle size={30} className="mb-2 opacity-50 group-hover:opacity-100 transition-opacity" />
                    <p className="text-sm font-semibold">Buat Amplop Kategori</p>
                    <p className="text-[10px] opacity-70 mt-1">Misal: Keperluan, Belanja, Cicilan Motor</p>
@@ -314,15 +315,15 @@ const Dashboard = () => {
                const dash = pct * circumference;
                const gap = circumference - dash;
                return (
-                 <div key={cat._id} className="flex flex-col items-center p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
-                    <button onClick={() => promptDeleteCategory(cat._id, cat.name)} className="absolute top-2 right-2 text-rose-300 hover:text-rose-600 transition-colors p-1" title="Reset/Hapus Budget ini">
+                 <div key={cat._id} className="flex flex-col items-center p-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-white dark:border-slate-700 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                    <button onClick={() => promptDeleteCategory(cat._id, cat.name)} className="absolute top-2 right-2 text-rose-300 dark:text-rose-900/50 hover:text-rose-600 dark:hover:text-rose-400 transition-colors p-1" title="Reset/Hapus Budget ini">
                       <X size={15} />
                     </button>
 
                     {/* Donut Chart */}
                     <div className="relative flex items-center justify-center my-2">
                       <svg width="72" height="72" viewBox="0 0 72 72">
-                        <circle cx="36" cy="36" r="28" fill="none" stroke="#e0e7ff" strokeWidth="8" />
+                        <circle cx="36" cy="36" r="28" fill="none" stroke="#e0e7ff" strokeWidth="8" className="dark:stroke-slate-700" />
                         <circle
                           cx="36" cy="36" r="28" fill="none"
                           stroke={bal <= 0 ? '#fca5a5' : '#818cf8'}
@@ -336,19 +337,19 @@ const Dashboard = () => {
                       <span className="absolute text-2xl group-hover:scale-110 transition-transform">{cat.icon}</span>
                     </div>
 
-                    <p className="text-gray-500 text-[11px] font-bold uppercase tracking-widest">{cat.name}</p>
-                    <h4 className={`font-extrabold text-xl tracking-tight mt-1 ${bal < 0 ? 'text-rose-500' : 'text-gray-800'}`}>
+                    <p className="text-gray-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-widest">{cat.name}</p>
+                    <h4 className={`font-extrabold text-xl tracking-tight mt-1 ${bal < 0 ? 'text-rose-500' : 'text-gray-800 dark:text-slate-100'}`}>
                       Rp {bal.toLocaleString('id-ID')}
                     </h4>
-                    <p className="text-[10px] text-indigo-400 font-semibold mt-0.5 mb-1">
+                    <p className="text-[10px] text-indigo-400 dark:text-indigo-500/80 font-semibold mt-0.5 mb-1">
                       {totalCatBalance > 0 ? `${Math.round(pct * 100)}% dari total` : '—'}
                     </p>
                     
-                    <div className="w-full mt-2 flex gap-1.5 pt-3 border-t border-indigo-50/50">
-                       <button onClick={() => openTransactionModal('allocation', 'gaji', cat._id)} className="flex-1 flex flex-col items-center justify-center text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 py-1.5 rounded-lg transition-colors">
+                    <div className="w-full mt-2 flex gap-1.5 pt-3 border-t border-indigo-50/50 dark:border-slate-700/50">
+                       <button onClick={() => openTransactionModal('allocation', 'gaji', cat._id)} className="flex-1 flex flex-col items-center justify-center text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 py-1.5 rounded-lg transition-colors">
                           <ArrowDownToLine size={14} className="mb-0.5" /> Sedot Gaji
                        </button>
-                       <button onClick={() => openTransactionModal('withdrawal', cat._id)} className="flex-1 flex flex-col items-center justify-center text-[10px] font-bold text-rose-500 bg-rose-50 hover:bg-rose-100 py-1.5 rounded-lg transition-colors">
+                       <button onClick={() => openTransactionModal('withdrawal', cat._id)} className="flex-1 flex flex-col items-center justify-center text-[10px] font-bold text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/40 py-1.5 rounded-lg transition-colors">
                           <ArrowUpFromLine size={14} className="mb-0.5" /> Pakai
                        </button>
                     </div>
@@ -359,13 +360,13 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-rose-100 via-pink-50 to-pink-200 backdrop-blur-xl rounded-3xl shadow-lg border-2 border-white/80 overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-pink-300/30 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-        <div className="bg-white/50 backdrop-blur-md border-b border-white/60 px-5 py-4 flex items-center justify-between relative z-10">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+      <div className="bg-gradient-to-br from-rose-100 via-pink-50 to-pink-200 dark:from-slate-800 dark:via-slate-900 dark:to-rose-950/40 backdrop-blur-xl rounded-3xl shadow-lg border-2 border-white/80 dark:border-slate-800 overflow-hidden relative transition-colors duration-300">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-pink-300/30 dark:bg-rose-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+        <div className="bg-white/50 dark:bg-slate-900/60 backdrop-blur-md border-b border-white/60 dark:border-slate-800 px-5 py-4 flex items-center justify-between relative z-10">
+          <h3 className="text-lg font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
             <Activity className="text-rose-400" size={20} /> Transaksi Publik Terakhir
           </h3>
-          <button onClick={() => navigate('/history')} className="flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-white/60 border border-rose-100 px-3 py-1.5 rounded-full transition-all hover:shadow-sm">
+          <button onClick={() => navigate('/history')} className="flex items-center gap-1 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 bg-white/60 dark:bg-slate-800 border border-rose-100 dark:border-slate-700 px-3 py-1.5 rounded-full transition-all hover:shadow-sm">
             Lihat Semua <ArrowRight size={13} />
           </button>
         </div>
@@ -375,17 +376,17 @@ const Dashboard = () => {
              <p className="text-center text-gray-500 text-sm py-8">Belum ada transaksi publik.</p>
           )}
           {transactions.map((trx) => (
-            <div key={trx._id} className="flex items-center gap-3 py-3 px-1 border-b border-rose-50/50 last:border-0 hover:bg-white/40 transition-colors rounded-xl mx-[-4px] px-2">
-               <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border border-white ${trx.type === 'deposit' ? 'bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600' : trx.type === 'income' ? 'bg-gradient-to-br from-blue-100 to-blue-50 text-blue-500' : 'bg-gradient-to-br from-rose-100 to-rose-50 text-rose-500'}`}>
+            <div key={trx._id} className="flex items-center gap-3 py-3 px-1 border-b border-rose-50/50 dark:border-slate-800/50 last:border-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors rounded-xl mx-[-4px] px-2">
+               <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border border-white dark:border-slate-700 ${trx.type === 'deposit' ? 'bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-900/30 dark:to-emerald-800/30 text-emerald-600' : trx.type === 'income' ? 'bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/30 text-blue-500' : 'bg-gradient-to-br from-rose-100 to-rose-50 dark:from-rose-900/30 dark:to-rose-800/30 text-rose-500'}`}>
                   {trx.type === 'deposit' ? <ArrowDownToLine size={15} /> : trx.type === 'income' ? <PlusCircle size={15} /> : <ArrowUpFromLine size={15} />}
                </div>
                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-800 text-sm truncate">{trx.user.name} <span className="ml-1.5 text-[11px] font-bold uppercase">{trx.type}</span></p>
-                  <p className="text-[11px] text-gray-500 mt-1">{new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric', month:'short'})} {trx.notes && `• ${trx.notes}`}</p>
+                  <p className="font-semibold text-gray-800 dark:text-slate-200 text-sm truncate">{trx.user.name} <span className="ml-1.5 text-[11px] font-bold uppercase">{trx.type}</span></p>
+                  <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-1">{new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric', month:'short'})} {trx.notes && `• ${trx.notes}`}</p>
                </div>
                <div className="text-right flex-shrink-0">
                   <p className={`font-extrabold text-sm ${trx.type === 'withdrawal' ? 'text-rose-500' : 'text-emerald-500'}`}>{trx.type === 'withdrawal' ? '−' : '+'} Rp {trx.amount.toLocaleString('id-ID')}</p>
-                  {trx.proofOfTransfer && <button onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))} className="mt-1 flex items-center justify-end gap-1 w-full text-[10px] text-gray-400"><ImageIcon size={10} /> bukti</button>}
+                  {trx.proofOfTransfer && <button onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))} className="mt-1 flex items-center justify-end gap-1 w-full text-[10px] text-gray-400 dark:text-slate-500"><ImageIcon size={10} /> bukti</button>}
                </div>
             </div>
           ))}
@@ -432,7 +433,14 @@ const Dashboard = () => {
          <form onSubmit={handleCategorySubmit} className="space-y-4 text-left">
            <div>
              <label className="block text-sm font-bold text-gray-700 mb-1">Nama Kategori</label>
-             <input type="text" required value={categoryName} onChange={(e) => setCategoryName(e.target.value)} className="w-full px-4 py-3 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-300 outline-none bg-indigo-50/30 text-indigo-900 font-semibold" placeholder="Contoh: Belanja Bulanan" />
+             <input type="text"
+                    required 
+                    value={categoryName} 
+                    onChange={(e) => setCategoryName(e.target.value)} 
+                    onInvalid={setIndonesianValidity}
+                    onInput={setIndonesianValidity}
+                    className="w-full px-4 py-3 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-300 outline-none bg-indigo-50/30 text-indigo-900 font-semibold" 
+                    placeholder="Contoh: Belanja Bulanan" />
            </div>
            <div>
              <label className="block text-sm font-bold text-gray-700 mb-1">Pilih Ikon (Emoji)</label>
@@ -455,14 +463,13 @@ const Dashboard = () => {
         type === 'deposit' ? 'Top-Up Saldo 💖' : type === 'income' ? 'Catat Pemasukan 🎉' : type === 'allocation' ? 'Sedot dari Gaji 💧' : 'Catat Pemakaian 💸'
       }>
         <form onSubmit={handleTransactionSubmit} className="space-y-4 text-left">
-          
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                {type === 'allocation' ? 'Tujuan Aliran Dana' : 'Pilih Sumber Dana / Tujuan'}
             </label>
             <div className="relative">
-              <div onClick={() => setIsSelectOpen(!isSelectOpen)} className={`w-full px-4 py-3 border rounded-xl flex justify-between items-center cursor-pointer ${type === 'allocation' ? 'bg-indigo-50 border-indigo-100' : 'bg-gray-50 border-gray-200'}`}>
-                <span className="truncate font-medium text-gray-800">
+              <div onClick={() => setIsSelectOpen(!isSelectOpen)} className={`w-full px-4 py-3 border rounded-xl flex justify-between items-center cursor-pointer ${type === 'allocation' ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800' : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700'}`}>
+                <span className="truncate font-medium text-gray-800 dark:text-slate-100">
                   {type === 'allocation' ? (
                      categories.find(c => c._id === toCategory)?.name || 'Pilih Amplop...'
                   ) : fundSource === 'tabungan_utama' && budgetId ? budgets.find(b => b._id === budgetId)?.title 
@@ -470,30 +477,30 @@ const Dashboard = () => {
                    : fundSource === 'gaji' ? '💼 Saldo Gaji (Pribadi)'
                    : categories.find(c => c._id === fundSource)?.name || '...'}
                 </span>
-                <ChevronDown size={18} className="text-gray-400" />
+                <ChevronDown size={18} className="text-gray-400 dark:text-slate-500" />
               </div>
               
               {isSelectOpen && (
-                <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
+                <div className="absolute z-50 w-full mt-2 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
                   {type === 'allocation' ? (
                      <div className="py-2">
-                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-1">Pilih Amplop Penerima</div>
+                        <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-1">Pilih Amplop Penerima</div>
                         {categories.map(c => (
-                           <div key={c._id} onClick={() => { setToCategory(c._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 cursor-pointer border-b border-gray-50 text-indigo-700 font-semibold">{c.icon} {c.name}</div>
+                           <div key={c._id} onClick={() => { setToCategory(c._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-indigo-700 dark:text-indigo-400 font-semibold">{c.icon} {c.name}</div>
                         ))}
                      </div>
                   ) : (
                      <>
-                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-2 bg-gray-50">Publik (Dilihat Bersama)</div>
-                        <div onClick={() => { setFundSource('tabungan_utama'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 cursor-pointer border-b border-gray-50 text-emerald-600 font-bold transition-colors">🌟 Tabungan Bersama (Utama)</div>
+                        <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Publik (Dilihat Bersama)</div>
+                        <div onClick={() => { setFundSource('tabungan_utama'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-emerald-600 dark:text-emerald-400 font-bold transition-colors">🌟 Tabungan Bersama (Utama)</div>
                         {budgets.map(b => (
-                           <div key={b._id} onClick={() => { setFundSource('tabungan_utama'); setBudgetId(b._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-rose-50 cursor-pointer border-b border-gray-50 text-gray-700 pl-8 font-medium truncate">{b.title}</div>
+                           <div key={b._id} onClick={() => { setFundSource('tabungan_utama'); setBudgetId(b._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-rose-50 dark:hover:bg-rose-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-gray-700 dark:text-slate-300 pl-8 font-medium truncate">{b.title}</div>
                         ))}
-
-                        <div className="text-xs font-bold text-gray-400 py-2 uppercase tracking-wider px-4 bg-gray-50">Private (Dompet Anda)</div>
-                        <div onClick={() => { setFundSource('gaji'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 cursor-pointer border-b border-emerald-100 text-emerald-700 font-bold bg-emerald-50/30">💼 Dompet Gaji Utama</div>
+ 
+                        <div className="text-xs font-bold text-gray-400 dark:text-slate-500 py-2 uppercase tracking-wider px-4 bg-gray-50 dark:bg-slate-900/50">Private (Dompet Anda)</div>
+                        <div onClick={() => { setFundSource('gaji'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 cursor-pointer border-b border-emerald-100 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50/30 dark:bg-emerald-900/20">💼 Dompet Gaji Utama</div>
                         {categories.map(c => (
-                           <div key={c._id} onClick={() => { setFundSource(c._id); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 cursor-pointer border-b border-gray-50 text-indigo-700 font-semibold truncate pl-8">{c.icon} {c.name}</div>
+                           <div key={c._id} onClick={() => { setFundSource(c._id); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-indigo-700 dark:text-indigo-400 font-semibold truncate pl-8">{c.icon} {c.name}</div>
                         ))}
                      </>
                   )}
@@ -501,27 +508,27 @@ const Dashboard = () => {
               )}
             </div>
           </div>
-
+ 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nominal (Rp)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nominal (Rp)</label>
             <CurrencyInput
               required
               value={amount}
               onChange={setAmount}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-300 bg-gray-50 text-xl font-extrabold text-indigo-900 shadow-inner"
+              className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-300 bg-gray-50 dark:bg-slate-800 text-xl font-extrabold text-indigo-900 dark:text-indigo-400 shadow-inner dark:shadow-none"
               placeholder="1.000.000"
             />
           </div>
-
+ 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Keterangan Singkat</label>
-            <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 outline-none bg-gray-50" placeholder={type === 'allocation' ? 'Sisihkan gaji buat...' : 'Keterangan'} />
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Keterangan Singkat</label>
+            <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 outline-none bg-gray-50 dark:bg-slate-800 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500" placeholder={type === 'allocation' ? 'Sisihkan gaji buat...' : 'Keterangan'} />
           </div>
-
+ 
           {type !== 'allocation' && (
              <div>
-               <label className="block text-sm font-medium text-gray-700 mb-1">Bukti Gambar (Opsional)</label>
-               <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rose-50 file:text-rose-600"/>
+               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Bukti Gambar (Opsional)</label>
+               <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 text-sm dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rose-50 dark:file:bg-rose-900/30 file:text-rose-600 dark:file:text-rose-400"/>
              </div>
           )}
 

@@ -5,7 +5,7 @@ export const Button = ({ children, onClick, variant = 'primary', className = '',
   const variants = {
     primary: "bg-[var(--color-floral-rose)] text-white hover:bg-rose-600",
     secondary: "bg-[var(--color-floral-mint)] text-emerald-800 hover:bg-emerald-200",
-    outline: "border-2 border-[var(--color-floral-rose)] text-rose-600 hover:bg-[var(--color-floral-pink)]",
+    outline: "border-2 border-[var(--color-floral-rose)] text-rose-600 hover:bg-[var(--color-floral-pink)] dark:hover:bg-rose-950",
   };
 
   return (

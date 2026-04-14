@@ -98,7 +98,7 @@ const History = () => {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20 md:pb-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Riwayat Transaksi 📜</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-slate-100">Riwayat Transaksi 📜</h1>
         
         {/* Name Filter Pills - bigger tap target on mobile */}
         <div className="flex flex-wrap gap-2">
@@ -109,7 +109,7 @@ const History = () => {
               className={`px-4 py-2 rounded-full text-sm font-semibold transition-all min-h-[38px] ${
                 filterName === name 
                   ? 'bg-rose-500 text-white shadow-md' 
-                  : 'bg-white text-gray-600 border border-pink-100 hover:bg-rose-50'
+                  : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-pink-100 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-slate-700'
               }`}
             >
               {name}
@@ -121,24 +121,24 @@ const History = () => {
       <Card>
         <div className="space-y-4">
           {filteredTransactions.length === 0 && (
-            <p className="text-center text-gray-500 py-8">Belum ada transaksi sama sekali.</p>
+            <p className="text-center text-gray-500 dark:text-slate-400 py-8">Belum ada transaksi sama sekali.</p>
           )}
           {filteredTransactions.map((trx) => (
-            <div key={trx._id} className="flex flex-row justify-between items-center p-3 sm:p-4 hover:bg-pink-50/50 rounded-2xl transition-colors border-b border-gray-50 last:border-0 gap-2 sm:gap-4">
+            <div key={trx._id} className="flex flex-row justify-between items-center p-3 sm:p-4 hover:bg-pink-50/50 dark:hover:bg-slate-800/50 rounded-2xl transition-colors border-b border-gray-50 dark:border-slate-800 last:border-0 gap-2 sm:gap-4">
               <div className="flex items-center gap-3 w-2/3">
                 <div className={`p-2 sm:p-3 rounded-2xl flex-shrink-0 ${
-                  trx.type === 'deposit' ? 'bg-emerald-100 text-emerald-600'
-                  : trx.type === 'income' ? 'bg-blue-100 text-blue-500'
-                  : 'bg-rose-100 text-rose-600'
+                  trx.type === 'deposit' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600'
+                  : trx.type === 'income' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-500'
+                  : 'bg-rose-100 dark:bg-rose-900/30 text-rose-600'
                 }`}>
                   {trx.type === 'deposit' ? <TrendingUp size={18} />
                   : trx.type === 'income' ? <PlusCircle size={18} />
                   : <TrendingDown size={18} />}
                 </div>
                 <div className="overflow-hidden">
-                  <p className="font-bold text-gray-800 text-base truncate">{trx.user.name}</p>
-                  <p className="text-xs text-gray-500">{new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric', month:'short', year:'2-digit', hour:'2-digit', minute:'2-digit'})}</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5 truncate">{trx.notes || '-'}</p>
+                  <p className="font-bold text-gray-800 dark:text-slate-200 text-base truncate">{trx.user.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">{new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric', month:'short', year:'2-digit', hour:'2-digit', minute:'2-digit'})}</p>
+                  <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5 truncate">{trx.notes || '-'}</p>
                 </div>
               </div>
               
@@ -150,14 +150,14 @@ const History = () => {
                 }`}>
                   {trx.type === 'withdrawal' ? '− Rp' : '+ Rp'} {trx.amount.toLocaleString('id-ID')}
                 </p>
-                <p className="text-right text-[11px] text-gray-500 font-medium">
+                <p className="text-right text-[11px] text-gray-500 dark:text-slate-400 font-medium">
                   {trx.type === 'deposit' ? 'Nabung' : trx.type === 'income' ? 'Pemasukan' : 'Pinjam'}
                 </p>
                 
                 {trx.proofOfTransfer && (
                   <button 
                     onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))}
-                    className="flex items-center gap-1 mt-1 text-xs text-blue-500 hover:text-blue-700 font-semibold bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full min-h-[30px] transition-colors"
+                    className="flex items-center gap-1 mt-1 text-xs text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-3 py-1.5 rounded-full min-h-[30px] transition-colors"
                   >
                     <ImageIcon size={13} /> Lihat Bukti
                   </button>
@@ -177,7 +177,7 @@ const History = () => {
               initial={{ scale: 0.9, opacity: 0 }} 
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative max-w-3xl w-full max-h-[90vh] bg-white rounded-xl overflow-hidden"
+              className="relative max-w-3xl w-full max-h-[90vh] bg-white dark:bg-slate-900 rounded-xl overflow-hidden"
             >
               <button 
                 onClick={() => setImageModal(null)} 
@@ -200,7 +200,7 @@ const History = () => {
                 <p className="text-lg">❌ Gambar tidak dapat dimuat</p>
                 <p className="text-sm mt-1 text-gray-400">File mungkin sudah dihapus dari server</p>
               </div>
-              <div className="p-3 bg-white text-center border-t">
+              <div className="p-3 bg-white dark:bg-slate-900 text-center border-t dark:border-slate-800">
                 <a href={imageModal} target="_blank" rel="noreferrer" className="text-rose-500 font-medium hover:underline inline-block">
                   Buka Gambar di Tab Baru (Download)
                 </a>

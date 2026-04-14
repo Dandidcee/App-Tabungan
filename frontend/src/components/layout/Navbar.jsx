@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { Heart, Activity, Target, LogOut, Bell, User } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
+import ThemeToggle from '../ui/ThemeToggle';
 
 export const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
@@ -44,40 +45,46 @@ export const Navbar = () => {
           <Link to="/history" className={`font-medium transition-colors ${isActive('/history') ? 'text-rose-500' : 'text-gray-600 hover:text-rose-400'}`}>Riwayat</Link>
           <Link to="/account" className={`font-medium transition-colors ${isActive('/account') ? 'text-rose-500' : 'text-gray-600 hover:text-rose-400'}`}>Akun</Link>
           
-          <Link to="/notifications" className="relative p-2 text-gray-500 hover:text-rose-500 transition-colors ml-2">
-            <Bell size={20} />
-            <BadgeCount count={unreadCount} />
-          </Link>
+          <div className="flex items-center gap-3 ml-2 border-l border-pink-100 dark:border-slate-700 pl-4">
+            <ThemeToggle />
+            <Link to="/notifications" className="relative p-2 text-gray-500 dark:text-slate-400 hover:text-rose-500 transition-colors">
+              <Bell size={20} />
+              <BadgeCount count={unreadCount} />
+            </Link>
+          </div>
         </div>
       </nav>
 
       {/* Mobile Top Header */}
-      <div className="md:hidden flex justify-between items-center p-4 bg-white/50 backdrop-blur-sm border-b border-pink-100">
+      <div className="md:hidden flex justify-between items-center p-4 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-b border-pink-100 dark:border-slate-800">
         <div className="flex items-center gap-2 text-rose-500 font-bold text-lg">
           <Heart className="text-rose-400 fill-rose-100" size={20} />
           <span>Tabungan Bersama</span>
         </div>
-        <Link to="/notifications" className="relative p-2 text-gray-500 hover:text-rose-500 transition-colors">
-          <Bell size={20} />
-          <BadgeCount count={unreadCount} mobile={true} />
-        </Link>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Link to="/notifications" className="relative p-2 text-gray-500 dark:text-slate-400 hover:text-rose-500 transition-colors">
+            <Bell size={20} />
+            <BadgeCount count={unreadCount} mobile={true} />
+          </Link>
+        </div>
       </div>
 
       {/* Bottom Navigation (Mobile Only) */}
-      <nav className="md:hidden bg-white/95 backdrop-blur-xl fixed bottom-0 left-0 right-0 z-50 border-t border-pink-100 px-8 py-3 flex justify-between items-center pb-safe shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
-        <Link to="/" className={`flex flex-col items-center gap-1 ${isActive('/') ? 'text-rose-500' : 'text-gray-400'}`}>
+      <nav className="md:hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl fixed bottom-0 left-0 right-0 z-50 border-t border-pink-100 dark:border-slate-800 px-8 py-3 flex justify-between items-center pb-safe shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+        <Link to="/" className={`flex flex-col items-center gap-1 ${isActive('/') ? 'text-rose-500' : 'text-gray-400 dark:text-slate-500'}`}>
           <Heart size={24} className={isActive('/') ? 'fill-rose-100' : ''} />
           <span className="text-[10px] font-semibold">Beranda</span>
         </Link>
-        <Link to="/budget" className={`flex flex-col items-center gap-1 ${isActive('/budget') ? 'text-rose-500' : 'text-gray-400'}`}>
+        <Link to="/budget" className={`flex flex-col items-center gap-1 ${isActive('/budget') ? 'text-rose-500' : 'text-gray-400 dark:text-slate-500'}`}>
           <Target size={24} className={isActive('/budget') ? 'fill-rose-100' : ''} />
           <span className="text-[10px] font-semibold">Target</span>
         </Link>
-        <Link to="/history" className={`flex flex-col items-center gap-1 ${isActive('/history') ? 'text-rose-500' : 'text-gray-400'}`}>
+        <Link to="/history" className={`flex flex-col items-center gap-1 ${isActive('/history') ? 'text-rose-500' : 'text-gray-400 dark:text-slate-500'}`}>
           <Activity size={24} />
           <span className="text-[10px] font-semibold">Riwayat</span>
         </Link>
-        <Link to="/account" className={`flex flex-col items-center gap-1 ${isActive('/account') ? 'text-rose-500' : 'text-gray-400'}`}>
+        <Link to="/account" className={`flex flex-col items-center gap-1 ${isActive('/account') ? 'text-rose-500' : 'text-gray-400 dark:text-slate-500'}`}>
           <User size={24} className={isActive('/account') ? 'fill-rose-100' : ''} />
           <span className="text-[10px] font-semibold">Akun</span>
         </Link>

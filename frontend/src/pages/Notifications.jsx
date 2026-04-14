@@ -7,37 +7,37 @@ import { useToast } from '../context/ToastContext';
 const TYPE_CONFIG = {
   deposit: {
     icon: <Coins size={20} />,
-    color: 'text-emerald-500',
-    bg: 'bg-emerald-50',
-    border: 'border-emerald-100',
+    color: 'text-emerald-500 dark:text-emerald-400',
+    bg: 'bg-emerald-50 dark:bg-emerald-900/20',
+    border: 'border-emerald-100 dark:border-emerald-800',
     label: 'Tabungan',
   },
   withdrawal: {
     icon: <AlertCircle size={20} />,
-    color: 'text-rose-500',
-    bg: 'bg-rose-50',
-    border: 'border-rose-100',
+    color: 'text-rose-500 dark:text-rose-400',
+    bg: 'bg-rose-50 dark:bg-rose-900/20',
+    border: 'border-rose-100 dark:border-rose-800',
     label: 'Pinjaman',
   },
   login: {
     icon: <LogIn size={20} />,
-    color: 'text-blue-400',
-    bg: 'bg-blue-50',
-    border: 'border-blue-100',
+    color: 'text-blue-400 dark:text-blue-300',
+    bg: 'bg-blue-50 dark:bg-blue-900/20',
+    border: 'border-blue-100 dark:border-blue-800',
     label: 'Login',
   },
   register: {
     icon: <UserPlus size={20} />,
-    color: 'text-violet-500',
-    bg: 'bg-violet-50',
-    border: 'border-violet-100',
+    color: 'text-violet-500 dark:text-violet-400',
+    bg: 'bg-violet-50 dark:bg-violet-900/20',
+    border: 'border-violet-100 dark:border-violet-800',
     label: 'Akun Baru',
   },
   activity: {
     icon: <CheckCircle2 size={20} />,
-    color: 'text-pink-400',
-    bg: 'bg-pink-50',
-    border: 'border-pink-100',
+    color: 'text-pink-400 dark:text-pink-300',
+    bg: 'bg-pink-50 dark:bg-pink-900/20',
+    border: 'border-pink-100 dark:border-pink-800',
     label: 'Aktivitas',
   },
 };
@@ -83,14 +83,14 @@ const Notifications = () => {
     >
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-3">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-3">
           <Bell className="text-rose-500" size={28} />
           Notifikasi
         </h1>
         <div className="flex items-center gap-2">
           <button
             onClick={fetchNotifications}
-            className="text-xs font-semibold text-gray-500 hover:text-rose-500 flex items-center gap-1 bg-white px-3 py-2 rounded-xl shadow-sm border border-gray-100 transition-colors"
+            className="text-xs font-semibold text-gray-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 flex items-center gap-1 bg-white dark:bg-slate-800 px-3 py-2 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 transition-colors"
             title="Refresh"
           >
             <RefreshCw size={14} />
@@ -99,7 +99,7 @@ const Notifications = () => {
           {notifications.length > 0 && (
             <button
               onClick={clearNotifications}
-              className="text-xs font-semibold text-gray-500 hover:text-rose-500 flex items-center gap-1 bg-white px-3 py-2 rounded-xl shadow-sm border border-gray-100 transition-colors"
+              className="text-xs font-semibold text-gray-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 flex items-center gap-1 bg-white dark:bg-slate-800 px-3 py-2 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 transition-colors"
             >
               <Trash2 size={14} />
               <span className="hidden sm:inline">Bersihkan</span>
@@ -109,9 +109,9 @@ const Notifications = () => {
       </div>
 
       {/* Notification List */}
-      <div className="bg-white/80 glass rounded-3xl p-4 md:p-6 shadow-sm border border-pink-50">
+      <div className="bg-white/80 dark:bg-slate-900/80 glass rounded-3xl p-4 md:p-6 shadow-sm border border-pink-50 dark:border-slate-800/50">
         {notifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+          <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-slate-600">
             <Bell size={48} className="mb-4 opacity-20" />
             <p className="font-medium">Belum ada notifikasi.</p>
             <p className="text-sm mt-1">Semua aktivitas akan muncul di sini.</p>
@@ -132,7 +132,7 @@ const Notifications = () => {
                     onClick={() => isClickable && handleNotifClick(notif)}
                     className={`p-4 rounded-2xl flex items-start gap-4 transition-all border
                       ${notif.read
-                        ? 'bg-gray-50/50 border-gray-100'
+                        ? 'bg-gray-50/50 dark:bg-slate-800/20 border-gray-100 dark:border-slate-800/50'
                         : `${cfg.bg} ${cfg.border} shadow-sm`}
                       ${isClickable ? 'cursor-pointer hover:scale-[1.01] hover:shadow-md active:scale-[0.99]' : ''}
                     `}
@@ -144,7 +144,7 @@ const Notifications = () => {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm md:text-base leading-snug ${notif.read ? 'text-gray-600 font-medium' : 'text-gray-900 font-bold'}`}>
+                      <p className={`text-sm md:text-base leading-snug ${notif.read ? 'text-gray-600 dark:text-slate-400 font-medium' : 'text-gray-900 dark:text-slate-100 font-bold'}`}>
                         {notif.message}
                       </p>
                       <div className="flex items-center gap-2 mt-1">

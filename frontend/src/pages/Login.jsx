@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Flower, Flower2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
+import { setIndonesianValidity } from '../utils/validation';
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -44,13 +45,13 @@ const Login = () => {
           </div>
           
           <div className="relative z-10 text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-rose-50 rounded-full mb-4 text-rose-500">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-rose-50 dark:bg-rose-900/20 rounded-full mb-4 text-rose-500">
               <Flower size={32} />
             </div>
-            <h1 className="text-2xl font-bold text-gray-800">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-slate-100">
               {isLogin ? 'Masuk ke TabungBersama' : 'Daftar Akun Baru'}
             </h1>
-            <p className="text-gray-500 mt-2">
+            <p className="text-gray-500 dark:text-slate-400 mt-2">
               Mulai wujudkan rencana indah bersama-sama
             </p>
           </div>
@@ -58,43 +59,49 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="relative z-10 space-y-4">
             {!isLogin && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nama</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nama</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-pink-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-rose-200 outline-none transition-all"
+                  onInvalid={setIndonesianValidity}
+                  onInput={setIndonesianValidity}
+                  className="w-full px-4 py-3 rounded-xl border border-pink-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-200 dark:text-slate-100 outline-none transition-all placeholder-gray-400 dark:placeholder-slate-500"
                   placeholder="Nama panggilangmu"
                 />
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Email</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-pink-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-rose-200 outline-none transition-all"
+                onInvalid={setIndonesianValidity}
+                onInput={setIndonesianValidity}
+                className="w-full px-4 py-3 rounded-xl border border-pink-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-200 dark:text-slate-100 outline-none transition-all placeholder-gray-400 dark:placeholder-slate-500"
                 placeholder="email@contoh.com"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+             <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-pink-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-rose-200 outline-none transition-all pr-12"
+                  onInvalid={setIndonesianValidity}
+                  onInput={setIndonesianValidity}
+                  className="w-full px-4 py-3 rounded-xl border border-pink-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-200 dark:text-slate-100 outline-none transition-all pr-12 placeholder-gray-400 dark:placeholder-slate-500"
                   placeholder="********"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -107,12 +114,12 @@ const Login = () => {
           </form>
 
           <div className="relative z-10 text-center mt-6">
-            <span className="text-gray-500 text-sm">
+            <span className="text-gray-500 dark:text-slate-400 text-sm">
               {isLogin ? 'Belum punya akun? ' : 'Sudah punya akun? '}
             </span>
             <button
               onClick={() => setIsLogin(!isLogin)}
-              className="text-rose-500 font-semibold hover:underline"
+              className="text-rose-500 dark:text-rose-400 font-semibold hover:underline"
             >
               {isLogin ? 'Daftar di sini' : 'Masuk di sini'}
             </button>
