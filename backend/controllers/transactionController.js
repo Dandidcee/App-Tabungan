@@ -31,6 +31,38 @@ export const getBudgetTransactions = async (req, res) => {
   }
 };
 
+// All-time private budget/category transactions for history page
+export const getAllBudgetTransactions = async (req, res) => {
+  try {
+    const PrivateCategory = (await import('../models/PrivateCategory.js')).default;
+
+    // Get all transactions that are NOT tabungan_utama (gaji or category-based)
+    const transactions = await Transaction.find({
+      user: req.user._id,
+      fundSource: { $nin: ['tabungan_utama', null] }
+    }).populate('user', 'name email').sort({ createdAt: -1 });
+
+    // Get all categories to enrich transaction data with category names
+    const categories = await PrivateCategory.find({ user: req.user._id });
+    const categoryMap = {};
+    categories.forEach(c => { categoryMap[c._id.toString()] = c; });
+
+    const enriched = transactions.map(t => {
+      const catId = t.fundSource;
+      const cat = categoryMap[catId];
+      return {
+        ...t.toObject(),
+        categoryName: cat?.name || (t.fundSource === 'gaji' ? '💼 Saldo Gaji' : t.fundSource),
+        categoryIcon: cat?.icon || (t.fundSource === 'gaji' ? '💼' : '📁'),
+      };
+    });
+
+    res.json(enriched);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const createTransaction = async (req, res) => {
   try {
     const { amount, type, notes, budgetId, proofOfTransfer, fundSource, toCategory } = req.body;

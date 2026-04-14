@@ -2,196 +2,283 @@ import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useToast } from '../context/ToastContext';
 import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Modal } from '../components/ui/Modal';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, TrendingUp, TrendingDown, PlusCircle, Image as ImageIcon, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, PlusCircle, Image as ImageIcon, X, ArrowDownToLine, ArrowUpFromLine, Wallet } from 'lucide-react';
 
 const History = () => {
+  const [activeTab, setActiveTab] = useState('public'); // 'public' | 'budget'
+
+  // Tabungan Umum (public) state
   const [transactions, setTransactions] = useState([]);
-  const [budgets, setBudgets] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filterName, setFilterName] = useState('Semua');
+
+  // Budget Bulanan (private) state
+  const [budgetTransactions, setBudgetTransactions] = useState([]);
+  const [filterCategory, setFilterCategory] = useState('Semua');
+
   const [imageModal, setImageModal] = useState(null);
-  
-  // Form State
-  const [type, setType] = useState('deposit');
-  const [amount, setAmount] = useState('');
-  const [budgetId, setBudgetId] = useState('');
-  const [notes, setNotes] = useState('');
-  const [file, setFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const { showToast } = useToast();
 
-  const fetchData = async () => {
+  const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
+  const getImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    return `${getApiUrl()}${path}`;
+  };
+
+  const fetchPublic = async () => {
     try {
-      const [transRes, budgetRes] = await Promise.all([
-        api.get('/api/transactions'),
-        api.get('/api/budget')
-      ]);
-      setTransactions(transRes.data.reverse());
-      setBudgets(budgetRes.data);
+      const res = await api.get('/api/transactions');
+      setTransactions(res.data.reverse());
     } catch (err) {
       console.error(err);
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setUploading(true);
+  const fetchBudget = async () => {
+    setLoading(true);
     try {
-      let proofOfTransfer = '';
-      if (file) {
-        const formData = new FormData();
-        formData.append('proof', file);
-        const uploadRes = await api.post('/api/upload', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        proofOfTransfer = uploadRes.data.filePath;
-      }
-
-      await api.post('/api/transactions', {
-        amount: Number(amount),
-        type,
-        budgetId: budgetId || undefined,
-        notes,
-        proofOfTransfer
-      });
-
-      showToast('Transaksi berhasil dicatat!', 'success');
-      setIsModalOpen(false);
-      
-      // Reset Form
-      setAmount('');
-      setNotes('');
-      setFile(null);
-      setBudgetId('');
-      
-      fetchData();
+      const res = await api.get('/api/transactions/budget-all');
+      setBudgetTransactions(res.data);
     } catch (err) {
-      showToast(err.response?.data?.message || 'Gagal menyimpan transaksi', 'error');
+      showToast('Gagal memuat riwayat budget', 'error');
     } finally {
-      setUploading(false);
+      setLoading(false);
     }
   };
 
-  const [filterName, setFilterName] = useState('Semua');
+  useEffect(() => {
+    fetchPublic();
+  }, []);
 
-  const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
+  useEffect(() => {
+    if (activeTab === 'budget') fetchBudget();
+  }, [activeTab]);
 
-  // Safely build image URL - avoid double-prepending base URL
-  const getImageUrl = (path) => {
-    if (!path) return null;
-    if (path.startsWith('http')) return path;          // Already full URL
-    return `${getApiUrl()}${path}`;                     // Prepend base URL
+  // ── Public tab logic ──────────────────────────────────────────────
+  const uniqueNames = ['Semua', ...new Set(transactions.map(t => t.user?.name).filter(Boolean))];
+  const filteredPublic = filterName === 'Semua'
+    ? transactions
+    : transactions.filter(t => t.user?.name === filterName);
+
+  // ── Budget tab logic ──────────────────────────────────────────────
+  const uniqueCategories = ['Semua', ...new Set(budgetTransactions.map(t => t.categoryName).filter(Boolean))];
+  const filteredBudget = filterCategory === 'Semua'
+    ? budgetTransactions
+    : budgetTransactions.filter(t => t.categoryName === filterCategory);
+
+  const getBudgetIcon = (trx) => {
+    if (trx.fundSource === 'gaji') {
+      return trx.type === 'withdrawal'
+        ? <ArrowUpFromLine size={16} />
+        : <ArrowDownToLine size={16} />;
+    }
+    if (trx.type === 'income') return <ArrowDownToLine size={16} />;
+    if (trx.type === 'withdrawal') return <ArrowUpFromLine size={16} />;
+    return <Wallet size={16} />;
   };
 
-  const uniqueNames = ['Semua', ...new Set(transactions.map(t => t.user?.name))];
-  const filteredTransactions = filterName === 'Semua' 
-    ? transactions 
-    : transactions.filter(t => t.user?.name === filterName);
+  const getBudgetColor = (trx) => {
+    if (trx.type === 'income') return 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400';
+    if (trx.type === 'withdrawal') return 'bg-rose-100 dark:bg-rose-900/30 text-rose-500';
+    return 'bg-gray-100 dark:bg-slate-800 text-gray-500';
+  };
+
+  const getBudgetAmountColor = (trx) => {
+    if (trx.type === 'income') return 'text-indigo-500';
+    if (trx.type === 'withdrawal') return 'text-rose-500';
+    return 'text-gray-500';
+  };
+
+  const getBudgetLabel = (trx) => {
+    if (trx.fundSource === 'gaji' && trx.type === 'withdrawal') return 'Keluar dari Gaji';
+    if (trx.type === 'income') return `Masuk → ${trx.categoryIcon} ${trx.categoryName}`;
+    if (trx.type === 'withdrawal') return `Pakai dari ${trx.categoryIcon} ${trx.categoryName}`;
+    return trx.categoryName;
+  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20 md:pb-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-slate-100">Riwayat Transaksi 📜</h1>
-        
-        {/* Name Filter Pills - bigger tap target on mobile */}
-        <div className="flex flex-wrap gap-2">
-          {uniqueNames.map(name => (
-            <button
-              key={name}
-              onClick={() => setFilterName(name)}
-              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all min-h-[38px] ${
-                filterName === name 
-                  ? 'bg-rose-500 text-white shadow-md' 
-                  : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-pink-100 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-slate-700'
-              }`}
-            >
-              {name}
-            </button>
-          ))}
-        </div>
+      <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-slate-100">Riwayat Transaksi 📜</h1>
+
+      {/* ── Tab Switcher ── */}
+      <div className="flex gap-2 bg-gray-100 dark:bg-slate-800 p-1 rounded-2xl w-fit">
+        <button
+          onClick={() => setActiveTab('public')}
+          className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
+            activeTab === 'public'
+              ? 'bg-white dark:bg-slate-700 text-rose-500 shadow-sm'
+              : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'
+          }`}
+        >
+          🌟 Tabungan Umum
+        </button>
+        <button
+          onClick={() => setActiveTab('budget')}
+          className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
+            activeTab === 'budget'
+              ? 'bg-white dark:bg-slate-700 text-indigo-500 shadow-sm'
+              : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'
+          }`}
+        >
+          📂 Budget Bulanan
+        </button>
       </div>
 
-      <Card>
-        <div className="space-y-4">
-          {filteredTransactions.length === 0 && (
-            <p className="text-center text-gray-500 dark:text-slate-400 py-8">Belum ada transaksi sama sekali.</p>
-          )}
-          {filteredTransactions.map((trx) => (
-            <div key={trx._id} className="flex flex-row justify-between items-center p-3 sm:p-4 hover:bg-pink-50/50 dark:hover:bg-slate-800/50 rounded-2xl transition-colors border-b border-gray-50 dark:border-slate-800 last:border-0 gap-2 sm:gap-4">
-              <div className="flex items-center gap-3 w-2/3">
-                <div className={`p-2 sm:p-3 rounded-2xl flex-shrink-0 ${
-                  trx.type === 'deposit' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600'
-                  : trx.type === 'income' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-500'
-                  : 'bg-rose-100 dark:bg-rose-900/30 text-rose-600'
-                }`}>
-                  {trx.type === 'deposit' ? <TrendingUp size={18} />
-                  : trx.type === 'income' ? <PlusCircle size={18} />
-                  : <TrendingDown size={18} />}
+      {/* ── PUBLIC TAB ── */}
+      {activeTab === 'public' && (
+        <>
+          {/* Name Filter Pills */}
+          <div className="flex flex-wrap gap-2">
+            {uniqueNames.map(name => (
+              <button
+                key={name}
+                onClick={() => setFilterName(name)}
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all min-h-[38px] ${
+                  filterName === name
+                    ? 'bg-rose-500 text-white shadow-md'
+                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-pink-100 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-slate-700'
+                }`}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+
+          <Card>
+            <div className="space-y-1">
+              {filteredPublic.length === 0 && (
+                <p className="text-center text-gray-500 dark:text-slate-400 py-8">Belum ada transaksi sama sekali.</p>
+              )}
+              {filteredPublic.map((trx) => (
+                <div key={trx._id} className="flex flex-row justify-between items-center p-3 sm:p-4 hover:bg-pink-50/50 dark:hover:bg-slate-800/50 rounded-2xl transition-colors border-b border-gray-50 dark:border-slate-800 last:border-0 gap-2 sm:gap-4">
+                  <div className="flex items-center gap-3 w-2/3">
+                    <div className={`p-2 sm:p-3 rounded-2xl flex-shrink-0 ${
+                      trx.type === 'deposit' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600'
+                      : trx.type === 'income' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-500'
+                      : 'bg-rose-100 dark:bg-rose-900/30 text-rose-600'
+                    }`}>
+                      {trx.type === 'deposit' ? <TrendingUp size={18} />
+                      : trx.type === 'income' ? <PlusCircle size={18} />
+                      : <TrendingDown size={18} />}
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="font-bold text-gray-800 dark:text-slate-200 text-base truncate">{trx.user.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">{new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric', month:'short', year:'2-digit', hour:'2-digit', minute:'2-digit'})}</p>
+                      <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5 truncate">{trx.notes || '-'}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-end flex-shrink-0 w-1/3">
+                    <p className={`font-bold text-sm sm:text-base ${
+                      trx.type === 'deposit' ? 'text-emerald-500'
+                      : trx.type === 'income' ? 'text-blue-500'
+                      : 'text-rose-500'
+                    }`}>
+                      {trx.type === 'withdrawal' ? '− Rp' : '+ Rp'} {trx.amount.toLocaleString('id-ID')}
+                    </p>
+                    <p className="text-right text-[11px] text-gray-500 dark:text-slate-400 font-medium">
+                      {trx.type === 'deposit' ? 'Nabung' : trx.type === 'income' ? 'Pemasukan' : 'Pinjam'}
+                    </p>
+                    {trx.proofOfTransfer && (
+                      <button
+                        onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))}
+                        className="flex items-center gap-1 mt-1 text-xs text-blue-500 dark:text-blue-400 hover:text-blue-700 font-semibold bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full min-h-[30px] transition-colors"
+                      >
+                        <ImageIcon size={13} /> Lihat Bukti
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="overflow-hidden">
-                  <p className="font-bold text-gray-800 dark:text-slate-200 text-base truncate">{trx.user.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-slate-400">{new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric', month:'short', year:'2-digit', hour:'2-digit', minute:'2-digit'})}</p>
-                  <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5 truncate">{trx.notes || '-'}</p>
-                </div>
-              </div>
-              
-              <div className="flex flex-col items-end flex-shrink-0 w-1/3">
-                <p className={`font-bold text-sm sm:text-base ${
-                  trx.type === 'deposit' ? 'text-emerald-500'
-                  : trx.type === 'income' ? 'text-blue-500'
-                  : 'text-rose-500'
-                }`}>
-                  {trx.type === 'withdrawal' ? '− Rp' : '+ Rp'} {trx.amount.toLocaleString('id-ID')}
-                </p>
-                <p className="text-right text-[11px] text-gray-500 dark:text-slate-400 font-medium">
-                  {trx.type === 'deposit' ? 'Nabung' : trx.type === 'income' ? 'Pemasukan' : 'Pinjam'}
-                </p>
-                
-                {trx.proofOfTransfer && (
-                  <button 
-                    onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))}
-                    className="flex items-center gap-1 mt-1 text-xs text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-3 py-1.5 rounded-full min-h-[30px] transition-colors"
-                  >
-                    <ImageIcon size={13} /> Lihat Bukti
-                  </button>
-                )}
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </Card>
+          </Card>
+        </>
+      )}
 
+      {/* ── BUDGET TAB ── */}
+      {activeTab === 'budget' && (
+        <>
+          {/* Category Filter Pills */}
+          <div className="flex flex-wrap gap-2">
+            {uniqueCategories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setFilterCategory(cat)}
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all min-h-[38px] ${
+                  filterCategory === cat
+                    ? 'bg-indigo-500 text-white shadow-md'
+                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-indigo-100 dark:border-slate-700 hover:bg-indigo-50 dark:hover:bg-slate-700'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
 
-      {/* Image View Modal (No close on click outside for simplicity, just a big X) */}
+          <Card>
+            <div className="space-y-1">
+              {loading && (
+                <p className="text-center text-gray-400 dark:text-slate-500 py-8 animate-pulse">Memuat data...</p>
+              )}
+              {!loading && filteredBudget.length === 0 && (
+                <div className="text-center py-12">
+                  <span className="text-5xl">📂</span>
+                  <p className="mt-3 text-gray-500 dark:text-slate-400 font-semibold">Belum ada transaksi budget</p>
+                  <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">Coba lakukan "Sedot Gaji" atau "Pakai" dari kategori di Dashboard</p>
+                </div>
+              )}
+              {!loading && filteredBudget.map((trx) => (
+                <div key={trx._id} className="flex flex-row justify-between items-center p-3 sm:p-4 hover:bg-indigo-50/30 dark:hover:bg-slate-800/50 rounded-2xl transition-colors border-b border-gray-50 dark:border-slate-800 last:border-0 gap-2 sm:gap-4">
+                  <div className="flex items-center gap-3 w-2/3">
+                    <div className={`p-2 sm:p-3 rounded-2xl flex-shrink-0 ${getBudgetColor(trx)}`}>
+                      {getBudgetIcon(trx)}
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="font-bold text-gray-800 dark:text-slate-200 text-sm truncate">{getBudgetLabel(trx)}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">{new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric', month:'short', year:'2-digit', hour:'2-digit', minute:'2-digit'})}</p>
+                      {trx.notes && <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5 truncate">{trx.notes}</p>}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-end flex-shrink-0 w-1/3">
+                    <p className={`font-bold text-sm sm:text-base ${getBudgetAmountColor(trx)}`}>
+                      {trx.type === 'withdrawal' ? '− Rp' : '+ Rp'} {trx.amount.toLocaleString('id-ID')}
+                    </p>
+                    <p className="text-right text-[11px] text-gray-500 dark:text-slate-400 font-medium truncate max-w-[100px]">
+                      {trx.categoryIcon} {trx.categoryName}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </>
+      )}
+
+      {/* ── Image Modal ── */}
       <AnimatePresence>
         {imageModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }} 
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               className="relative max-w-3xl w-full max-h-[90vh] bg-white dark:bg-slate-900 rounded-xl overflow-hidden"
             >
-              <button 
-                onClick={() => setImageModal(null)} 
+              <button
+                onClick={() => setImageModal(null)}
                 className="absolute top-2 right-2 bg-rose-500 text-white rounded-full p-1 shadow-md hover:bg-rose-600 z-10"
               >
                 <X size={20} />
               </button>
-              <img 
-                src={imageModal} 
-                alt="Bukti Transfer" 
+              <img
+                src={imageModal}
+                alt="Bukti Transfer"
                 className="max-w-full max-h-[80vh] object-contain w-full"
                 onError={(e) => {
-                  e.currentTarget.src = '';
-                  e.currentTarget.alt = '❌ Gambar tidak ditemukan / gagal dimuat';
                   e.currentTarget.className = 'hidden';
                   e.currentTarget.nextSibling.classList.remove('hidden');
                 }}
