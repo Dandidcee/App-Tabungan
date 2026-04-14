@@ -50,6 +50,8 @@ const Dashboard = () => {
   const [categoryToDelete, setCategoryToDelete] = useState(null);
   // Recent transactions tab
   const [recentTab, setRecentTab] = useState('public');
+  // Source mode for deposit/income: 'external' (manual input) | 'internal' (deduct from balance)
+  const [sourceMode, setSourceMode] = useState('external');
 
   const { showToast } = useToast();
   const prevDataRef = useRef(null);
@@ -100,7 +102,8 @@ const Dashboard = () => {
     setType(txType);
     setFundSource(overrideSource);
     setToCategory(overrideToCat);
-    setAmount(''); // Reset nominal saat modal dibuka
+    setAmount('');
+    setSourceMode('external'); // default to external
     setIsModalOpen(true);
   };
 
@@ -136,12 +139,29 @@ const Dashboard = () => {
         proofOfTransfer = uploadRes.data.filePath;
       }
 
+      // For deposit/income in external mode:
+      // - fundSource remains as selected destination (tabungan_utama or gaji or category)
+      // - type stays 'income' to just add to balance without deducting from anywhere else
+      const finalFundSource = (type === 'deposit' || type === 'income')
+        ? (sourceMode === 'external'
+            ? (toCategory || fundSource)  // destination chosen by user
+            : fundSource)                 // internal: deduct from fundSource
+        : fundSource;
+
+      const finalType = (type === 'deposit' || type === 'income')
+        ? (sourceMode === 'internal'
+            ? 'allocation' // treat as allocation: deduct from source, add to destination
+            : type)        // external: just add (deposit or income)
+        : type;
+
+      // For external mode, send the destination as fundSource  
+      // For internal mode, it's handled as allocation (fundSource → toCategory)
       await api.post('/api/transactions', {
         amount: Number(amount),
-        type,
-        budgetId: (fundSource === 'tabungan_utama' && budgetId) ? budgetId : undefined,
-        fundSource,
-        toCategory,
+        type: finalType,
+        budgetId: (finalFundSource === 'tabungan_utama' && budgetId) ? budgetId : undefined,
+        fundSource: finalFundSource,
+        toCategory: sourceMode === 'internal' ? toCategory : undefined,
         notes,
         proofOfTransfer
       });
@@ -149,7 +169,7 @@ const Dashboard = () => {
       const msg = type === 'deposit' ? 'Berhasil nabung.' : type === 'income' ? 'Pemasukan dicatat!' : type === 'allocation' ? 'Alokasi berhasil disedot.' : 'Pinjaman dicatat.';
       showToast(msg, 'success');
       setIsModalOpen(false);
-      setAmount(''); setNotes(''); setBudgetId(''); setFundSource('tabungan_utama'); setToCategory(''); setFile(null); setIsSelectOpen(false);
+      setAmount(''); setNotes(''); setBudgetId(''); setFundSource('tabungan_utama'); setToCategory(''); setFile(null); setIsSelectOpen(false); setSourceMode('external');
       fetchData();
     } catch (err) {
       showToast(err.response?.data?.message || 'Gagal menyimpan transaksi', 'error');
@@ -528,54 +548,159 @@ const Dashboard = () => {
 
       {/* Transaction Modal */}
       <Modal isOpen={isModalOpen} onClose={() => !uploading && setIsModalOpen(false)} title={
-        type === 'deposit' ? 'Top-Up Saldo 💖' : type === 'income' ? 'Catat Pemasukan 🎉' : type === 'allocation' ? 'Sedot dari Gaji 💧' : 'Catat Pemakaian 💸'
+        type === 'deposit' ? 'Nabung 💖' : type === 'income' ? 'Catat Pemasukan 🎉' : type === 'allocation' ? 'Sedot dari Gaji 💧' : 'Catat Pemakaian 💸'
       }>
         <form onSubmit={handleTransactionSubmit} className="space-y-4 text-left">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-               {type === 'allocation' ? 'Tujuan Aliran Dana' : 'Pilih Sumber Dana / Tujuan'}
-            </label>
-            <div className="relative">
-              <div onClick={() => setIsSelectOpen(!isSelectOpen)} className={`w-full px-4 py-3 border rounded-xl flex justify-between items-center cursor-pointer ${type === 'allocation' ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800' : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700'}`}>
-                <span className="truncate font-medium text-gray-800 dark:text-slate-100">
-                  {type === 'allocation' ? (
-                     categories.find(c => c._id === toCategory)?.name || 'Pilih Amplop...'
-                  ) : fundSource === 'tabungan_utama' && budgetId ? budgets.find(b => b._id === budgetId)?.title 
-                   : fundSource === 'tabungan_utama' ? '🌟 Tabungan Bersama (Utama Publik)'
-                   : fundSource === 'gaji' ? '💼 Saldo Gaji (Pribadi)'
-                   : categories.find(c => c._id === fundSource)?.name || '...'}
-                </span>
-                <ChevronDown size={18} className="text-gray-400 dark:text-slate-500" />
+
+          {/* ── Source Mode Picker (only for deposit & income) ── */}
+          {(type === 'deposit' || type === 'income') && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Sumber Dana</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setSourceMode('external'); setFundSource('tabungan_utama'); setToCategory(''); }}
+                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all text-sm font-semibold ${
+                    sourceMode === 'external'
+                      ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
+                      : 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400'
+                  }`}
+                >
+                  <span className="text-2xl">💵</span>
+                  <span>Dari Luar</span>
+                  <span className="text-[10px] font-normal opacity-70 text-center">Uang masuk dari luar aplikasi</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setSourceMode('internal'); setFundSource('gaji'); setToCategory(''); }}
+                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all text-sm font-semibold ${
+                    sourceMode === 'internal'
+                      ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400'
+                      : 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400'
+                  }`}
+                >
+                  <span className="text-2xl">🔄</span>
+                  <span>Dari Internal</span>
+                  <span className="text-[10px] font-normal opacity-70 text-center">Pindahkan dari saldo di aplikasi</span>
+                </button>
               </div>
-              
-              {isSelectOpen && (
-                <div className="absolute z-50 w-full mt-2 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
-                  {type === 'allocation' ? (
-                     <div className="py-2">
+            </div>
+          )}
+
+          {/* ── Pilih Sumber (only for internal mode) ── */}
+          {(type === 'deposit' || type === 'income') && sourceMode === 'internal' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Pilih Sumber (Potong dari mana?)</label>
+              <div className="relative">
+                <div onClick={() => setIsSelectOpen(isSelectOpen === 'source' ? false : 'source')} className="w-full px-4 py-3 border border-indigo-100 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl flex justify-between items-center cursor-pointer">
+                  <span className="font-medium text-indigo-900 dark:text-indigo-300">
+                    {fundSource === 'gaji' ? '💼 Dompet Gaji'
+                      : fundSource === 'tabungan_utama' ? '🌟 Tabungan Bersama'
+                      : categories.find(c => c._id === fundSource)?.name || 'Pilih...'}
+                  </span>
+                  <ChevronDown size={16} className="text-indigo-400" />
+                </div>
+                {isSelectOpen === 'source' && (
+                  <div className="absolute z-50 w-full mt-2 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl shadow-2xl max-h-52 overflow-y-auto">
+                    <div onClick={() => { setFundSource('gaji'); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-emerald-700 dark:text-emerald-400 border-b border-gray-50 dark:border-slate-700">💼 Dompet Gaji (Rp {gajiBalance.toLocaleString('id-ID')})</div>
+                    <div onClick={() => { setFundSource('tabungan_utama'); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-indigo-700 dark:text-indigo-400 border-b border-gray-50 dark:border-slate-700">🌟 Tabungan Bersama (Rp {totalTabungan.toLocaleString('id-ID')})</div>
+                    {categories.map(c => (
+                      <div key={c._id} onClick={() => { setFundSource(c._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400 pl-8">{c.icon} {c.name} (Rp {getEnvelopeBalance(c._id).toLocaleString('id-ID')})</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── Pilih Tujuan (for both modes of deposit/income) ── */}
+          {(type === 'deposit' || type === 'income') && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+                {sourceMode === 'internal' ? 'Pilih Tujuan (Kemana uang pergi?)' : 'Pilih Tujuan'}
+              </label>
+              <div className="relative">
+                <div onClick={() => setIsSelectOpen(isSelectOpen === 'dest' ? false : 'dest')} className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 rounded-xl flex justify-between items-center cursor-pointer">
+                  <span className="font-medium text-gray-800 dark:text-slate-100 truncate">
+                    {sourceMode === 'internal'
+                      ? (categories.find(c => c._id === toCategory)?.name || 'Pilih amplop tujuan...')
+                      : (fundSource === 'tabungan_utama' ? '🌟 Tabungan Bersama (Utama)'
+                          : fundSource === 'gaji' ? '💼 Dompet Gaji'
+                          : categories.find(c => c._id === fundSource)?.name || 'Pilih tujuan...')}
+                  </span>
+                  <ChevronDown size={16} className="text-gray-400" />
+                </div>
+                {isSelectOpen === 'dest' && (
+                  <div className="absolute z-50 w-full mt-2 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl shadow-2xl max-h-52 overflow-y-auto">
+                    {sourceMode === 'internal' ? (
+                      // Internal: only show categories as destination
+                      categories.length === 0
+                        ? <p className="text-center text-sm text-gray-400 py-4">Belum ada kategori amplop</p>
+                        : categories.map(c => (
+                            <div key={c._id} onClick={() => { setToCategory(c._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400">{c.icon} {c.name}</div>
+                          ))
+                    ) : (
+                      // External: can go to tabungan utama, gaji, or category
+                      <>
+                        <div onClick={() => { setFundSource('tabungan_utama'); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer font-bold text-emerald-600 dark:text-emerald-400 border-b border-gray-50 dark:border-slate-700">🌟 Tabungan Bersama (Utama)</div>
+                        <div onClick={() => { setFundSource('gaji'); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer font-bold text-emerald-700 dark:text-emerald-300 border-b border-gray-50 dark:border-slate-700">💼 Dompet Gaji</div>
+                        {categories.map(c => (
+                          <div key={c._id} onClick={() => { setFundSource(c._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400 pl-8">{c.icon} {c.name}</div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── Original flow for allocation & withdrawal ── */}
+          {(type === 'allocation' || type === 'withdrawal') && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+                {type === 'allocation' ? 'Tujuan Aliran Dana' : 'Pilih Sumber Dana / Tujuan'}
+              </label>
+              <div className="relative">
+                <div onClick={() => setIsSelectOpen(isSelectOpen === 'main' ? false : 'main')} className={`w-full px-4 py-3 border rounded-xl flex justify-between items-center cursor-pointer ${type === 'allocation' ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800' : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700'}`}>
+                  <span className="truncate font-medium text-gray-800 dark:text-slate-100">
+                    {type === 'allocation' ? (
+                      categories.find(c => c._id === toCategory)?.name || 'Pilih Amplop...'
+                    ) : fundSource === 'tabungan_utama' && budgetId ? budgets.find(b => b._id === budgetId)?.title
+                     : fundSource === 'tabungan_utama' ? '🌟 Tabungan Bersama (Utama Publik)'
+                     : fundSource === 'gaji' ? '💼 Saldo Gaji (Pribadi)'
+                     : categories.find(c => c._id === fundSource)?.name || '...'}
+                  </span>
+                  <ChevronDown size={18} className="text-gray-400 dark:text-slate-500" />
+                </div>
+                {isSelectOpen === 'main' && (
+                  <div className="absolute z-50 w-full mt-2 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
+                    {type === 'allocation' ? (
+                      <div className="py-2">
                         <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-1">Pilih Amplop Penerima</div>
                         {categories.map(c => (
-                           <div key={c._id} onClick={() => { setToCategory(c._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-indigo-700 dark:text-indigo-400 font-semibold">{c.icon} {c.name}</div>
+                          <div key={c._id} onClick={() => { setToCategory(c._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-indigo-700 dark:text-indigo-400 font-semibold">{c.icon} {c.name}</div>
                         ))}
-                     </div>
-                  ) : (
-                     <>
+                      </div>
+                    ) : (
+                      <>
                         <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Publik (Dilihat Bersama)</div>
                         <div onClick={() => { setFundSource('tabungan_utama'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-emerald-600 dark:text-emerald-400 font-bold transition-colors">🌟 Tabungan Bersama (Utama)</div>
                         {budgets.map(b => (
-                           <div key={b._id} onClick={() => { setFundSource('tabungan_utama'); setBudgetId(b._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-rose-50 dark:hover:bg-rose-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-gray-700 dark:text-slate-300 pl-8 font-medium truncate">{b.title}</div>
+                          <div key={b._id} onClick={() => { setFundSource('tabungan_utama'); setBudgetId(b._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-rose-50 dark:hover:bg-rose-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-gray-700 dark:text-slate-300 pl-8 font-medium truncate">{b.title}</div>
                         ))}
- 
                         <div className="text-xs font-bold text-gray-400 dark:text-slate-500 py-2 uppercase tracking-wider px-4 bg-gray-50 dark:bg-slate-900/50">Private (Dompet Anda)</div>
                         <div onClick={() => { setFundSource('gaji'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 cursor-pointer border-b border-emerald-100 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50/30 dark:bg-emerald-900/20">💼 Dompet Gaji Utama</div>
                         {categories.map(c => (
-                           <div key={c._id} onClick={() => { setFundSource(c._id); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-indigo-700 dark:text-indigo-400 font-semibold truncate pl-8">{c.icon} {c.name}</div>
+                          <div key={c._id} onClick={() => { setFundSource(c._id); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-indigo-700 dark:text-indigo-400 font-semibold truncate pl-8">{c.icon} {c.name}</div>
                         ))}
-                     </>
-                  )}
-                </div>
-              )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
  
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nominal (Rp)</label>
@@ -594,13 +719,18 @@ const Dashboard = () => {
           </div>
  
           {type !== 'allocation' && (
-             <div>
-               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Bukti Gambar (Opsional)</label>
-               <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 text-sm dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rose-50 dark:file:bg-rose-900/30 file:text-rose-600 dark:file:text-rose-400"/>
-             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Bukti Gambar (Opsional)</label>
+              <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 text-sm dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rose-50 dark:file:bg-rose-900/30 file:text-rose-600 dark:file:text-rose-400"/>
+            </div>
           )}
 
-          <Button type="submit" variant={type === 'withdrawal' ? 'outline' : 'primary'} className={`w-full mt-6 py-3 text-lg rounded-xl shadow-md ${type === 'allocation' ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : ''}`} disabled={type === 'allocation' && !toCategory}>
+          <Button
+            type="submit"
+            variant={type === 'withdrawal' ? 'outline' : 'primary'}
+            className={`w-full mt-6 py-3 text-lg rounded-xl shadow-md ${type === 'allocation' ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : ''}`}
+            disabled={(type === 'allocation' && !toCategory) || (sourceMode === 'internal' && (type === 'deposit' || type === 'income') && !toCategory)}
+          >
             {uploading ? 'Menyimpan...' : type === 'allocation' ? 'Transfer Saldo' : 'Konfirmasi Transaksi'}
           </Button>
         </form>
