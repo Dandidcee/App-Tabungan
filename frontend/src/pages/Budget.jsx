@@ -51,7 +51,13 @@ const Budget = () => {
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20 md:pb-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Target Tabungan Nikah 💖</h1>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
+        <button 
+          onClick={() => setIsModalOpen(true)} 
+          className="md:hidden w-10 h-10 bg-rose-500 rounded-full text-white flex shrink-0 items-center justify-center shadow-md hover:bg-rose-600 transition-colors"
+        >
+          <Plus size={20} />
+        </button>
+        <Button onClick={() => setIsModalOpen(true)} className="hidden md:flex items-center gap-2">
           <Plus size={18} /> Buat Target
         </Button>
       </div>

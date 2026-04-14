@@ -12,6 +12,8 @@ const Dashboard = () => {
   const { user } = useContext(AuthContext);
   const [budgets, setBudgets] = useState([]);
   const [transactions, setTransactions] = useState([]);
+  const [totalTabungan, setTotalTabungan] = useState(0);
+  const [uangKeluar, setUangKeluar] = useState(0);
   
   // Transaction Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,8 +32,15 @@ const Dashboard = () => {
           api.get('/api/budget'),
           api.get('/api/transactions'),
         ]);
+        const allTx = transactionsRes.data;
+        
+        const unallocatedDeposits = allTx.filter(t => t.type === 'deposit' && !t.budgetId).reduce((acc, curr) => acc + curr.amount, 0);
+        const unallocatedWithdrawals = allTx.filter(t => t.type === 'withdrawal' && !t.budgetId).reduce((acc, curr) => acc + curr.amount, 0);
+        setTotalTabungan(unallocatedDeposits - unallocatedWithdrawals);
+        setUangKeluar(unallocatedWithdrawals);
+
         setBudgets(budgetsRes.data);
-        setTransactions(transactionsRes.data.reverse().slice(0, 5)); // Last 5 transactions
+        setTransactions(allTx.reverse().slice(0, 5)); // Last 5 transactions
     } catch (error) {
         console.error(error);
     }
@@ -41,8 +50,7 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  const totalTabungan = budgets.reduce((acc, curr) => acc + curr.currentAmount, 0);
-  const uangKeluar = transactions.filter(t => t.type === 'withdrawal').reduce((acc, curr) => acc + curr.amount, 0);
+
 
   const openTransactionModal = (txType) => {
     setType(txType);
