@@ -219,7 +219,7 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        <Card className="col-span-1 md:col-span-2 bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600 text-white border-none relative overflow-hidden shadow-pink-200 shadow-xl">
+        <Card className="col-span-1 md:col-span-2 bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600 text-white border-none relative overflow-hidden shadow-pink-200 dark:shadow-none shadow-xl">
           <div className="relative z-10 flex flex-col justify-between h-full">
             <div>
               <p className="text-pink-100 font-medium opacity-90 text-sm tracking-wide uppercase">Tabungan Bersama</p>
