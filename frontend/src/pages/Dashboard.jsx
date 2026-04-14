@@ -417,10 +417,10 @@ const Dashboard = () => {
       </Modal>
 
       {/* Add New Category Custom (Envelope) Modal */}
-      <Modal isOpen={isCategoryModalOpen} onClose={() => setIsCategoryModalOpen(false)} title="Cetakan Amplop Baru ✉️">
+      <Modal isOpen={isCategoryModalOpen} onClose={() => setIsCategoryModalOpen(false)} title="Buat Budget Baru ✉️">
          <form onSubmit={handleCategorySubmit} className="space-y-4 text-left">
            <div>
-             <label className="block text-sm font-bold text-gray-700 mb-1">Nama Kategori (Amplop)</label>
+             <label className="block text-sm font-bold text-gray-700 mb-1">Nama Kategori</label>
              <input type="text" required value={categoryName} onChange={(e) => setCategoryName(e.target.value)} className="w-full px-4 py-3 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-300 outline-none bg-indigo-50/30 text-indigo-900 font-semibold" placeholder="Contoh: Belanja Bulanan" />
            </div>
            <div>
@@ -434,7 +434,7 @@ const Dashboard = () => {
              </div>
            </div>
            <Button type="submit" variant="primary" className="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-lg rounded-xl shadow-[0_8px_20px_rgb(79,70,229,0.2)]" disabled={!categoryName}>
-             Cetak Kartu {categoryIcon}
+             Tambah Kategori {categoryIcon}
            </Button>
          </form>
       </Modal>
