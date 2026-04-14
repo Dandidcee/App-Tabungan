@@ -660,7 +660,7 @@ const Dashboard = () => {
                           : 'Pilih tujuan...')
                       : (fundSource === 'tabungan_utama' && budgetId
                           ? `🎯 ${budgets.find(b => b._id === budgetId)?.title || 'Target'}`
-                          : fundSource === 'tabungan_utama' ? '🌟 Tabungan Bersama (Utama)'
+                          : fundSource === 'tabungan_utama' ? '🌟 Tabungan Bersama'
                           : fundSource === 'gaji' ? '💼 Dompet Gaji'
                           : categories.find(c => c._id === fundSource)?.name || 'Pilih tujuan...')}
                   </span>
@@ -673,7 +673,7 @@ const Dashboard = () => {
                       <>
                         {categories.length > 0 && (
                           <>
-                            <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Amplop Kategori</div>
+                            <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Budget Bulanan</div>
                             {categories.map(c => (
                               <div key={c._id} onClick={() => { setToCategory(c._id); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400 border-b border-gray-50 dark:border-slate-700">{c.icon} {c.name}</div>
                             ))}
@@ -694,8 +694,7 @@ const Dashboard = () => {
                     ) : (
                       // External mode: tabungan utama, gaji, categories, + budget targets
                       <>
-                        <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Umum</div>
-                        <div onClick={() => { setFundSource('tabungan_utama'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer font-bold text-emerald-600 dark:text-emerald-400 border-b border-gray-50 dark:border-slate-700">🌟 Tabungan Bersama (Utama)</div>
+                        <div onClick={() => { setFundSource('tabungan_utama'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer font-bold text-emerald-600 dark:text-emerald-400 border-b border-gray-50 dark:border-slate-700">🌟 Tabungan Bersama</div>
                         <div onClick={() => { setFundSource('gaji'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer font-bold text-emerald-700 dark:text-emerald-300 border-b border-gray-50 dark:border-slate-700">💼 Dompet Gaji</div>
                         {budgets.length > 0 && (
                           <>
@@ -707,7 +706,7 @@ const Dashboard = () => {
                         )}
                         {categories.length > 0 && (
                           <>
-                            <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Amplop Kategori</div>
+                            <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Budget Bulanan</div>
                             {categories.map(c => (
                               <div key={c._id} onClick={() => { setFundSource(c._id); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400 pl-8">{c.icon} {c.name}</div>
                             ))}
@@ -733,8 +732,8 @@ const Dashboard = () => {
                     {type === 'allocation' ? (
                       categories.find(c => c._id === toCategory)?.name || 'Pilih Amplop...'
                     ) : fundSource === 'tabungan_utama' && budgetId ? budgets.find(b => b._id === budgetId)?.title
-                     : fundSource === 'tabungan_utama' ? '🌟 Tabungan Bersama (Utama Publik)'
-                     : fundSource === 'gaji' ? '💼 Saldo Gaji (Pribadi)'
+                     : fundSource === 'tabungan_utama' ? '🌟 Tabungan Bersama'
+                     : fundSource === 'gaji' ? '💼 Dompet Gaji'
                      : categories.find(c => c._id === fundSource)?.name || '...'}
                   </span>
                   <ChevronDown size={18} className="text-gray-400 dark:text-slate-500" />
@@ -750,10 +749,8 @@ const Dashboard = () => {
                       </div>
                     ) : (
                       <>
-                        <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Publik (Dilihat Bersama)</div>
-                        <div onClick={() => { setFundSource('tabungan_utama'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-emerald-600 dark:text-emerald-400 font-bold transition-colors">🌟 Tabungan Bersama (Utama)</div>
-                        <div className="text-xs font-bold text-gray-400 dark:text-slate-500 py-2 uppercase tracking-wider px-4 bg-gray-50 dark:bg-slate-900/50">Private (Dompet Anda)</div>
-                        <div onClick={() => { setFundSource('gaji'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 cursor-pointer border-b border-emerald-100 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50/30 dark:bg-emerald-900/20">💼 Dompet Gaji Utama</div>
+                        <div onClick={() => { setFundSource('tabungan_utama'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-emerald-600 dark:text-emerald-400 font-bold transition-colors">🌟 Tabungan Bersama</div>
+                        <div onClick={() => { setFundSource('gaji'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 cursor-pointer border-b border-emerald-100 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50/30 dark:bg-emerald-900/20">💼 Dompet Gaji</div>
                         {categories.map(c => (
                           <div key={c._id} onClick={() => { setFundSource(c._id); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-indigo-700 dark:text-indigo-400 font-semibold truncate pl-8">{c.icon} {c.name}</div>
                         ))}
