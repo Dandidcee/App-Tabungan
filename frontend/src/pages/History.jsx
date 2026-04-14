@@ -151,11 +151,7 @@ const History = () => {
             <div className="space-y-1">
               {filteredPublic.length === 0 && (
                 <div className="text-center py-16 flex flex-col items-center gap-3">
-                  <div className="w-24 h-24 rounded-full bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-rose-300 dark:text-rose-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                  </div>
+                  <span className="text-7xl">📋</span>
                   <p className="font-bold text-gray-600 dark:text-slate-300 text-lg">Belum ada transaksi</p>
                   <p className="text-sm text-gray-400 dark:text-slate-500 max-w-xs">Mulai nabung bareng untuk melihat riwayat transaksi di sini ✨</p>
                 </div>
@@ -233,11 +229,7 @@ const History = () => {
               )}
               {!loading && filteredBudget.length === 0 && (
                 <div className="text-center py-16 flex flex-col items-center gap-3">
-                  <div className="w-24 h-24 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-indigo-300 dark:text-indigo-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                    </svg>
-                  </div>
+                  <span className="text-7xl">📂</span>
                   <p className="font-bold text-gray-600 dark:text-slate-300 text-lg">Belum ada transaksi budget</p>
                   <p className="text-sm text-gray-400 dark:text-slate-500 max-w-xs">Coba lakukan "Sedot Gaji" atau "Pakai" dari kategori amplop di Dashboard 📂</p>
                 </div>

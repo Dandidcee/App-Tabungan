@@ -48,6 +48,8 @@ const Dashboard = () => {
 
   // Category Deletion State
   const [categoryToDelete, setCategoryToDelete] = useState(null);
+  // Recent transactions tab
+  const [recentTab, setRecentTab] = useState('public');
 
   const { showToast } = useToast();
   const prevDataRef = useRef(null);
@@ -358,39 +360,105 @@ const Dashboard = () => {
              })}
           </div>
         </div>
-      </div>
-
-      <div className="bg-gradient-to-br from-rose-100 via-pink-50 to-pink-200 dark:from-slate-800 dark:via-slate-900 dark:to-rose-950/40 backdrop-blur-xl rounded-3xl shadow-lg border-2 border-white/80 dark:border-slate-800 overflow-hidden relative transition-colors duration-300">
+          <div className="bg-gradient-to-br from-rose-100 via-pink-50 to-pink-200 dark:from-slate-800 dark:via-slate-900 dark:to-rose-950/40 backdrop-blur-xl rounded-3xl shadow-lg border-2 border-white/80 dark:border-slate-800 overflow-hidden relative transition-colors duration-300">
         <div className="absolute top-0 right-0 w-64 h-64 bg-pink-300/30 dark:bg-rose-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-        <div className="bg-white/50 dark:bg-slate-900/60 backdrop-blur-md border-b border-white/60 dark:border-slate-800 px-5 py-4 flex items-center justify-between relative z-10">
+        <div className="bg-white/50 dark:bg-slate-900/60 backdrop-blur-md border-b border-white/60 dark:border-slate-800 px-5 py-4 flex items-center justify-between relative z-10 flex-wrap gap-2">
           <h3 className="text-lg font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
-            <Activity className="text-rose-400" size={20} /> Transaksi Publik Terakhir
+            <Activity className="text-rose-400" size={20} /> Riwayat Terbaru
           </h3>
-          <button onClick={() => navigate('/history')} className="flex items-center gap-1 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 bg-white/60 dark:bg-slate-800 border border-rose-100 dark:border-slate-700 px-3 py-1.5 rounded-full transition-all hover:shadow-sm">
-            Lihat Semua <ArrowRight size={13} />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Tab switcher */}
+            <div className="flex gap-1 bg-gray-100 dark:bg-slate-800 p-0.5 rounded-xl">
+              <button
+                onClick={() => setRecentTab('public')}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  recentTab === 'public'
+                    ? 'bg-white dark:bg-slate-700 text-rose-500 shadow-sm'
+                    : 'text-gray-500 dark:text-slate-400'
+                }`}
+              >
+                🌟 Umum
+              </button>
+              <button
+                onClick={() => setRecentTab('budget')}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  recentTab === 'budget'
+                    ? 'bg-white dark:bg-slate-700 text-indigo-500 shadow-sm'
+                    : 'text-gray-500 dark:text-slate-400'
+                }`}
+              >
+                📂 Budget
+              </button>
+            </div>
+            <button onClick={() => navigate('/history')} className="flex items-center gap-1 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 bg-white/60 dark:bg-slate-800 border border-rose-100 dark:border-slate-700 px-3 py-1.5 rounded-full transition-all hover:shadow-sm">
+              Lihat Semua <ArrowRight size={13} />
+            </button>
+          </div>
         </div>
 
         <div className="px-5 py-2 relative z-10">
-          {transactions.length === 0 && (
-             <p className="text-center text-gray-500 text-sm py-8">Belum ada transaksi publik.</p>
+          {/* PUBLIC TAB */}
+          {recentTab === 'public' && (
+            <>
+              {transactions.length === 0 && (
+                <div className="text-center py-10 flex flex-col items-center gap-2">
+                  <span className="text-6xl">📋</span>
+                  <p className="font-bold text-gray-500 dark:text-slate-400">Belum ada transaksi</p>
+                  <p className="text-xs text-gray-400 dark:text-slate-500">Mulai nabung untuk melihat riwayat ✨</p>
+                </div>
+              )}
+              {transactions.map((trx) => (
+                <div key={trx._id} className="flex items-center gap-3 py-3 px-1 border-b border-rose-50/50 dark:border-slate-800/50 last:border-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors rounded-xl mx-[-4px] px-2">
+                  <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border border-white dark:border-slate-700 ${trx.type === 'deposit' ? 'bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-900/30 dark:to-emerald-800/30 text-emerald-600' : trx.type === 'income' ? 'bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/30 text-blue-500' : 'bg-gradient-to-br from-rose-100 to-rose-50 dark:from-rose-900/30 dark:to-rose-800/30 text-rose-500'}`}>
+                    {trx.type === 'deposit' ? <ArrowDownToLine size={15} /> : trx.type === 'income' ? <PlusCircle size={15} /> : <ArrowUpFromLine size={15} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-800 dark:text-slate-200 text-sm truncate">{trx.user.name} <span className="ml-1.5 text-[11px] font-bold uppercase">{trx.type}</span></p>
+                    <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-1">{new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric', month:'short'})} {trx.notes && `• ${trx.notes}`}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className={`font-extrabold text-sm ${trx.type === 'withdrawal' ? 'text-rose-500' : 'text-emerald-500'}`}>{trx.type === 'withdrawal' ? '−' : '+'} Rp {trx.amount.toLocaleString('id-ID')}</p>
+                    {trx.proofOfTransfer && <button onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))} className="mt-1 flex items-center justify-end gap-1 w-full text-[10px] text-gray-400 dark:text-slate-500"><ImageIcon size={10} /> bukti</button>}
+                  </div>
+                </div>
+              ))}
+            </>
           )}
-          {transactions.map((trx) => (
-            <div key={trx._id} className="flex items-center gap-3 py-3 px-1 border-b border-rose-50/50 dark:border-slate-800/50 last:border-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors rounded-xl mx-[-4px] px-2">
-               <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border border-white dark:border-slate-700 ${trx.type === 'deposit' ? 'bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-900/30 dark:to-emerald-800/30 text-emerald-600' : trx.type === 'income' ? 'bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/30 text-blue-500' : 'bg-gradient-to-br from-rose-100 to-rose-50 dark:from-rose-900/30 dark:to-rose-800/30 text-rose-500'}`}>
-                  {trx.type === 'deposit' ? <ArrowDownToLine size={15} /> : trx.type === 'income' ? <PlusCircle size={15} /> : <ArrowUpFromLine size={15} />}
-               </div>
-               <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-800 dark:text-slate-200 text-sm truncate">{trx.user.name} <span className="ml-1.5 text-[11px] font-bold uppercase">{trx.type}</span></p>
-                  <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-1">{new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric', month:'short'})} {trx.notes && `• ${trx.notes}`}</p>
-               </div>
-               <div className="text-right flex-shrink-0">
-                  <p className={`font-extrabold text-sm ${trx.type === 'withdrawal' ? 'text-rose-500' : 'text-emerald-500'}`}>{trx.type === 'withdrawal' ? '−' : '+'} Rp {trx.amount.toLocaleString('id-ID')}</p>
-                  {trx.proofOfTransfer && <button onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))} className="mt-1 flex items-center justify-end gap-1 w-full text-[10px] text-gray-400 dark:text-slate-500"><ImageIcon size={10} /> bukti</button>}
-               </div>
-            </div>
-          ))}
+
+          {/* BUDGET TAB */}
+          {recentTab === 'budget' && (
+            <>
+              {budgetTransactions.length === 0 && (
+                <div className="text-center py-10 flex flex-col items-center gap-2">
+                  <span className="text-6xl">📂</span>
+                  <p className="font-bold text-gray-500 dark:text-slate-400">Belum ada transaksi budget</p>
+                  <p className="text-xs text-gray-400 dark:text-slate-500">Coba sedot gaji atau pakai dari amplop 🗂️</p>
+                </div>
+              )}
+              {budgetTransactions.slice(0, 5).map((trx) => (
+                <div key={trx._id} className="flex items-center gap-3 py-3 px-1 border-b border-indigo-50/50 dark:border-slate-800/50 last:border-0 hover:bg-indigo-50/30 dark:hover:bg-slate-800/40 transition-colors rounded-xl mx-[-4px] px-2">
+                  <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border border-white dark:border-slate-700 ${
+                    trx.type === 'income' ? 'bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-900/30 dark:to-indigo-800/30 text-indigo-500'
+                    : 'bg-gradient-to-br from-rose-100 to-rose-50 dark:from-rose-900/30 dark:to-rose-800/30 text-rose-500'
+                  }`}>
+                    {trx.type === 'income' ? <ArrowDownToLine size={15} /> : <ArrowUpFromLine size={15} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-800 dark:text-slate-200 text-sm truncate">
+                      {trx.type === 'income' ? '↓ Masuk' : '↑ Keluar'} {trx.notes ? `• ${trx.notes}` : ''}
+                    </p>
+                    <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-1">{new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric', month:'short'})}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className={`font-extrabold text-sm ${trx.type === 'withdrawal' ? 'text-rose-500' : 'text-indigo-500'}`}>{trx.type === 'withdrawal' ? '−' : '+'} Rp {trx.amount.toLocaleString('id-ID')}</p>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
         </div>
+      </div>
+
       </div>
 
       <AnimatePresence>
