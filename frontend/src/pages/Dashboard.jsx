@@ -277,9 +277,9 @@ const Dashboard = () => {
       </div>
 
       {/* AUTO BUDGETING DASHBOARD */}
-      <div className="bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-200/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-        <div className="bg-white/40 backdrop-blur-md border-b border-white/60 px-5 py-4 flex items-center justify-between relative z-10">
+      <div className="bg-gradient-to-br from-indigo-100 via-purple-50 to-purple-200 backdrop-blur-xl rounded-3xl shadow-lg border-2 border-white/80 overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-300/30 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+        <div className="bg-white/50 backdrop-blur-md border-b border-white/60 px-5 py-4 flex items-center justify-between relative z-10">
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
             <PieChartIcon className="text-indigo-500" size={20} /> Auto Budgeting Bulanan
           </h3>
@@ -345,9 +345,9 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-rose-50/40 via-white to-pink-50/40 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-pink-200/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-        <div className="bg-white/40 backdrop-blur-md border-b border-white/60 px-5 py-4 flex items-center justify-between relative z-10">
+      <div className="bg-gradient-to-br from-rose-100 via-pink-50 to-pink-200 backdrop-blur-xl rounded-3xl shadow-lg border-2 border-white/80 overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-pink-300/30 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+        <div className="bg-white/50 backdrop-blur-md border-b border-white/60 px-5 py-4 flex items-center justify-between relative z-10">
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
             <Activity className="text-rose-400" size={20} /> Transaksi Publik Terakhir
           </h3>
