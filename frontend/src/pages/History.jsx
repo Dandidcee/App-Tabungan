@@ -1,0 +1,236 @@
+import { useEffect, useState } from 'react';
+import api from '../services/api';
+import { useToast } from '../context/ToastContext';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Modal } from '../components/ui/Modal';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, TrendingUp, TrendingDown, Image as ImageIcon, X } from 'lucide-react';
+
+const History = () => {
+  const [transactions, setTransactions] = useState([]);
+  const [budgets, setBudgets] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [imageModal, setImageModal] = useState(null);
+  
+  // Form State
+  const [type, setType] = useState('deposit');
+  const [amount, setAmount] = useState('');
+  const [budgetId, setBudgetId] = useState('');
+  const [notes, setNotes] = useState('');
+  const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
+  const { showToast } = useToast();
+
+  const fetchData = async () => {
+    try {
+      const [transRes, budgetRes] = await Promise.all([
+        api.get('/api/transactions'),
+        api.get('/api/budget')
+      ]);
+      setTransactions(transRes.data.reverse());
+      setBudgets(budgetRes.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setUploading(true);
+    try {
+      let proofOfTransfer = '';
+      if (file) {
+        const formData = new FormData();
+        formData.append('proof', file);
+        const uploadRes = await api.post('/api/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        proofOfTransfer = uploadRes.data.filePath;
+      }
+
+      await api.post('/api/transactions', {
+        amount: Number(amount),
+        type,
+        budgetId: budgetId || undefined,
+        notes,
+        proofOfTransfer
+      });
+
+      showToast('Transaksi berhasil dicatat!', 'success');
+      setIsModalOpen(false);
+      
+      // Reset Form
+      setAmount('');
+      setNotes('');
+      setFile(null);
+      setBudgetId('');
+      
+      fetchData();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Gagal menyimpan transaksi', 'error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-gray-800">Riwayat Transaksi 📜</h1>
+        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
+          <Plus size={18} /> Catat Transaksi
+        </Button>
+      </div>
+
+      <Card>
+        <div className="space-y-4">
+          {transactions.length === 0 && (
+            <p className="text-center text-gray-500 py-8">Belum ada transaksi sama sekali.</p>
+          )}
+          {transactions.map((trx) => (
+            <div key={trx._id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 hover:bg-pink-50/50 rounded-2xl transition-colors border-b border-gray-50 last:border-0 gap-4">
+              <div className="flex items-center gap-4">
+                <div className={`p-4 rounded-2xl ${trx.type === 'deposit' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                  {trx.type === 'deposit' ? <TrendingUp size={24} /> : <TrendingDown size={24} />}
+                </div>
+                <div>
+                  <p className="font-bold text-gray-800 text-lg">{trx.user.name}</p>
+                  <p className="text-sm text-gray-500">{new Date(trx.createdAt).toLocaleString('id-ID')}</p>
+                  <p className="text-gray-600 mt-1">{trx.notes || '-'}</p>
+                </div>
+              </div>
+              
+              <div className="flex flex-col items-end w-full md:w-auto gap-2">
+                <span className={`font-bold text-xl ${trx.type === 'deposit' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  {trx.type === 'deposit' ? '+' : '-'} Rp {trx.amount.toLocaleString('id-ID')}
+                </span>
+                
+                {trx.proofOfTransfer && (
+                  <button 
+                    onClick={() => setImageModal(`${getApiUrl()}${trx.proofOfTransfer}`)}
+                    className="flex items-center gap-1 text-sm text-blue-500 hover:text-blue-700 font-medium bg-blue-50 px-3 py-1 rounded-full"
+                  >
+                    <ImageIcon size={14} /> Lihat Bukti
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Transaction Entry Modal */}
+      <Modal isOpen={isModalOpen} onClose={() => !uploading && setIsModalOpen(false)} title="Catat Transaksi">
+        <form onSubmit={handleSubmit} className="space-y-4 text-left">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Transaksi</label>
+            <div className="flex gap-2">
+              <button 
+                type="button" 
+                onClick={() => setType('deposit')}
+                className={`flex-1 py-2 rounded-xl border ${type === 'deposit' ? 'bg-emerald-100 border-emerald-500 text-emerald-700 font-bold' : 'bg-gray-50 text-gray-500 border-gray-200'}`}
+              >
+                Menabung
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setType('withdrawal')}
+                className={`flex-1 py-2 rounded-xl border ${type === 'withdrawal' ? 'bg-rose-100 border-rose-500 text-rose-700 font-bold' : 'bg-gray-50 text-gray-500 border-gray-200'}`}
+              >
+                Menarik
+              </button>
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nominal (Rp)</label>
+            <input
+              type="number"
+              required
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-rose-200 outline-none"
+              placeholder="100000"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Pilih Target (Opsional)</label>
+            <select
+              value={budgetId}
+              onChange={(e) => setBudgetId(e.target.value)}
+              className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-rose-200 outline-none bg-white"
+            >
+              <option value="">-- Tidak dikaitkan dengan target --</option>
+              {budgets.map(b => (
+                <option key={b._id} value={b._id}>{b.title}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Catatan</label>
+            <input
+              type="text"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-rose-200 outline-none"
+              placeholder="Uang jajan tambahan..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Bukti Transfer (Opsional)</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
+              className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-rose-200 outline-none text-sm"
+            />
+          </div>
+
+          <Button type="submit" className="w-full mt-4" disabled={uploading}>
+            {uploading ? 'Menyimpan...' : 'Simpan Transaksi'}
+          </Button>
+        </form>
+      </Modal>
+
+      {/* Image View Modal (No close on click outside for simplicity, just a big X) */}
+      <AnimatePresence>
+        {imageModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-w-3xl max-h-[90vh] bg-white rounded-xl overflow-hidden"
+            >
+              <button 
+                onClick={() => setImageModal(null)} 
+                className="absolute top-2 right-2 bg-rose-500 text-white rounded-full p-1 shadow-md hover:bg-rose-600 z-10"
+              >
+                <X size={20} />
+              </button>
+              <img src={imageModal} alt="Bukti Transfer" className="max-w-full max-h-[85vh] object-contain" />
+              <div className="p-3 bg-white text-center border-t">
+                <a href={imageModal} target="_blank" rel="noreferrer" className="text-rose-500 font-medium hover:underline inline-block">
+                  Buka Gambar di Tab Baru (Download)
+                </a>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+
+export default History;
