@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
-import { Heart, Activity, Target, LogOut, Bell, User } from 'lucide-react';
+import { Heart, Activity, Target, LogOut, Bell, User, PieChart } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import ThemeToggle from '../ui/ThemeToggle';
 
@@ -43,6 +43,7 @@ export const Navbar = () => {
           <Link to="/" className={`font-medium transition-colors ${isActive('/') ? 'text-rose-500' : 'text-gray-600 hover:text-rose-400'}`}>Beranda</Link>
           <Link to="/budget" className={`font-medium transition-colors ${isActive('/budget') ? 'text-rose-500' : 'text-gray-600 hover:text-rose-400'}`}>Target</Link>
           <Link to="/history" className={`font-medium transition-colors ${isActive('/history') ? 'text-rose-500' : 'text-gray-600 hover:text-rose-400'}`}>Riwayat</Link>
+          <Link to="/rekap" className={`font-medium transition-colors ${isActive('/rekap') ? 'text-rose-500' : 'text-gray-600 hover:text-rose-400'}`}>Rekap</Link>
           <Link to="/account" className={`font-medium transition-colors ${isActive('/account') ? 'text-rose-500' : 'text-gray-600 hover:text-rose-400'}`}>Akun</Link>
           
           <div className="flex items-center gap-3 ml-2 border-l border-pink-100 dark:border-slate-700 pl-4">
@@ -83,6 +84,10 @@ export const Navbar = () => {
         <Link to="/history" className={`flex flex-col items-center gap-1 ${isActive('/history') ? 'text-rose-500' : 'text-gray-400 dark:text-slate-500'}`}>
           <Activity size={24} />
           <span className="text-[10px] font-semibold">Riwayat</span>
+        </Link>
+        <Link to="/rekap" className={`flex flex-col items-center gap-1 ${isActive('/rekap') ? 'text-rose-500' : 'text-gray-400 dark:text-slate-500'}`}>
+          <PieChart size={24} className={isActive('/rekap') ? 'fill-rose-100' : ''} />
+          <span className="text-[10px] font-semibold">Rekap</span>
         </Link>
         <Link to="/account" className={`flex flex-col items-center gap-1 ${isActive('/account') ? 'text-rose-500' : 'text-gray-400 dark:text-slate-500'}`}>
           <User size={24} className={isActive('/account') ? 'fill-rose-100' : ''} />

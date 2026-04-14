@@ -8,8 +8,9 @@ import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import CurrencyInput from '../components/ui/CurrencyInput';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ArrowDownToLine, ArrowUpFromLine, PlusCircle, Activity, ChevronDown, Image as ImageIcon, X, ArrowRight, Settings, Wallet, ShoppingBag, Coffee, Plus, AlertTriangle, RefreshCcw } from 'lucide-react';
+import { Heart, ArrowDownToLine, ArrowUpFromLine, PlusCircle, Activity, ChevronDown, Image as ImageIcon, X, ArrowRight, Settings, Wallet, ShoppingBag, Coffee, Plus, AlertTriangle, RefreshCcw, Calculator } from 'lucide-react';
 import { setIndonesianValidity } from '../utils/validation';
+import CalculatorModal from '../components/ui/CalculatorModal';
 
 const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
 const getImageUrl = (path) => {
@@ -52,6 +53,8 @@ const Dashboard = () => {
   const [recentTab, setRecentTab] = useState('public');
   // Source mode for deposit/income: 'external' (manual input) | 'internal' (deduct from balance)
   const [sourceMode, setSourceMode] = useState('external');
+  // Calculator State
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
 
   const { showToast } = useToast();
   const prevDataRef = useRef(null);
@@ -288,7 +291,7 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <div className="col-span-1 flex flex-col gap-3">
-          <div className="flex flex-row md:flex-col gap-3 flex-1">
+          <div className="flex flex-row gap-3 flex-1">
             <button onClick={() => openTransactionModal('deposit')} className="flex-1 glass bg-white/60 dark:bg-slate-800/60 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-emerald-100 dark:border-emerald-900/30 group">
                 <div className="w-10 h-10 bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-900/20 dark:to-emerald-800/20 text-emerald-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white dark:border-slate-700 transition-transform">
                     <ArrowDownToLine size={20} />
@@ -300,16 +303,25 @@ const Dashboard = () => {
                 <div className="w-10 h-10 bg-gradient-to-br from-rose-100 to-rose-50 dark:from-rose-900/20 dark:to-rose-800/20 text-rose-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white dark:border-slate-700 transition-transform">
                     <ArrowUpFromLine size={20} />
                 </div>
-                <h3 className="font-bold text-gray-800 dark:text-slate-200 text-sm md:text-base">Pinjam/Pakai</h3>
+                <h3 className="font-bold text-gray-800 dark:text-slate-200 text-sm md:text-base">Pinjam</h3>
             </button>
           </div>
- 
-          <button onClick={() => openTransactionModal('income')} className="glass bg-white/60 dark:bg-slate-800/60 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-blue-100 dark:border-blue-900/30 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/20 dark:to-blue-800/20 text-blue-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white dark:border-slate-700 transition-transform">
-                  <PlusCircle size={20} />
-              </div>
-              <h3 className="font-bold text-gray-800 dark:text-slate-200 text-sm md:text-base">Pemasukan</h3>
-          </button>
+
+          <div className="flex flex-row gap-3 flex-1">
+            <button onClick={() => openTransactionModal('income')} className="flex-1 glass bg-white/60 dark:bg-slate-800/60 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-blue-100 dark:border-blue-900/30 group">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/20 dark:to-blue-800/20 text-blue-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white dark:border-slate-700 transition-transform">
+                    <PlusCircle size={20} />
+                </div>
+                <h3 className="font-bold text-gray-800 dark:text-slate-200 text-sm md:text-base">Pemasukan</h3>
+            </button>
+
+            <button onClick={() => setIsCalculatorOpen(true)} className="flex-1 glass bg-white/60 dark:bg-slate-800/60 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-purple-100 dark:border-purple-900/30 group">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-50 dark:from-purple-900/20 dark:to-purple-800/20 text-purple-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white dark:border-slate-700 transition-transform">
+                    <Calculator size={20} />
+                </div>
+                <h3 className="font-bold text-gray-800 dark:text-slate-200 text-sm md:text-base">Kalkulator</h3>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -796,6 +808,7 @@ const Dashboard = () => {
         </form>
       </Modal>
 
+      <CalculatorModal isOpen={isCalculatorOpen} onClose={() => setIsCalculatorOpen(false)} />
     </motion.div>
   );
 };
