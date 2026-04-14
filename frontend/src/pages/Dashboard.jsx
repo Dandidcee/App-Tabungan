@@ -432,21 +432,21 @@ const Dashboard = () => {
       <Modal isOpen={isCategoryModalOpen} onClose={() => setIsCategoryModalOpen(false)} title="Buat Budget Baru ✉️">
          <form onSubmit={handleCategorySubmit} className="space-y-4 text-left">
            <div>
-             <label className="block text-sm font-bold text-gray-700 mb-1">Nama Kategori</label>
+             <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Nama Kategori</label>
              <input type="text"
                     required 
                     value={categoryName} 
                     onChange={(e) => setCategoryName(e.target.value)} 
                     onInvalid={setIndonesianValidity}
                     onInput={setIndonesianValidity}
-                    className="w-full px-4 py-3 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-300 outline-none bg-indigo-50/30 text-indigo-900 font-semibold" 
+                    className="w-full px-4 py-3 border border-indigo-100 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-300 outline-none bg-indigo-50/30 dark:bg-slate-800 text-indigo-900 dark:text-slate-100 font-semibold placeholder:text-gray-400 dark:placeholder:text-slate-500" 
                     placeholder="Contoh: Belanja Bulanan" />
            </div>
            <div>
-             <label className="block text-sm font-bold text-gray-700 mb-1">Pilih Ikon (Emoji)</label>
+             <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Pilih Ikon (Emoji)</label>
              <div className="flex gap-2 text-2xl flex-wrap">
                {['🏷️', '🛒', '☕', '🍔', '🛵', '💄', '💍', '🎮', '💊', '🎁'].map(em => (
-                 <button type="button" key={em} onClick={() => setCategoryIcon(em)} className={`p-2 rounded-xl transition-all ${categoryIcon === em ? 'bg-indigo-100 scale-110 shadow-sm border border-indigo-200' : 'bg-gray-50 opacity-50 hover:opacity-100'}`}>
+                 <button type="button" key={em} onClick={() => setCategoryIcon(em)} className={`p-2 rounded-xl transition-all ${categoryIcon === em ? 'bg-indigo-100 dark:bg-indigo-900/40 scale-110 shadow-sm border border-indigo-200 dark:border-indigo-800' : 'bg-gray-50 dark:bg-slate-800 opacity-50 hover:opacity-100'}`}>
                    {em}
                  </button>
                ))}
