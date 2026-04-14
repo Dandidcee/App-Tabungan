@@ -359,8 +359,10 @@ const Dashboard = () => {
 
              {categories.map(cat => {
                const bal = getEnvelopeBalance(cat._id);
-               const totalCatBalance = categories.reduce((sum, c) => sum + Math.max(getEnvelopeBalance(c._id), 0), 0);
-               const pct = totalCatBalance > 0 ? Math.max(bal, 0) / totalCatBalance : 0;
+               // Total income ever received by this category
+               const catTxs = budgetTransactions.filter(t => t.fundSource === cat._id);
+               const totalIncome = catTxs.filter(t => t.type === 'income' || t.type === 'deposit').reduce((s, t) => s + t.amount, 0);
+               const pct = totalIncome > 0 ? Math.max(bal, 0) / totalIncome : 0;
                const circumference = 2 * Math.PI * 28;
                const dash = pct * circumference;
                const gap = circumference - dash;
@@ -392,7 +394,7 @@ const Dashboard = () => {
                       Rp {bal.toLocaleString('id-ID')}
                     </h4>
                     <p className="text-[10px] text-indigo-400 dark:text-indigo-500/80 font-semibold mt-0.5 mb-1">
-                      {totalCatBalance > 0 ? `${Math.round(pct * 100)}% dari total` : '—'}
+                      {totalIncome > 0 ? `${Math.round(pct * 100)}% sisa` : '—'}
                     </p>
                     
                     <div className="w-full mt-2 flex gap-1.5 pt-3 border-t border-indigo-50/50 dark:border-slate-700/50">
