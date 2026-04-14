@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState, useContext, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
@@ -36,31 +36,42 @@ const Dashboard = () => {
   const [isSelectOpen, setIsSelectOpen] = useState(false);
   const { showToast } = useToast();
 
-  const fetchData = async () => {
-    try {
-        const [budgetsRes, transactionsRes] = await Promise.all([
-          api.get('/api/budget'),
-          api.get('/api/transactions'),
-        ]);
-        const allTx = transactionsRes.data;
-        
-        const unallocatedDeposits = allTx.filter(t => t.type === 'deposit' && !t.budgetId).reduce((acc, curr) => acc + curr.amount, 0);
-        const unallocatedWithdrawals = allTx.filter(t => t.type === 'withdrawal' && !t.budgetId).reduce((acc, curr) => acc + curr.amount, 0);
-        setTotalTabungan(unallocatedDeposits - unallocatedWithdrawals);
-        setUangKeluar(unallocatedWithdrawals);
+  const prevDataRef = useRef(null);
 
-        setBudgets(budgetsRes.data);
-        setTransactions(allTx.reverse().slice(0, 5)); // Last 5 transactions
+  const fetchData = useCallback(async () => {
+    try {
+      const [budgetsRes, transactionsRes] = await Promise.all([
+        api.get('/api/budget'),
+        api.get('/api/transactions'),
+      ]);
+      const allTx = transactionsRes.data;
+
+      // ── Anti-flicker: only update state if data actually changed ──
+      const newSignature = JSON.stringify({
+        txIds: allTx.map(t => t._id + t.amount).join(','),
+        budgetAmounts: budgetsRes.data.map(b => b._id + b.currentAmount).join(',')
+      });
+
+      if (prevDataRef.current === newSignature) return; // Nothing changed
+      prevDataRef.current = newSignature;
+
+      const deposits = allTx.filter(t => t.type === 'deposit' && !t.budgetId).reduce((a, c) => a + c.amount, 0);
+      const withdrawals = allTx.filter(t => t.type === 'withdrawal' && !t.budgetId).reduce((a, c) => a + c.amount, 0);
+      setTotalTabungan(deposits - withdrawals);
+      setUangKeluar(withdrawals);
+      setBudgets(budgetsRes.data);
+      setTransactions(allTx.reverse().slice(0, 5));
     } catch (error) {
-        console.error(error);
+      console.error(error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
-
-
+    // Poll every 10 seconds for real-time updates
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   const openTransactionModal = (txType) => {
     setType(txType);
@@ -173,7 +184,7 @@ const Dashboard = () => {
           </button>
         </div>
 
-        <div className="p-4 space-y-2">
+        <div className="px-5 py-2">
           {transactions.length === 0 && (
             <div className="text-center py-8">
               <Heart size={32} className="mx-auto text-rose-200 mb-2" />
@@ -183,48 +194,44 @@ const Dashboard = () => {
           {transactions.map((trx) => (
             <div
               key={trx._id}
-              className={`flex items-center gap-3 p-3 rounded-2xl border transition-colors ${
-                trx.type === 'deposit'
-                  ? 'bg-emerald-50/60 border-emerald-100'
-                  : 'bg-rose-50/60 border-rose-100'
-              }`}
+              className="flex items-center gap-3 py-3 px-1 border-b border-gray-50 last:border-0"
             >
-              {/* Icon */}
-              <div className={`p-2.5 rounded-xl flex-shrink-0 ${
-                trx.type === 'deposit' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
+              {/* Colored dot + icon */}
+              <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 ${
+                trx.type === 'deposit' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-500'
               }`}>
-                {trx.type === 'deposit' ? <ArrowDownToLine size={16} /> : <ArrowUpFromLine size={16} />}
+                {trx.type === 'deposit' ? <ArrowDownToLine size={15} /> : <ArrowUpFromLine size={15} />}
               </div>
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="font-bold text-gray-800 text-sm truncate">{trx.user.name}</p>
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
-                    trx.type === 'deposit' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                <p className="font-semibold text-gray-800 text-sm truncate">
+                  {trx.user.name}
+                  <span className={`ml-1.5 text-xs font-normal ${
+                    trx.type === 'deposit' ? 'text-emerald-500' : 'text-rose-400'
                   }`}>
-                    {trx.type === 'deposit' ? 'Nabung' : 'Pinjam'}
+                    {trx.type === 'deposit' ? 'menabung' : 'meminjam'}
                   </span>
-                </div>
-                <p className="text-[11px] text-gray-400 mt-0.5">
-                  {new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
+                </p>
+                <p className="text-[11px] text-gray-400 mt-0.5 truncate">
+                  {new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})}
                   {trx.notes ? ` · ${trx.notes}` : ''}
                 </p>
               </div>
 
               {/* Amount + Bukti */}
               <div className="text-right flex-shrink-0">
-                <p className={`font-extrabold text-sm ${
-                  trx.type === 'deposit' ? 'text-emerald-600' : 'text-rose-600'
+                <p className={`font-bold text-sm tabular-nums ${
+                  trx.type === 'deposit' ? 'text-emerald-600' : 'text-rose-500'
                 }`}>
-                  {trx.type === 'deposit' ? '+' : '-'} Rp {trx.amount.toLocaleString('id-ID')}
+                  {trx.type === 'deposit' ? '+' : '−'} Rp {trx.amount.toLocaleString('id-ID')}
                 </p>
                 {trx.proofOfTransfer && (
                   <button
                     onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))}
-                    className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-full transition-colors ml-auto"
+                    className="mt-0.5 text-[10px] font-medium text-blue-400 hover:text-blue-600 underline underline-offset-2 transition-colors"
                   >
-                    <ImageIcon size={11} /> Bukti
+                    lihat bukti
                   </button>
                 )}
               </div>
