@@ -124,27 +124,27 @@ const Dashboard = () => {
         </Card>
 
         {/* Quick Actions Action Pads */}
-        <div className="col-span-1 flex flex-col gap-4">
+        <div className="col-span-1 flex flex-row md:flex-col gap-4">
             <button 
                 onClick={() => openTransactionModal('deposit')}
-                className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-6 flex flex-col items-center justify-center text-center shadow-sm border border-emerald-100 group"
+                className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-4 md:p-6 flex flex-col items-center justify-center text-center shadow-sm border border-emerald-100 group"
             >
-                <div className="w-14 h-14 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <ArrowDownToLine size={28} />
+                <div className="w-12 h-12 md:w-14 md:h-14 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-transform">
+                    <ArrowDownToLine size={24} className="md:w-7 md:h-7" />
                 </div>
-                <h3 className="font-bold text-gray-800 text-lg">Nabung</h3>
-                <p className="text-xs text-gray-500">Tambah saldo pernikahan</p>
+                <h3 className="font-bold text-gray-800 text-base md:text-lg">Nabung</h3>
+                <p className="text-[10px] md:text-xs text-gray-500 hidden md:block">Tambah saldo pernikahan</p>
             </button>
 
             <button 
                 onClick={() => openTransactionModal('withdrawal')}
-                className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-6 flex flex-col items-center justify-center text-center shadow-sm border border-rose-100 group"
+                className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-4 md:p-6 flex flex-col items-center justify-center text-center shadow-sm border border-rose-100 group"
             >
-                <div className="w-14 h-14 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <ArrowUpFromLine size={28} />
+                <div className="w-12 h-12 md:w-14 md:h-14 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-transform">
+                    <ArrowUpFromLine size={24} className="md:w-7 md:h-7" />
                 </div>
-                <h3 className="font-bold text-gray-800 text-lg">Pinjam Uang</h3>
-                <p className="text-xs text-gray-500">Ambil/pinjam uang tabungan</p>
+                <h3 className="font-bold text-gray-800 text-base md:text-lg">Pinjam</h3>
+                <p className="text-[10px] md:text-xs text-gray-500 hidden md:block">Ambil/pinjam uang tabungan</p>
             </button>
         </div>
       </div>
