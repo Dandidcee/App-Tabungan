@@ -83,6 +83,13 @@ const History = () => {
 
   const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
 
+  // Safely build image URL - avoid double-prepending base URL
+  const getImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;          // Already full URL
+    return `${getApiUrl()}${path}`;                     // Prepend base URL
+  };
+
   const uniqueNames = ['Semua', ...new Set(transactions.map(t => t.user?.name))];
   const filteredTransactions = filterName === 'Semua' 
     ? transactions 
@@ -93,13 +100,13 @@ const History = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Riwayat Transaksi 📜</h1>
         
-        {/* Name Filter Pills */}
+        {/* Name Filter Pills - bigger tap target on mobile */}
         <div className="flex flex-wrap gap-2">
           {uniqueNames.map(name => (
             <button
               key={name}
               onClick={() => setFilterName(name)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all min-h-[38px] ${
                 filterName === name 
                   ? 'bg-rose-500 text-white shadow-md' 
                   : 'bg-white text-gray-600 border border-pink-100 hover:bg-rose-50'
@@ -139,10 +146,10 @@ const History = () => {
                 
                 {trx.proofOfTransfer && (
                   <button 
-                    onClick={() => setImageModal(`${getApiUrl()}${trx.proofOfTransfer}`)}
-                    className="flex items-center gap-1 text-sm text-blue-500 hover:text-blue-700 font-medium bg-blue-50 px-3 py-1 rounded-full"
+                    onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))}
+                    className="flex items-center gap-1 mt-1 text-xs text-blue-500 hover:text-blue-700 font-semibold bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full min-h-[30px] transition-colors"
                   >
-                    <ImageIcon size={14} /> Lihat Bukti
+                    <ImageIcon size={13} /> Lihat Bukti
                   </button>
                 )}
               </div>
@@ -160,7 +167,7 @@ const History = () => {
               initial={{ scale: 0.9, opacity: 0 }} 
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative max-w-3xl max-h-[90vh] bg-white rounded-xl overflow-hidden"
+              className="relative max-w-3xl w-full max-h-[90vh] bg-white rounded-xl overflow-hidden"
             >
               <button 
                 onClick={() => setImageModal(null)} 
@@ -168,7 +175,21 @@ const History = () => {
               >
                 <X size={20} />
               </button>
-              <img src={imageModal} alt="Bukti Transfer" className="max-w-full max-h-[85vh] object-contain" />
+              <img 
+                src={imageModal} 
+                alt="Bukti Transfer" 
+                className="max-w-full max-h-[80vh] object-contain w-full"
+                onError={(e) => {
+                  e.currentTarget.src = '';
+                  e.currentTarget.alt = '❌ Gambar tidak ditemukan / gagal dimuat';
+                  e.currentTarget.className = 'hidden';
+                  e.currentTarget.nextSibling.classList.remove('hidden');
+                }}
+              />
+              <div className="hidden p-8 text-center text-gray-500">
+                <p className="text-lg">❌ Gambar tidak dapat dimuat</p>
+                <p className="text-sm mt-1 text-gray-400">File mungkin sudah dihapus dari server</p>
+              </div>
               <div className="p-3 bg-white text-center border-t">
                 <a href={imageModal} target="_blank" rel="noreferrer" className="text-rose-500 font-medium hover:underline inline-block">
                   Buka Gambar di Tab Baru (Download)

@@ -64,15 +64,11 @@ export const Navbar = () => {
           <Heart className="text-rose-400 fill-rose-100" size={20} />
           <span>Tabungan Nikah</span>
         </div>
-        <div className="flex items-center gap-3">
-          <Link to="/notifications" className="relative p-2 text-gray-500 hover:text-rose-500 bg-white rounded-full shadow-sm border border-gray-100">
-            <Bell size={18} />
-            <BadgeCount count={unreadCount} mobile />
-          </Link>
-          <button onClick={handleLogout} className="text-gray-500 hover:text-rose-500 bg-white p-2 rounded-full shadow-sm border border-gray-100">
-            <LogOut size={18} />
-          </button>
-        </div>
+        {/* Hanya tombol Keluar di header atas mobile — Notif sudah ada di bottom nav */}
+        <button onClick={handleLogout} className="flex items-center gap-1.5 text-gray-500 hover:text-rose-500 bg-white px-3 py-2 rounded-full shadow-sm border border-gray-100 text-sm font-medium">
+          <LogOut size={15} />
+          <span>Keluar</span>
+        </button>
       </div>
 
       {/* Bottom Navigation (Mobile Only) */}
