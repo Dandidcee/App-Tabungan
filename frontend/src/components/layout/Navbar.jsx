@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
-import { Heart, Activity, Target, LogOut, Bell } from 'lucide-react';
+import { Heart, Activity, Target, LogOut, Bell, User } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 
 export const Navbar = () => {
@@ -42,6 +42,7 @@ export const Navbar = () => {
           <Link to="/" className={`font-medium transition-colors ${isActive('/') ? 'text-rose-500' : 'text-gray-600 hover:text-rose-400'}`}>Beranda</Link>
           <Link to="/budget" className={`font-medium transition-colors ${isActive('/budget') ? 'text-rose-500' : 'text-gray-600 hover:text-rose-400'}`}>Target</Link>
           <Link to="/history" className={`font-medium transition-colors ${isActive('/history') ? 'text-rose-500' : 'text-gray-600 hover:text-rose-400'}`}>Riwayat</Link>
+          <Link to="/account" className={`font-medium transition-colors ${isActive('/account') ? 'text-rose-500' : 'text-gray-600 hover:text-rose-400'}`}>Akun</Link>
           
           <Link to="/notifications" className="relative p-2 text-gray-500 hover:text-rose-500 transition-colors ml-2">
             <Bell size={20} />
@@ -95,6 +96,10 @@ export const Navbar = () => {
             )}
           </div>
           <span className="text-[10px] font-semibold">Notif</span>
+        </Link>
+        <Link to="/account" className={`flex flex-col items-center gap-1 ${isActive('/account') ? 'text-rose-500' : 'text-gray-400'}`}>
+          <User size={24} className={isActive('/account') ? 'fill-rose-100' : ''} />
+          <span className="text-[10px] font-semibold">Akun</span>
         </Link>
       </nav>
     </>

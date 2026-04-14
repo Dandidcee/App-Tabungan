@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import History from './pages/History';
 import Budget from './pages/Budget';
+import Account from './pages/Account';
 
 import Notifications from './pages/Notifications';
 import { Heart } from 'lucide-react';
@@ -28,6 +29,7 @@ const App = () => {
           <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="/history" element={user ? <History /> : <Navigate to="/login" />} />
           <Route path="/budget" element={user ? <Budget /> : <Navigate to="/login" />} />
+          <Route path="/account" element={user ? <Account /> : <Navigate to="/login" />} />
           <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
         </Routes>
       </div>

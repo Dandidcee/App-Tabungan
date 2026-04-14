@@ -201,9 +201,16 @@ const Dashboard = () => {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-24 md:pb-6">
       <div className="flex justify-between items-start">
-        <div className="flex flex-col">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Halo, {user?.name} 💖</h1>
-          <p className="italic text-sm sm:text-base text-gray-500 mt-1">semangat nabungnya ya</p>
+        <div className="flex items-center gap-3 md:gap-4">
+          {user?.profilePicture && (
+            <div className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-white shadow-md overflow-hidden bg-rose-50 shrink-0 hidden sm:block">
+              <img src={getImageUrl(user.profilePicture)} alt="Profile" className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div className="flex flex-col">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Halo, {user?.name} {user?.emoji || '👋'}</h1>
+            <p className="italic text-sm md:text-base text-gray-500 mt-0.5">semangat nabungnya ya</p>
+          </div>
         </div>
         
         {/* DANGER ZONE RESET BUTTON */}
