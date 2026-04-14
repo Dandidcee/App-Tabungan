@@ -102,6 +102,23 @@ const Dashboard = () => {
 
   const handleTransactionSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validasi saldo untuk pengeluaran atau alokasi
+    if (type === 'allocation' || type === 'withdrawal') {
+      const spendAmount = Number(amount);
+      if (fundSource === 'gaji') {
+        if (spendAmount > gajiBalance) {
+          return showToast('Saldo Gaji tidak cukup!', 'error');
+        }
+      } else if (fundSource !== 'tabungan_utama') {
+        // Fund source is a category
+        const catBalance = getEnvelopeBalance(fundSource);
+        if (spendAmount > catBalance) {
+          return showToast('Saldo Kategori tidak cukup!', 'error');
+        }
+      }
+    }
+
     setUploading(true);
     try {
       let proofOfTransfer = '';
