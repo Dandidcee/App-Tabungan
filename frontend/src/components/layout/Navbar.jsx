@@ -1,10 +1,12 @@
 import { useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
-import { Heart, Activity, Target, LogOut } from 'lucide-react';
+import { Heart, Activity, Target, LogOut, Bell } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 
 export const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
+  const { unreadCount } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -30,6 +32,12 @@ export const Navbar = () => {
           <Link to="/" className={`font-medium transition-colors ${isActive('/') ? 'text-rose-500' : 'text-gray-600 hover:text-rose-400'}`}>Beranda</Link>
           <Link to="/budget" className={`font-medium transition-colors ${isActive('/budget') ? 'text-rose-500' : 'text-gray-600 hover:text-rose-400'}`}>Target</Link>
           <Link to="/history" className={`font-medium transition-colors ${isActive('/history') ? 'text-rose-500' : 'text-gray-600 hover:text-rose-400'}`}>Riwayat</Link>
+          
+          <Link to="/notifications" className="relative p-2 text-gray-500 hover:text-rose-500 transition-colors ml-2">
+            <Bell size={20} />
+            {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full"></span>}
+          </Link>
+
           <button 
             onClick={handleLogout}
             className="flex items-center gap-2 text-gray-500 hover:text-rose-500 bg-rose-50 px-4 py-2 rounded-full transition-colors ml-4"
@@ -46,9 +54,15 @@ export const Navbar = () => {
           <Heart className="text-rose-400 fill-rose-100" size={20} />
           <span>Tabungan Nikah</span>
         </div>
-        <button onClick={handleLogout} className="text-gray-500 hover:text-rose-500 bg-white p-2 rounded-full shadow-sm border border-gray-100">
-          <LogOut size={18} />
-        </button>
+        <div className="flex items-center gap-3">
+          <Link to="/notifications" className="relative p-2 text-gray-500 hover:text-rose-500 bg-white rounded-full shadow-sm border border-gray-100">
+            <Bell size={18} />
+            {unreadCount > 0 && <span className="absolute top-1.5 right-2 w-2 h-2 bg-rose-500 rounded-full"></span>}
+          </Link>
+          <button onClick={handleLogout} className="text-gray-500 hover:text-rose-500 bg-white p-2 rounded-full shadow-sm border border-gray-100">
+            <LogOut size={18} />
+          </button>
+        </div>
       </div>
 
       {/* Bottom Navigation (Mobile Only) */}
