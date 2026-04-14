@@ -63,7 +63,12 @@ export const authUser = async (req, res) => {
         token: generateToken(user._id) 
       });
     } else {
-      res.status(401).json({ message: 'Invalid email or password' });
+      // Custom Error logic as requested
+      if (!user) {
+        return res.status(401).json({ message: 'Akun tidak terdaftar' });
+      } else {
+        return res.status(401).json({ message: 'Password anda salah' });
+      }
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
