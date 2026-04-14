@@ -13,6 +13,9 @@ const Budget = () => {
   const [title, setTitle] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
   const [deadline, setDeadline] = useState('');
+  const [icon, setIcon] = useState('🎯');
+  const [budgetToDelete, setBudgetToDelete] = useState(null);
+
   const { showToast } = useToast();
 
   const fetchBudgets = async () => {
@@ -35,15 +38,29 @@ const Budget = () => {
         title,
         targetAmount: Number(targetAmount),
         deadline,
+        icon,
       });
       showToast('Target tabungan berhasil dibuat!', 'success');
       setIsModalOpen(false);
       setTitle('');
       setTargetAmount('');
       setDeadline('');
+      setIcon('🎯');
       fetchBudgets();
     } catch (err) {
       showToast(err.response?.data?.message || 'Terjadi kesalahan', 'error');
+    }
+  };
+
+  const confirmDeleteBudget = async () => {
+    if (!budgetToDelete) return;
+    try {
+      await api.delete(`/api/budget/${budgetToDelete._id}`);
+      showToast(`Target ${budgetToDelete.title} berhasil dihapus!`, 'success');
+      setBudgetToDelete(null);
+      fetchBudgets();
+    } catch (err) {
+      showToast('Gagal menghapus target', 'error');
     }
   };
 
@@ -75,8 +92,14 @@ const Budget = () => {
                     <span>{budget.deadline ? new Date(budget.deadline).toLocaleDateString('id-ID') : 'Tanpa batas waktu'}</span>
                   </div>
                 </div>
-                <div className="p-2 bg-pink-100 text-pink-500 rounded-lg">
-                  <Target size={24} />
+                <div className="flex items-start gap-2">
+                   <div className="p-2 bg-pink-100 text-3xl rounded-lg">
+                     {budget.icon || '🎯'}
+                   </div>
+                   <button onClick={() => setBudgetToDelete(budget)} className="text-rose-300 hover:text-rose-600 transition-colors bg-rose-50 hover:bg-rose-100 p-1.5 rounded-lg" title="Hapus Target ini beserta saldonya">
+                      <Target size={14} style={{ display: 'none' }} /> {/* To keep import valid if used */}
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                   </button>
                 </div>
               </div>
 
@@ -124,6 +147,16 @@ const Budget = () => {
             />
           </div>
           <div>
+             <label className="block text-sm font-medium text-gray-700 mb-1">Pilih Ikon (Emoji)</label>
+             <div className="flex gap-2 text-2xl flex-wrap">
+               {['🎯', '✈️', '🏠', '💍', '🚗', '🎓', '🏥', '🎉', '💻', '💵'].map(em => (
+                 <button type="button" key={em} onClick={() => setIcon(em)} className={`p-2 rounded-xl transition-all ${icon === em ? 'bg-pink-100 scale-110 shadow-sm border border-pink-200' : 'bg-gray-50 opacity-50 hover:opacity-100'}`}>
+                   {em}
+                 </button>
+               ))}
+             </div>
+           </div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Tenggat Waktu</label>
             <input
               type="date"
@@ -134,6 +167,24 @@ const Budget = () => {
           </div>
           <Button type="submit" className="w-full mt-4">Simpan Target</Button>
         </form>
+      </Modal>
+
+      {/* Delete Budget Confirmation Modal */}
+      <Modal isOpen={!!budgetToDelete} onClose={() => setBudgetToDelete(null)} title="Hapus Target Tabungan">
+         <div className="text-center p-2 space-y-4">
+             <div className="mx-auto w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+             </div>
+             <p className="text-sm font-semibold text-gray-700">Apakah Anda yakin ingin menghapus target "{budgetToDelete?.title}"?</p>
+             <p className="text-xs text-gray-500 bg-rose-50 p-3 rounded-xl border border-rose-100">Uang yang sudah Anda masukkan ke target ini <b>tidak akan dikembalikan ke mana pun</b>, melainkan akan ikut terhapus dari sistem sepenuhnya.</p>
+             
+             <div className="flex gap-3 mt-6">
+                <Button onClick={() => setBudgetToDelete(null)} variant="outline" className="flex-1 py-3 bg-gray-50 border-0">Batal</Button>
+                <Button onClick={confirmDeleteBudget} className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-200">
+                   Lanjutkan
+                </Button>
+             </div>
+         </div>
       </Modal>
     </motion.div>
   );

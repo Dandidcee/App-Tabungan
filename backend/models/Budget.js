@@ -5,6 +5,7 @@ const budgetSchema = new mongoose.Schema({
   targetAmount: { type: Number, required: true },
   currentAmount: { type: Number, default: 0 },
   deadline: { type: Date },
+  icon: { type: String, default: '🎯' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
 
