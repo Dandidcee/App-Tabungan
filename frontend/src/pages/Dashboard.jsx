@@ -48,6 +48,9 @@ const Dashboard = () => {
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
+  // Category Deletion State
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
+
   const { showToast } = useToast();
   const prevDataRef = useRef(null);
 
@@ -162,11 +165,16 @@ const Dashboard = () => {
     }
   };
 
-  const handleDeleteCategory = async (id, name) => {
-    if(!window.confirm(`Yakin ingin mereset/menghapus amplop "${name}" selamanya?`)) return;
+  const promptDeleteCategory = (id, name) => {
+    setCategoryToDelete({ id, name });
+  };
+
+  const confirmDeleteCategory = async () => {
+    if (!categoryToDelete) return;
     try {
-      await api.delete(`/api/budgeting/categories/${id}`);
-      showToast(`Budget ${name} berhasil dihapus!`, 'success');
+      await api.delete(`/api/budgeting/categories/${categoryToDelete.id}`);
+      showToast(`Budget ${categoryToDelete.name} berhasil dihapus!`, 'success');
+      setCategoryToDelete(null);
       fetchData();
     } catch (err) {
       showToast('Gagal menghapus budget', 'error');
@@ -302,7 +310,7 @@ const Dashboard = () => {
                const bal = getEnvelopeBalance(cat._id);
                return (
                  <div key={cat._id} className="flex flex-col items-center p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
-                    <button onClick={() => handleDeleteCategory(cat._id, cat.name)} className="absolute top-2 right-2 text-rose-300 hover:text-rose-600 transition-colors p-1" title="Reset/Hapus Budget ini">
+                    <button onClick={() => promptDeleteCategory(cat._id, cat.name)} className="absolute top-2 right-2 text-rose-300 hover:text-rose-600 transition-colors p-1" title="Reset/Hapus Budget ini">
                       <X size={15} />
                     </button>
                     <p className="text-3xl mb-1 mt-2 group-hover:scale-110 transition-transform">{cat.icon}</p>
@@ -387,6 +395,22 @@ const Dashboard = () => {
                 <Button onClick={() => setIsResetModalOpen(false)} variant="outline" className="flex-1 py-3 bg-gray-50 border-0">Batal JANGAN!</Button>
                 <Button onClick={handleResetData} className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-200">
                    {isResetting ? <RefreshCcw className="animate-spin h-5 w-5 mx-auto" /> : 'Ya, Hapus Semua'}
+                </Button>
+             </div>
+         </div>
+      </Modal>
+
+      {/* Delete Category Confirmation Modal */}
+      <Modal isOpen={!!categoryToDelete} onClose={() => setCategoryToDelete(null)} title="Hapus Amplop 🗑️">
+         <div className="text-center p-2 space-y-4">
+             <AlertTriangle size={60} className="mx-auto text-rose-500 animate-pulse" />
+             <p className="text-sm font-semibold text-gray-700">Yakin ingin menghapus amplop "{categoryToDelete?.name}"?</p>
+             <p className="text-xs text-gray-500 bg-rose-50 p-3 rounded-xl border border-rose-100">Semua riwayat transaksi di dalam amplop ini akan ikut <b>terhapus</b>. Pastikan Anda sudah memindahkan sisanya ke Dompet Gaji jika masih ada.</p>
+             
+             <div className="flex gap-3 mt-6">
+                <Button onClick={() => setCategoryToDelete(null)} variant="outline" className="flex-1 py-3 bg-gray-50 border-0">Batal JANGAN!</Button>
+                <Button onClick={confirmDeleteCategory} className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-200">
+                   Ya, Hapus
                 </Button>
              </div>
          </div>
