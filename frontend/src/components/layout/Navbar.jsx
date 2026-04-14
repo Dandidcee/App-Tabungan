@@ -1,8 +1,7 @@
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { AuthContext } from '../../context/AuthContext';
-import { Heart, Activity, Target, LogOut, Bell, User, PieChart, Menu, X } from 'lucide-react';
+import { Heart, Activity, Target, LogOut, Bell, User, PieChart } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import ThemeToggle from '../ui/ThemeToggle';
 
@@ -11,14 +10,11 @@ export const Navbar = () => {
   const { unreadCount } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
-
-  const closeMenu = () => setIsMobileMenuOpen(false);
 
   if (!user) return null;
 
@@ -63,9 +59,7 @@ export const Navbar = () => {
       {/* Mobile Top Header */}
       <div className="md:hidden flex justify-between items-center p-4 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-b border-pink-100 dark:border-slate-800">
         <div className="flex items-center gap-2 text-rose-500 font-bold text-lg">
-          <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 -ml-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
-            <Menu size={24} />
-          </button>
+          <Heart className="text-rose-400 fill-rose-100" size={20} />
           <span>Tabungan Bersama</span>
         </div>
         <div className="flex items-center gap-2">
@@ -77,52 +71,29 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* Left Sidebar Menu (Mobile Only) */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <>
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] md:hidden"
-              onClick={closeMenu}
-            />
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
-              className="fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-slate-900 z-[101] shadow-2xl flex flex-col md:hidden pb-safe"
-            >
-              <div className="p-6 flex justify-between items-center border-b border-pink-100 dark:border-slate-800">
-                <span className="text-rose-500 font-bold text-xl">Main Menu</span>
-                <button onClick={closeMenu} className="p-2 text-gray-500 bg-gray-100 dark:bg-slate-800 rounded-full hover:text-rose-500 transition-colors">
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className="p-4 flex flex-col gap-2 flex-1 overflow-y-auto">
-                <Link to="/" onClick={closeMenu} className={`flex items-center gap-3 px-4 py-3 rounded-2xl ${isActive('/') ? 'bg-rose-50 text-rose-600 dark:bg-rose-900/20' : 'text-gray-600 dark:text-slate-400'}`}>
-                  <Heart size={20} className={isActive('/') ? 'fill-rose-100' : ''} /> <span className="font-semibold">Beranda</span>
-                </Link>
-                <Link to="/budget" onClick={closeMenu} className={`flex items-center gap-3 px-4 py-3 rounded-2xl ${isActive('/budget') ? 'bg-rose-50 text-rose-600 dark:bg-rose-900/20' : 'text-gray-600 dark:text-slate-400'}`}>
-                  <Target size={20} className={isActive('/budget') ? 'fill-rose-100' : ''} /> <span className="font-semibold">Target</span>
-                </Link>
-                <Link to="/history" onClick={closeMenu} className={`flex items-center gap-3 px-4 py-3 rounded-2xl ${isActive('/history') ? 'bg-rose-50 text-rose-600 dark:bg-rose-900/20' : 'text-gray-600 dark:text-slate-400'}`}>
-                  <Activity size={20} /> <span className="font-semibold">Riwayat</span>
-                </Link>
-                <Link to="/rekap" onClick={closeMenu} className={`flex items-center gap-3 px-4 py-3 rounded-2xl ${isActive('/rekap') ? 'bg-rose-50 text-rose-600 dark:bg-rose-900/20' : 'text-gray-600 dark:text-slate-400'}`}>
-                  <PieChart size={20} className={isActive('/rekap') ? 'fill-rose-100' : ''} /> <span className="font-semibold">Rekap</span>
-                </Link>
-                <Link to="/account" onClick={closeMenu} className={`flex items-center gap-3 px-4 py-3 rounded-2xl ${isActive('/account') ? 'bg-rose-50 text-rose-600 dark:bg-rose-900/20' : 'text-gray-600 dark:text-slate-400'}`}>
-                  <User size={20} className={isActive('/account') ? 'fill-rose-100' : ''} /> <span className="font-semibold">Akun</span>
-                </Link>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      {/* Bottom Navigation (Mobile Only) */}
+      <nav className="md:hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl fixed bottom-0 left-0 right-0 z-50 border-t border-pink-100 dark:border-slate-800 px-8 py-3 flex justify-between items-center pb-safe shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+        <Link to="/" className={`flex flex-col items-center gap-1 ${isActive('/') ? 'text-rose-500' : 'text-gray-400 dark:text-slate-500'}`}>
+          <Heart size={24} className={isActive('/') ? 'fill-rose-100' : ''} />
+          <span className="text-[10px] font-semibold">Beranda</span>
+        </Link>
+        <Link to="/budget" className={`flex flex-col items-center gap-1 ${isActive('/budget') ? 'text-rose-500' : 'text-gray-400 dark:text-slate-500'}`}>
+          <Target size={24} className={isActive('/budget') ? 'fill-rose-100' : ''} />
+          <span className="text-[10px] font-semibold">Target</span>
+        </Link>
+        <Link to="/history" className={`flex flex-col items-center gap-1 ${isActive('/history') ? 'text-rose-500' : 'text-gray-400 dark:text-slate-500'}`}>
+          <Activity size={24} />
+          <span className="text-[10px] font-semibold">Riwayat</span>
+        </Link>
+        <Link to="/rekap" className={`flex flex-col items-center gap-1 ${isActive('/rekap') ? 'text-rose-500' : 'text-gray-400 dark:text-slate-500'}`}>
+          <PieChart size={24} className={isActive('/rekap') ? 'fill-rose-100' : ''} />
+          <span className="text-[10px] font-semibold">Rekap</span>
+        </Link>
+        <Link to="/account" className={`flex flex-col items-center gap-1 ${isActive('/account') ? 'text-rose-500' : 'text-gray-400 dark:text-slate-500'}`}>
+          <User size={24} className={isActive('/account') ? 'fill-rose-100' : ''} />
+          <span className="text-[10px] font-semibold">Akun</span>
+        </Link>
+      </nav>
     </>
   );
 };
