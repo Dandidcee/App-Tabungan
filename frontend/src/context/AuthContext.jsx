@@ -1,11 +1,15 @@
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect, useContext } from 'react';
 import api from '../services/api';
+import { ToastContext } from './ToastContext';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Access toast context to control polling lifecycle
+  const toastCtx = useContext(ToastContext);
 
   useEffect(() => {
     const userInfo = localStorage.getItem('user');
@@ -20,6 +24,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(data));
     localStorage.setItem('token', data.token);
     setUser(data);
+    // Start polling after login
+    toastCtx?.startPolling?.();
   };
 
   const register = async (name, email, password) => {
@@ -27,12 +33,15 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(data));
     localStorage.setItem('token', data.token);
     setUser(data);
+    toastCtx?.startPolling?.();
   };
 
   const logout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     setUser(null);
+    // Stop polling after logout
+    toastCtx?.stopPolling?.();
   };
 
   return (

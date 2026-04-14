@@ -1,5 +1,6 @@
 import Transaction from '../models/Transaction.js';
 import Budget from '../models/Budget.js';
+import { createNotification } from './notificationController.js';
 
 export const getTransactions = async (req, res) => {
   try {
@@ -38,6 +39,30 @@ export const createTransaction = async (req, res) => {
         budget.currentAmount -= Number(amount);
         await budget.save();
       }
+    }
+
+    // === Auto-create notification for all users ===
+    const formattedAmount = Number(amount).toLocaleString('id-ID');
+    const userName = req.user.name;
+
+    if (type === 'deposit') {
+      await createNotification({
+        triggeredBy: req.user._id,
+        type: 'deposit',
+        message: `💰 ${userName} menabung Rp ${formattedAmount}${notes ? ` — "${notes}"` : ''}`,
+        linkTo: '/history',
+        transactionId: createdTransaction._id,
+        amount: Number(amount),
+      });
+    } else if (type === 'withdrawal') {
+      await createNotification({
+        triggeredBy: req.user._id,
+        type: 'withdrawal',
+        message: `💸 ${userName} meminjam Rp ${formattedAmount}${notes ? ` — "${notes}"` : ''}`,
+        linkTo: '/history',
+        transactionId: createdTransaction._id,
+        amount: Number(amount),
+      });
     }
 
     res.status(201).json(createdTransaction);

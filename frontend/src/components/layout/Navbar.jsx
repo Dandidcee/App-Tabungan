@@ -19,6 +19,16 @@ export const Navbar = () => {
 
   const isActive = (path) => location.pathname === path;
 
+  const BadgeCount = ({ count, mobile = false }) => {
+    if (!count || count === 0) return null;
+    const size = mobile ? 'w-4 h-4 text-[9px] top-0 right-0' : 'w-4 h-4 text-[9px] top-1 right-1';
+    return (
+      <span className={`absolute ${size} bg-rose-500 text-white rounded-full flex items-center justify-center font-bold leading-none`}>
+        {count > 9 ? '9+' : count}
+      </span>
+    );
+  };
+
   return (
     <>
       {/* Top Navbar (Desktop Only) */}
@@ -35,7 +45,7 @@ export const Navbar = () => {
           
           <Link to="/notifications" className="relative p-2 text-gray-500 hover:text-rose-500 transition-colors ml-2">
             <Bell size={20} />
-            {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full"></span>}
+            <BadgeCount count={unreadCount} />
           </Link>
 
           <button 
@@ -57,7 +67,7 @@ export const Navbar = () => {
         <div className="flex items-center gap-3">
           <Link to="/notifications" className="relative p-2 text-gray-500 hover:text-rose-500 bg-white rounded-full shadow-sm border border-gray-100">
             <Bell size={18} />
-            {unreadCount > 0 && <span className="absolute top-1.5 right-2 w-2 h-2 bg-rose-500 rounded-full"></span>}
+            <BadgeCount count={unreadCount} mobile />
           </Link>
           <button onClick={handleLogout} className="text-gray-500 hover:text-rose-500 bg-white p-2 rounded-full shadow-sm border border-gray-100">
             <LogOut size={18} />
@@ -78,6 +88,17 @@ export const Navbar = () => {
         <Link to="/history" className={`flex flex-col items-center gap-1 ${isActive('/history') ? 'text-rose-500' : 'text-gray-400'}`}>
           <Activity size={24} />
           <span className="text-[10px] font-semibold">Riwayat</span>
+        </Link>
+        <Link to="/notifications" className={`relative flex flex-col items-center gap-1 ${isActive('/notifications') ? 'text-rose-500' : 'text-gray-400'}`}>
+          <div className="relative">
+            <Bell size={24} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full flex items-center justify-center font-bold text-[9px] leading-none">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] font-semibold">Notif</span>
         </Link>
       </nav>
     </>

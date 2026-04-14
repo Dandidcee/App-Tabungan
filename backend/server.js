@@ -9,6 +9,7 @@ import { connectDB } from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import budgetRoutes from './routes/budgetRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 dotenv.config();
 
@@ -39,6 +40,7 @@ const upload = multer({ storage });
 app.use('/api/auth', authRoutes);
 app.use('/api/budget', budgetRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Upload Endpoint
 app.post('/api/upload', upload.single('proof'), (req, res) => {
