@@ -97,23 +97,30 @@ const Dashboard = () => {
     setType(txType);
     setFundSource(overrideSource);
     setToCategory(overrideToCat);
+    setAmount(''); // Reset nominal saat modal dibuka
     setIsModalOpen(true);
   };
 
   const handleTransactionSubmit = async (e) => {
     e.preventDefault();
     
-    // Validasi saldo untuk pengeluaran atau alokasi
+    // Validasi saldo sebelum lanjut
     if (type === 'allocation' || type === 'withdrawal') {
       const spendAmount = Number(amount);
+      if (!spendAmount || spendAmount <= 0) {
+        return showToast('Masukkan nominal yang valid!', 'error');
+      }
+
       if (fundSource === 'gaji') {
         if (spendAmount > gajiBalance) {
+          // Gunakan alert browser agar lebih terlihat jika toast bermasalah di mobile
+          alert('Saldo Gaji tidak cukup!');
           return showToast('Saldo Gaji tidak cukup!', 'error');
         }
       } else if (fundSource !== 'tabungan_utama') {
-        // Fund source is a category
         const catBalance = getEnvelopeBalance(fundSource);
         if (spendAmount > catBalance) {
+          alert('Saldo Kategori ini tidak cukup!');
           return showToast('Saldo Kategori tidak cukup!', 'error');
         }
       }
