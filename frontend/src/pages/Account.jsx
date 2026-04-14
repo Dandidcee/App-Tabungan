@@ -1,12 +1,19 @@
 import { useState, useContext, useEffect, useRef } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import api, { fileUploadPath } from '../services/api';
+import api from '../services/api';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, Camera, Save, CameraOff } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 const emojis = ['👋', '😎', '💖', '🚀', '🔥', '✨', '👑', '💸', '🤑', '⭐', '🦄', '🎉', '🌟'];
+
+const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
+const getImageUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  return `${getApiUrl()}${path}`;
+};
 
 const Account = () => {
   const { user, updateUser } = useContext(AuthContext);
@@ -87,7 +94,7 @@ const Account = () => {
         <div className="flex flex-col items-center mb-8 relative">
           <div className="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gradient-to-br from-indigo-100 to-purple-100 relative group">
             {profilePicture ? (
-              <img src={fileUploadPath(profilePicture)} alt="Profile Avatar" className="w-full h-full object-cover" />
+              <img src={getImageUrl(profilePicture)} alt="Profile Avatar" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
                 <User size={40} />
