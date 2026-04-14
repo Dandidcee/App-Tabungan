@@ -146,11 +146,12 @@ const Dashboard = () => {
           <Heart size={200} className="absolute -right-10 -bottom-10 text-white/10" />
         </Card>
 
-        {/* Quick Actions — 3 buttons: Nabung, Pemasukan, Pinjam */}
-        <div className="col-span-1 flex flex-row md:flex-col gap-3">
+        {/* Quick Actions — 3 buttons */}
+        <div className="col-span-1 flex flex-col gap-3">
+          <div className="flex flex-row md:flex-col gap-3 flex-1">
             <button 
                 onClick={() => openTransactionModal('deposit')}
-                className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-5 flex flex-col items-center justify-center text-center shadow-sm border border-emerald-100 group"
+                className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-emerald-100 group"
             >
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 transition-transform">
                     <ArrowDownToLine size={20} />
@@ -160,19 +161,8 @@ const Dashboard = () => {
             </button>
 
             <button 
-                onClick={() => openTransactionModal('income')}
-                className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-5 flex flex-col items-center justify-center text-center shadow-sm border border-blue-100 group"
-            >
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 transition-transform">
-                    <PlusCircle size={20} />
-                </div>
-                <h3 className="font-bold text-gray-800 text-sm md:text-base">Pemasukan</h3>
-                <p className="text-[10px] text-gray-500 hidden md:block">Pendapatan lain</p>
-            </button>
-
-            <button 
                 onClick={() => openTransactionModal('withdrawal')}
-                className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-5 flex flex-col items-center justify-center text-center shadow-sm border border-rose-100 group"
+                className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-rose-100 group"
             >
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 transition-transform">
                     <ArrowUpFromLine size={20} />
@@ -180,6 +170,18 @@ const Dashboard = () => {
                 <h3 className="font-bold text-gray-800 text-sm md:text-base">Pinjam</h3>
                 <p className="text-[10px] text-gray-500 hidden md:block">Ambil/pinjam uang</p>
             </button>
+          </div>
+
+          <button 
+              onClick={() => openTransactionModal('income')}
+              className="glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-blue-100 group"
+          >
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 transition-transform">
+                  <PlusCircle size={20} />
+              </div>
+              <h3 className="font-bold text-gray-800 text-sm md:text-base">Pemasukan</h3>
+              <p className="text-[10px] text-gray-500 hidden md:block">Pendapatan lain</p>
+          </button>
         </div>
       </div>
 
@@ -261,8 +263,53 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Image Viewer Modal */}
+      {/* Loading Overlay Overlay & Image Viewer Modal */}
       <AnimatePresence>
+        {uploading && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-white p-6 md:p-8 rounded-3xl flex flex-col items-center justify-center shadow-2xl relative overflow-hidden max-w-xs w-full"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-rose-50/50 to-pink-50/50 z-0"></div>
+              
+              <div className="relative z-10">
+                {/* Heart Beating Animation */}
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.2, 1],
+                  }}
+                  transition={{ 
+                    duration: 1,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="bg-rose-100 p-4 rounded-full text-rose-500 mb-4 shadow-sm"
+                >
+                  <Activity size={32} />
+                </motion.div>
+              </div>
+
+              <h3 className="font-bold text-gray-800 text-lg relative z-10">{file ? 'Mengunggah Gambar...' : 'Menyimpan...'}</h3>
+              <p className="text-xs text-gray-500 mt-2 text-center relative z-10">
+                Tunggu sebentar ya, transaksi kamu sedang dicatat dengan penuh cinta 💖
+              </p>
+
+              {/* Progress bar placeholder */}
+              <div className="w-full bg-pink-100 h-1.5 mt-5 rounded-full overflow-hidden relative z-10">
+                <motion.div 
+                  initial={{ width: "0%" }} 
+                  animate={{ width: "100%" }} 
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="bg-rose-500 h-full rounded-full"
+                ></motion.div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
         {imageModal && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
