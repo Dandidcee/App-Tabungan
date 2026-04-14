@@ -277,87 +277,89 @@ const Dashboard = () => {
       </div>
 
       {/* AUTO BUDGETING DASHBOARD */}
-      <div className="bg-white rounded-3xl shadow-md border border-purple-100 overflow-hidden relative">
-        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-purple-100 px-5 py-4 flex items-center justify-between">
+      <div className="bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-200/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+        <div className="bg-white/40 backdrop-blur-md border-b border-white/60 px-5 py-4 flex items-center justify-between relative z-10">
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <PieChartIcon className="text-purple-500" size={20} /> Auto Budgeting Bulanan
+            <PieChartIcon className="text-indigo-500" size={20} /> Auto Budgeting Bulanan
           </h3>
           <button
             onClick={openBudgetModal}
-            className="flex items-center gap-1.5 text-xs font-semibold bg-white border border-purple-200 px-3 py-1.5 rounded-full text-purple-600 hover:bg-purple-50 transition-colors shadow-sm"
+            className="flex items-center gap-1.5 text-xs font-semibold bg-white border border-indigo-100 px-3 py-1.5 rounded-full text-indigo-600 hover:bg-indigo-50 hover:shadow-sm transition-all"
           >
             <Settings size={14} /> Atur Budget
           </button>
         </div>
         
-        <div className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-5 relative z-10">
           {/* Gaji/Income */}
-          <div className="flex flex-col items-center p-4 bg-gray-50 rounded-2xl border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
-            <div className="absolute top-2 left-2 bg-emerald-100 text-emerald-600 text-[10px] font-bold px-2 py-0.5 rounded-full">Private</div>
-            <p className="text-gray-500 text-xs font-medium uppercase tracking-wider mt-4">Sisa Gaji</p>
-            <div className="my-3">
+          <div className="flex flex-col items-center p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white shadow-sm relative overflow-hidden group hover:shadow-md transition-all hover:-translate-y-0.5">
+            <div className="absolute top-2 left-2 bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">Private</div>
+            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-4">Sisa Gaji</p>
+            <div className="my-3 relative">
               <CircularProgress 
                 value={gajiStats.sisa} 
                 max={monthlyBudget.income} 
-                colorClass="text-emerald-500" 
+                colorClass="text-emerald-400" 
                 icon={Wallet} 
                 size={70} 
               />
             </div>
-            <h4 className="font-bold text-lg text-gray-800">Rp {gajiStats.sisa.toLocaleString('id-ID')}</h4>
-            <p className="text-[11px] text-gray-400 mt-1">Terpakai: Rp {gajiStats.spent.toLocaleString('id-ID')}</p>
+            <h4 className="font-extrabold text-lg text-gray-800 tracking-tight">Rp {gajiStats.sisa.toLocaleString('id-ID')}</h4>
+            <p className="text-[11px] text-gray-400 mt-1 font-medium">Terpakai: Rp {gajiStats.spent.toLocaleString('id-ID')}</p>
           </div>
 
           {/* Keperluan */}
-          <div className="flex flex-col items-center p-4 bg-gray-50 rounded-2xl border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
-            <div className="absolute top-2 left-2 bg-blue-100 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded-full">Private</div>
-            <p className="text-gray-500 text-xs font-medium uppercase tracking-wider mt-4">Keperluan</p>
-            <div className="my-3">
+          <div className="flex flex-col items-center p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white shadow-sm relative overflow-hidden group hover:shadow-md transition-all hover:-translate-y-0.5">
+            <div className="absolute top-2 left-2 bg-gradient-to-r from-blue-100 to-blue-50 text-blue-600 border border-blue-100 text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">Private</div>
+            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-4">Keperluan</p>
+            <div className="my-3 relative">
               <CircularProgress 
                 value={keperluanStats.sisa} 
                 max={monthlyBudget.keperluan} 
-                colorClass="text-blue-500" 
+                colorClass="text-blue-400" 
                 icon={Coffee} 
                 size={70} 
               />
             </div>
-            <h4 className="font-bold text-lg text-gray-800">Rp {keperluanStats.sisa.toLocaleString('id-ID')}</h4>
-            <p className="text-[11px] text-gray-400 mt-1">Terpakai: Rp {keperluanStats.spent.toLocaleString('id-ID')}</p>
+            <h4 className="font-extrabold text-lg text-gray-800 tracking-tight">Rp {keperluanStats.sisa.toLocaleString('id-ID')}</h4>
+            <p className="text-[11px] text-gray-400 mt-1 font-medium">Terpakai: Rp {keperluanStats.spent.toLocaleString('id-ID')}</p>
           </div>
 
           {/* Belanja */}
-          <div className="flex flex-col items-center p-4 bg-gray-50 rounded-2xl border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
-            <div className="absolute top-2 left-2 bg-rose-100 text-rose-600 text-[10px] font-bold px-2 py-0.5 rounded-full">Private</div>
-            <p className="text-gray-500 text-xs font-medium uppercase tracking-wider mt-4">Sisa Belanja</p>
-            <div className="my-3">
+          <div className="flex flex-col items-center p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white shadow-sm relative overflow-hidden group hover:shadow-md transition-all hover:-translate-y-0.5">
+            <div className="absolute top-2 left-2 bg-gradient-to-r from-rose-100 to-rose-50 text-rose-600 border border-rose-100 text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">Private</div>
+            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-4">Sisa Belanja</p>
+            <div className="my-3 relative">
               <CircularProgress 
                 value={belanjaStats.sisa} 
                 max={monthlyBudget.belanja} 
-                colorClass="text-rose-500" 
+                colorClass="text-rose-400" 
                 icon={ShoppingBag} 
                 size={70} 
               />
             </div>
-            <h4 className="font-bold text-lg text-gray-800">Rp {belanjaStats.sisa.toLocaleString('id-ID')}</h4>
-            <p className="text-[11px] text-gray-400 mt-1">Terpakai: Rp {belanjaStats.spent.toLocaleString('id-ID')}</p>
+            <h4 className="font-extrabold text-lg text-gray-800 tracking-tight">Rp {belanjaStats.sisa.toLocaleString('id-ID')}</h4>
+            <p className="text-[11px] text-gray-400 mt-1 font-medium">Terpakai: Rp {belanjaStats.spent.toLocaleString('id-ID')}</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-md border border-pink-50 overflow-hidden">
-        <div className="bg-gradient-to-r from-rose-50 to-pink-50 border-b border-pink-100 px-5 py-4 flex items-center justify-between">
+      <div className="bg-gradient-to-br from-rose-50/40 via-white to-pink-50/40 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-pink-200/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+        <div className="bg-white/40 backdrop-blur-md border-b border-white/60 px-5 py-4 flex items-center justify-between relative z-10">
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
             <Activity className="text-rose-400" size={20} /> Transaksi Publik Terakhir
           </h3>
           <button
             onClick={() => navigate('/history')}
-            className="flex items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-700 transition-colors"
+            className="flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-white/60 border border-rose-100 px-3 py-1.5 rounded-full transition-all hover:shadow-sm"
           >
             Lihat Semua <ArrowRight size={13} />
           </button>
         </div>
 
-        <div className="px-5 py-2">
+        <div className="px-5 py-2 relative z-10">
           {transactions.length === 0 && (
             <div className="text-center py-8">
               <Heart size={32} className="mx-auto text-rose-200 mb-2" />
@@ -365,11 +367,11 @@ const Dashboard = () => {
             </div>
           )}
           {transactions.map((trx) => (
-            <div key={trx._id} className="flex items-center gap-3 py-3 px-1 border-b border-gray-50 last:border-0">
-               <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 ${
-                trx.type === 'deposit' ? 'bg-emerald-100 text-emerald-600'
-                : trx.type === 'income' ? 'bg-blue-100 text-blue-500'
-                : 'bg-rose-100 text-rose-500'
+            <div key={trx._id} className="flex items-center gap-3 py-3 px-1 border-b border-rose-50/50 last:border-0 hover:bg-white/40 transition-colors rounded-xl mx-[-4px] px-2">
+               <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border border-white ${
+                trx.type === 'deposit' ? 'bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600'
+                : trx.type === 'income' ? 'bg-gradient-to-br from-blue-100 to-blue-50 text-blue-500'
+                : 'bg-gradient-to-br from-rose-100 to-rose-50 text-rose-500'
               }`}>
                 {trx.type === 'deposit' ? <ArrowDownToLine size={15} /> : trx.type === 'income' ? <PlusCircle size={15} /> : <ArrowUpFromLine size={15} />}
               </div>
@@ -377,26 +379,28 @@ const Dashboard = () => {
                <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-800 text-sm truncate">
                   {trx.user.name}
-                  <span className={`ml-1.5 text-xs font-normal ${
-                    trx.type === 'deposit' ? 'text-emerald-500' : trx.type === 'income' ? 'text-blue-500' : 'text-rose-400'
+                  <span className={`ml-1.5 text-[11px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
+                    trx.type === 'deposit' ? 'bg-emerald-50 text-emerald-600' : trx.type === 'income' ? 'bg-blue-50 text-blue-600' : 'bg-rose-50 text-rose-500'
                   }`}>
                     {trx.type === 'deposit' ? 'menabung' : trx.type === 'income' ? 'pemasukan' : 'meminjam'}
                   </span>
                 </p>
-                <p className="text-[11px] text-gray-400 mt-0.5 truncate">
+                <p className="text-[11px] text-gray-500 mt-1 truncate">
                   {new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})}
-                  {trx.notes ? ` · ${trx.notes}` : ''}
+                  {trx.notes ? <span className="text-gray-400"> • {trx.notes}</span> : ''}
                 </p>
               </div>
 
                <div className="text-right flex-shrink-0">
-                <p className={`font-bold text-sm tabular-nums ${
-                  trx.type === 'deposit' ? 'text-emerald-600' : trx.type === 'income' ? 'text-blue-600' : 'text-rose-500'
+                <p className={`font-extrabold text-sm tracking-tight tabular-nums ${
+                  trx.type === 'deposit' ? 'text-emerald-500' : trx.type === 'income' ? 'text-blue-500' : 'text-rose-500'
                 }`}>
                   {trx.type === 'withdrawal' ? '−' : '+'} Rp {trx.amount.toLocaleString('id-ID')}
                 </p>
                 {trx.proofOfTransfer && (
-                  <button onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))} className="mt-0.5 text-[10px] font-medium text-blue-400 hover:text-blue-600 underline underline-offset-2 transition-colors">lihat bukti</button>
+                  <button onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))} className="mt-1 flex items-center justify-end gap-1 w-full text-[10px] font-semibold text-gray-400 hover:text-rose-500 transition-colors">
+                    <ImageIcon size={10} /> bukti
+                  </button>
                 )}
               </div>
             </div>
