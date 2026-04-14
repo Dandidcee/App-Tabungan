@@ -4,7 +4,9 @@ import Notification from '../models/Notification.js';
 // Returns notifications with read status per-user
 export const getNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find({})
+    const notifications = await Notification.find({
+      userId: { $in: [req.user._id, null] }
+    })
       .sort({ createdAt: -1 })
       .limit(50)
       .populate('triggeredBy', 'name email');
@@ -35,7 +37,7 @@ export const markAllRead = async (req, res) => {
     
     // Add userId to readBy for all unread notifications
     await Notification.updateMany(
-      { readBy: { $ne: userId } },
+      { readBy: { $ne: userId }, userId: { $in: [userId, null] } },
       { $addToSet: { readBy: userId } }
     );
 
@@ -48,7 +50,7 @@ export const markAllRead = async (req, res) => {
 // DELETE /api/notifications - Clear all notifications (admin-style, clears for everyone)
 export const clearAll = async (req, res) => {
   try {
-    await Notification.deleteMany({});
+    await Notification.deleteMany({ userId: { $in: [req.user._id, null] } });
     res.json({ message: 'All notifications cleared' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -56,9 +58,10 @@ export const clearAll = async (req, res) => {
 };
 
 // Internal helper - called from other controllers to create a notification
-export const createNotification = async ({ triggeredBy, type, message, linkTo, transactionId, amount }) => {
+export const createNotification = async ({ userId, triggeredBy, type, message, linkTo, transactionId, amount }) => {
   try {
     await Notification.create({
+      userId: userId || null,
       triggeredBy,
       type,
       message,
@@ -76,7 +79,10 @@ export const createNotification = async ({ triggeredBy, type, message, linkTo, t
 export const getUnreadCount = async (req, res) => {
   try {
     const userId = req.user._id;
-    const count = await Notification.countDocuments({ readBy: { $ne: userId } });
+    const count = await Notification.countDocuments({ 
+      readBy: { $ne: userId }, 
+      userId: { $in: [userId, null] } 
+    });
     res.json({ count });
   } catch (error) {
     res.status(500).json({ message: error.message });

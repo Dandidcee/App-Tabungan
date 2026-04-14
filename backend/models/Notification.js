@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 
 const notificationSchema = new mongoose.Schema({
+  // Who owns this notification (null = broadcast to all users)
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+
   // Who triggered the action (optional - null = system)
   triggeredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   

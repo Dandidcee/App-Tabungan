@@ -105,6 +105,39 @@ export const createTransaction = async (req, res) => {
       }
     }
 
+    // === Generate Notification helper ===
+    const sendTxNotification = async (txType, txAmount, txNotes, source, dest, txId) => {
+      const isPublic = source === 'tabungan_utama' || dest === 'tabungan_utama';
+      const formattedAmt = Number(txAmount).toLocaleString('id-ID');
+      const uName = req.user.name;
+
+      let notifMessage = "";
+      let notifType = txType;
+
+      if (txType === 'deposit') {
+        notifMessage = `💰 ${uName} menabung Rp ${formattedAmt}${txNotes ? ` — "${txNotes}"` : ''}`;
+      } else if (txType === 'income') {
+        notifType = 'deposit'; // UI expects deposit for income icons
+        notifMessage = `🎉 ${uName} mencatat pemasukan Rp ${formattedAmt}${txNotes ? ` — "${txNotes}"` : ''}`;
+      } else if (txType === 'withdrawal') {
+        notifMessage = `💸 ${uName} memakai dana Rp ${formattedAmt}${txNotes ? ` — "${txNotes}"` : ''}`;
+      } else if (txType === 'allocation') {
+        notifMessage = `🔄 ${uName} memindahkan dana Rp ${formattedAmt}${txNotes ? ` — "${txNotes}"` : ''}`;
+      }
+
+      if (notifMessage) {
+        await createNotification({
+          userId: isPublic ? null : req.user._id, // null = broadcast to all
+          triggeredBy: req.user._id,
+          type: notifType,
+          message: notifMessage,
+          linkTo: '/history',
+          transactionId: txId,
+          amount: Number(txAmount),
+        });
+      }
+    };
+
     if (type === 'allocation') {
       // Create double entry for Envelope Budgeting
       const withdrawalTx = new Transaction({
@@ -124,6 +157,9 @@ export const createTransaction = async (req, res) => {
         fundSource: toCategory
       });
       const createdAllocation = await incomeTx.save();
+      
+      await sendTxNotification('allocation', amount, notes, fundSource || 'gaji', toCategory, createdAllocation._id);
+
       return res.status(201).json(createdAllocation);
     }
 
@@ -154,41 +190,7 @@ export const createTransaction = async (req, res) => {
       }
     }
 
-    // === Auto-create notification for all users ONLY IF public ===
-    const isPublic = transaction.fundSource === 'tabungan_utama';
-    const formattedAmount = Number(amount).toLocaleString('id-ID');
-    const userName = req.user.name;
-
-    if (isPublic) {
-      if (type === 'deposit') {
-        await createNotification({
-          triggeredBy: req.user._id,
-          type: 'deposit',
-          message: `💰 ${userName} menabung Rp ${formattedAmount}${notes ? ` — "${notes}"` : ''}`,
-          linkTo: '/history',
-          transactionId: createdTransaction._id,
-          amount: Number(amount),
-        });
-      } else if (type === 'income') {
-        await createNotification({
-          triggeredBy: req.user._id,
-          type: 'deposit',
-          message: `🎉 ${userName} pemasukan tambahan Rp ${formattedAmount}${notes ? ` — "${notes}"` : ''}`,
-          linkTo: '/history',
-          transactionId: createdTransaction._id,
-          amount: Number(amount),
-        });
-      } else if (type === 'withdrawal') {
-        await createNotification({
-          triggeredBy: req.user._id,
-          type: 'withdrawal',
-          message: `💸 ${userName} meminjam Rp ${formattedAmount}${notes ? ` — "${notes}"` : ''}`,
-          linkTo: '/history',
-          transactionId: createdTransaction._id,
-          amount: Number(amount),
-        });
-      }
-    }
+    await sendTxNotification(type, amount, notes, fundSource || 'tabungan_utama', null, createdTransaction._id);
 
     res.status(201).json(createdTransaction);
   } catch (error) {
