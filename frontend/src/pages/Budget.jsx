@@ -48,9 +48,9 @@ const Budget = () => {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20 md:pb-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-800">Target Tabungan 🎯</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Target Tabungan Nikah 💖</h1>
         <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
           <Plus size={18} /> Buat Target
         </Button>

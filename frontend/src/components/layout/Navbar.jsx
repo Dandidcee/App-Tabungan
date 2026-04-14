@@ -1,10 +1,11 @@
 import { useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
-import { Flower2, LogOut } from 'lucide-react';
+import { Heart, Activity, Target, LogOut } from 'lucide-react';
 
 export const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
+  const location = useLocation();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -14,25 +15,50 @@ export const Navbar = () => {
 
   if (!user) return null;
 
+  const isActive = (path) => location.pathname === path;
+
   return (
-    <nav className="bg-white/70 backdrop-blur-md sticky top-0 z-30 border-b border-pink-100 px-6 py-4 flex justify-between items-center shadow-sm">
-      <Link to="/" className="flex items-center gap-2 text-rose-500 font-bold text-xl">
-        <Flower2 className="text-rose-400" />
-        <span>TabungBersama</span>
-      </Link>
-      
-      <div className="flex items-center gap-6">
-        <Link to="/" className="text-gray-600 hover:text-rose-500 font-medium transition-colors">Dashboard</Link>
-        <Link to="/budget" className="text-gray-600 hover:text-rose-500 font-medium transition-colors">Budget</Link>
-        <Link to="/history" className="text-gray-600 hover:text-rose-500 font-medium transition-colors">History</Link>
-        <button 
-          onClick={handleLogout}
-          className="flex items-center gap-2 text-gray-500 hover:text-rose-500 transition-colors"
-        >
-          <LogOut size={18} />
-          <span className="font-medium">Keluar</span>
+    <>
+      {/* Top Navbar (Desktop Only) */}
+      <nav className="glass sticky top-0 z-40 border-b border-pink-100 px-6 py-4 hidden md:flex justify-between items-center shadow-sm">
+        <Link to="/" className="flex items-center gap-2 text-rose-500 font-bold text-xl">
+          <Heart className="text-rose-400 fill-rose-100" />
+          <span>Tabungan Nikah</span>
+        </Link>
+        
+        <div className="flex items-center gap-8">
+          <Link to="/" className={`font-medium transition-colors ${isActive('/') ? 'text-rose-500' : 'text-gray-600 hover:text-rose-400'}`}>Beranda</Link>
+          <Link to="/budget" className={`font-medium transition-colors ${isActive('/budget') ? 'text-rose-500' : 'text-gray-600 hover:text-rose-400'}`}>Target</Link>
+          <Link to="/history" className={`font-medium transition-colors ${isActive('/history') ? 'text-rose-500' : 'text-gray-600 hover:text-rose-400'}`}>Riwayat</Link>
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-gray-500 hover:text-rose-500 bg-rose-50 px-4 py-2 rounded-full transition-colors ml-4"
+          >
+            <LogOut size={16} />
+            <span className="font-medium text-sm">Keluar</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* Bottom Navigation (Mobile Only) */}
+      <nav className="md:hidden glass fixed bottom-0 left-0 right-0 z-50 border-t border-pink-100 px-6 py-3 flex justify-between items-center pb-safe">
+        <Link to="/" className={`flex flex-col items-center gap-1 ${isActive('/') ? 'text-rose-500' : 'text-gray-400'}`}>
+          <Heart size={24} className={isActive('/') ? 'fill-rose-100' : ''} />
+          <span className="text-[10px] font-semibold">Beranda</span>
+        </Link>
+        <Link to="/budget" className={`flex flex-col items-center gap-1 ${isActive('/budget') ? 'text-rose-500' : 'text-gray-400'}`}>
+          <Target size={24} className={isActive('/budget') ? 'fill-rose-100' : ''} />
+          <span className="text-[10px] font-semibold">Target</span>
+        </Link>
+        <Link to="/history" className={`flex flex-col items-center gap-1 ${isActive('/history') ? 'text-rose-500' : 'text-gray-400'}`}>
+          <Activity size={24} />
+          <span className="text-[10px] font-semibold">Riwayat</span>
+        </Link>
+        <button onClick={handleLogout} className="flex flex-col items-center gap-1 text-gray-400">
+          <LogOut size={24} />
+          <span className="text-[10px] font-semibold">Keluar</span>
         </button>
-      </div>
-    </nav>
+      </nav>
+    </>
   );
 };

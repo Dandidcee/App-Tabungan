@@ -82,12 +82,9 @@ const History = () => {
   const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20 md:pb-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-800">Riwayat Transaksi 📜</h1>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
-          <Plus size={18} /> Catat Transaksi
-        </Button>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Riwayat Transaksi 📜</h1>
       </div>
 
       <Card>
@@ -109,9 +106,12 @@ const History = () => {
               </div>
               
               <div className="flex flex-col items-end w-full md:w-auto gap-2">
-                <span className={`font-bold text-xl ${trx.type === 'deposit' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                  {trx.type === 'deposit' ? '+' : '-'} Rp {trx.amount.toLocaleString('id-ID')}
-                </span>
+                <p className={`font-bold ${trx.type === 'deposit' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                  {trx.type === 'deposit' ? '+ Rp' : '- Rp'} {trx.amount.toLocaleString('id-ID')}
+                </p>
+                <p className="text-right text-[11px] text-gray-500 font-medium">
+                  {trx.type === 'deposit' ? 'Nabung' : 'Pinjam'}
+                </p>
                 
                 {trx.proofOfTransfer && (
                   <button 
@@ -146,63 +146,6 @@ const History = () => {
                 className={`flex-1 py-2 rounded-xl border ${type === 'withdrawal' ? 'bg-rose-100 border-rose-500 text-rose-700 font-bold' : 'bg-gray-50 text-gray-500 border-gray-200'}`}
               >
                 Menarik
-              </button>
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nominal (Rp)</label>
-            <input
-              type="number"
-              required
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-rose-200 outline-none"
-              placeholder="100000"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Pilih Target (Opsional)</label>
-            <select
-              value={budgetId}
-              onChange={(e) => setBudgetId(e.target.value)}
-              className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-rose-200 outline-none bg-white"
-            >
-              <option value="">-- Tidak dikaitkan dengan target --</option>
-              {budgets.map(b => (
-                <option key={b._id} value={b._id}>{b.title}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Catatan</label>
-            <input
-              type="text"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-rose-200 outline-none"
-              placeholder="Uang jajan tambahan..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Bukti Transfer (Opsional)</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
-              className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-rose-200 outline-none text-sm"
-            />
-          </div>
-
-          <Button type="submit" className="w-full mt-4" disabled={uploading}>
-            {uploading ? 'Menyimpan...' : 'Simpan Transaksi'}
-          </Button>
-        </form>
-      </Modal>
-
       {/* Image View Modal (No close on click outside for simplicity, just a big X) */}
       <AnimatePresence>
         {imageModal && (

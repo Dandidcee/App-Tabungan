@@ -13,9 +13,9 @@ function App() {
   if (loading) return <div className="min-h-screen flex items-center justify-center text-rose-400">Loading...</div>;
 
   return (
-    <div className="min-h-screen font-sans">
+    <div className="min-h-screen font-sans pb-16 md:pb-0">
       <Navbar />
-      <div className="max-w-5xl mx-auto p-6">
+      <div className="max-w-5xl mx-auto p-4 md:p-8">
         <Routes>
           <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
           <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
