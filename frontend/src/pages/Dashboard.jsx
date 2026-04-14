@@ -233,7 +233,7 @@ const Dashboard = () => {
             </div>
             <div className="mt-8 flex justify-between items-end">
               <div>
-                <p className="text-xs text-pink-100 font-medium">Uang Pinjaman / Keluar</p>
+                <p className="text-xs text-pink-100 font-medium">Uang di Pinjam atau di Luar</p>
                 <p className="text-lg font-bold">Rp {uangKeluar.toLocaleString('id-ID')}</p>
               </div>
               <p className="text-sm text-pink-100 italic">"Satu langkah lebih dekat."</p>

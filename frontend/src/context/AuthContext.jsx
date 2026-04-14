@@ -12,11 +12,27 @@ export const AuthProvider = ({ children }) => {
   const toastCtx = useContext(ToastContext);
 
   useEffect(() => {
-    const userInfo = localStorage.getItem('user');
-    if (userInfo) {
-      setUser(JSON.parse(userInfo));
-    }
-    setLoading(false);
+    const initAuth = async () => {
+      const userInfo = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
+      
+      if (userInfo && token) {
+        // Set immediately to prevent UI blocking
+        setUser(JSON.parse(userInfo));
+        
+        try {
+          // Fetch the freshest data from server
+          const { data } = await api.get('/api/auth/profile');
+          localStorage.setItem('user', JSON.stringify(data));
+          setUser(data);
+        } catch (err) {
+          console.error('Failed to sync user profile:', err);
+        }
+      }
+      setLoading(false);
+    };
+
+    initAuth();
   }, []);
 
   const login = async (email, password) => {
