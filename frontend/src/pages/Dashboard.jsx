@@ -401,16 +401,16 @@ const Dashboard = () => {
       </Modal>
 
       {/* Delete Category Confirmation Modal */}
-      <Modal isOpen={!!categoryToDelete} onClose={() => setCategoryToDelete(null)} title="Hapus Amplop 🗑️">
+      <Modal isOpen={!!categoryToDelete} onClose={() => setCategoryToDelete(null)} title="Hapus Kategori">
          <div className="text-center p-2 space-y-4">
              <AlertTriangle size={60} className="mx-auto text-rose-500 animate-pulse" />
-             <p className="text-sm font-semibold text-gray-700">Yakin ingin menghapus amplop "{categoryToDelete?.name}"?</p>
-             <p className="text-xs text-gray-500 bg-rose-50 p-3 rounded-xl border border-rose-100">Semua riwayat transaksi di dalam amplop ini akan ikut <b>terhapus</b>. Pastikan Anda sudah memindahkan sisanya ke Dompet Gaji jika masih ada.</p>
+             <p className="text-sm font-semibold text-gray-700">Apakah anda Yakin ingin menghapus Kategori Ini?</p>
+             <p className="text-xs text-gray-500 bg-rose-50 p-3 rounded-xl border border-rose-100">Semua Riwayat yang ada di Kategori ini akan di hapus, dan balance sisa akan di kembalikan Ke Gaji</p>
              
              <div className="flex gap-3 mt-6">
-                <Button onClick={() => setCategoryToDelete(null)} variant="outline" className="flex-1 py-3 bg-gray-50 border-0">Batal JANGAN!</Button>
+                <Button onClick={() => setCategoryToDelete(null)} variant="outline" className="flex-1 py-3 bg-gray-50 border-0">Batal</Button>
                 <Button onClick={confirmDeleteCategory} className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-200">
-                   Ya, Hapus
+                   Lanjutkan
                 </Button>
              </div>
          </div>
