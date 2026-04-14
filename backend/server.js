@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { connectDB } from './config/db.js';
 
@@ -23,6 +24,13 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Auto-create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('✅ Folder uploads/ dibuat otomatis');
+}
 
 // Set up Multer for file uploads
 const storage = multer.diskStorage({
