@@ -22,10 +22,10 @@ const Toast = ({ message, type = 'success', onClose }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 50, scale: 0.9 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] min-w-[300px] max-w-[90vw] p-4 rounded-2xl border shadow-xl flex items-center gap-3 backdrop-blur-md ${bgMap[type]}`}
+      initial={{ opacity: 0, x: 50, scale: 0.9 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 50, scale: 0.9 }}
+      className={`fixed top-8 right-4 md:top-8 md:right-8 z-[9999] min-w-[300px] max-w-[90vw] p-4 rounded-2xl border shadow-xl flex items-center gap-3 backdrop-blur-md ${bgMap[type]}`}
     >
       <div className="shrink-0">{iconMap[type]}</div>
       <p className={`flex-1 font-bold text-sm ${textMap[type]}`}>{message}</p>
