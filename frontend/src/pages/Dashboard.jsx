@@ -725,7 +725,7 @@ const Dashboard = () => {
           {(type === 'allocation' || type === 'withdrawal') && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-                {type === 'allocation' ? 'Tujuan Aliran Dana' : 'Pilih Sumber Dana / Tujuan'}
+                {type === 'allocation' ? 'Tujuan Aliran Dana' : 'Pilih Sumber Dana'}
               </label>
               <div className="relative">
                 <div onClick={() => setIsSelectOpen(isSelectOpen === 'main' ? false : 'main')} className={`w-full px-4 py-3 border rounded-xl flex justify-between items-center cursor-pointer ${type === 'allocation' ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800' : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700'}`}>
