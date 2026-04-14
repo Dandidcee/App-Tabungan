@@ -385,16 +385,16 @@ const Dashboard = () => {
       </AnimatePresence>
 
       {/* Reset Confirmation Modal */}
-      <Modal isOpen={isResetModalOpen} onClose={() => !isResetting && setIsResetModalOpen(false)} title="Peringatan Bahaya! ☠️">
+      <Modal isOpen={isResetModalOpen} onClose={() => !isResetting && setIsResetModalOpen(false)} title="PERINGATAN ⚠️">
          <div className="text-center p-2 space-y-4">
-             <AlertTriangle size={60} className="mx-auto text-rose-500 animate-pulse" />
-             <p className="text-sm font-semibold text-gray-700">Apakah Anda Yakin Ingin Menghapus Semuanya?</p>
-             <p className="text-xs text-gray-500 bg-rose-50 p-3 rounded-xl border border-rose-100">Semua Uang, History Public & Private, serta File Bukti Gambar akan <b>hangus selamanya</b> dari Server (kembali ke 0). Akun login Anda akan tetap aman.</p>
+             <AlertTriangle size={60} className="mx-auto text-yellow-500 animate-pulse" />
+             <p className="text-sm font-semibold text-gray-700">Apakah anda ingin menghapus semua data</p>
+             <p className="text-xs text-gray-500 bg-yellow-50 p-3 rounded-xl border border-yellow-100">Aksi ini akan menghapus semua data yang ada di server</p>
              
              <div className="flex gap-3 mt-6">
-                <Button onClick={() => setIsResetModalOpen(false)} variant="outline" className="flex-1 py-3 bg-gray-50 border-0">Batal JANGAN!</Button>
+                <Button onClick={() => setIsResetModalOpen(false)} variant="outline" className="flex-1 py-3 bg-gray-50 border-0">Batal</Button>
                 <Button onClick={handleResetData} className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-200">
-                   {isResetting ? <RefreshCcw className="animate-spin h-5 w-5 mx-auto" /> : 'Ya, Hapus Semua'}
+                   {isResetting ? <RefreshCcw className="animate-spin h-5 w-5 mx-auto" /> : 'Lanjutkan'}
                 </Button>
              </div>
          </div>
