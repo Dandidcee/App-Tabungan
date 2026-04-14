@@ -117,20 +117,20 @@ const History = () => {
             <p className="text-center text-gray-500 py-8">Belum ada transaksi sama sekali.</p>
           )}
           {filteredTransactions.map((trx) => (
-            <div key={trx._id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 hover:bg-pink-50/50 rounded-2xl transition-colors border-b border-gray-50 last:border-0 gap-4">
-              <div className="flex items-center gap-4">
-                <div className={`p-4 rounded-2xl ${trx.type === 'deposit' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
-                  {trx.type === 'deposit' ? <TrendingUp size={24} /> : <TrendingDown size={24} />}
+            <div key={trx._id} className="flex flex-row justify-between items-center p-3 sm:p-4 hover:bg-pink-50/50 rounded-2xl transition-colors border-b border-gray-50 last:border-0 gap-2 sm:gap-4">
+              <div className="flex items-center gap-3 w-2/3">
+                <div className={`p-2 sm:p-3 rounded-2xl flex-shrink-0 ${trx.type === 'deposit' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                  {trx.type === 'deposit' ? <TrendingUp size={18} /> : <TrendingDown size={18} />}
                 </div>
-                <div>
-                  <p className="font-bold text-gray-800 text-lg">{trx.user.name}</p>
-                  <p className="text-sm text-gray-500">{new Date(trx.createdAt).toLocaleString('id-ID')}</p>
-                  <p className="text-gray-600 mt-1">{trx.notes || '-'}</p>
+                <div className="overflow-hidden">
+                  <p className="font-bold text-gray-800 text-base truncate">{trx.user.name}</p>
+                  <p className="text-xs text-gray-500">{new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric', month:'short', year:'2-digit', hour:'2-digit', minute:'2-digit'})}</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5 truncate">{trx.notes || '-'}</p>
                 </div>
               </div>
               
-              <div className="flex flex-col items-end w-full md:w-auto gap-2">
-                <p className={`font-bold ${trx.type === 'deposit' ? 'text-emerald-500' : 'text-rose-500'}`}>
+              <div className="flex flex-col items-end flex-shrink-0 w-1/3">
+                <p className={`font-bold text-sm sm:text-base ${trx.type === 'deposit' ? 'text-emerald-500' : 'text-rose-500'}`}>
                   {trx.type === 'deposit' ? '+ Rp' : '- Rp'} {trx.amount.toLocaleString('id-ID')}
                 </p>
                 <p className="text-right text-[11px] text-gray-500 font-medium">
