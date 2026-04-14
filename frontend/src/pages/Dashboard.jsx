@@ -7,7 +7,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ArrowDownToLine, ArrowUpFromLine, Activity, ChevronDown, Image as ImageIcon, X, ArrowRight } from 'lucide-react';
+import { Heart, ArrowDownToLine, ArrowUpFromLine, PlusCircle, Activity, ChevronDown, Image as ImageIcon, X, ArrowRight } from 'lucide-react';
 
 const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
 const getImageUrl = (path) => {
@@ -55,7 +55,8 @@ const Dashboard = () => {
       if (prevDataRef.current === newSignature) return; // Nothing changed
       prevDataRef.current = newSignature;
 
-      const deposits = allTx.filter(t => t.type === 'deposit' && !t.budgetId).reduce((a, c) => a + c.amount, 0);
+      // income & deposit both ADD to total, withdrawal subtracts
+      const deposits = allTx.filter(t => (t.type === 'deposit' || t.type === 'income') && !t.budgetId).reduce((a, c) => a + c.amount, 0);
       const withdrawals = allTx.filter(t => t.type === 'withdrawal' && !t.budgetId).reduce((a, c) => a + c.amount, 0);
       setTotalTabungan(deposits - withdrawals);
       setUangKeluar(withdrawals);
@@ -100,7 +101,8 @@ const Dashboard = () => {
         proofOfTransfer
       });
 
-      showToast(type === 'deposit' ? 'Asyik! Berhasil nabung.' : 'Uang pinjaman dicatat.', 'success');
+      const msg = type === 'deposit' ? 'Asyik! Berhasil nabung.' : type === 'income' ? 'Pemasukan tambahan dicatat!' : 'Uang pinjaman dicatat.';
+      showToast(msg, 'success');
       setIsModalOpen(false);
       setAmount('');
       setNotes('');
@@ -144,28 +146,39 @@ const Dashboard = () => {
           <Heart size={200} className="absolute -right-10 -bottom-10 text-white/10" />
         </Card>
 
-        {/* Quick Actions Action Pads */}
-        <div className="col-span-1 flex flex-row md:flex-col gap-4">
+        {/* Quick Actions — 3 buttons: Nabung, Pemasukan, Pinjam */}
+        <div className="col-span-1 flex flex-row md:flex-col gap-3">
             <button 
                 onClick={() => openTransactionModal('deposit')}
-                className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-4 md:p-6 flex flex-col items-center justify-center text-center shadow-sm border border-emerald-100 group"
+                className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-5 flex flex-col items-center justify-center text-center shadow-sm border border-emerald-100 group"
             >
-                <div className="w-12 h-12 md:w-14 md:h-14 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-transform">
-                    <ArrowDownToLine size={24} className="md:w-7 md:h-7" />
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 transition-transform">
+                    <ArrowDownToLine size={20} />
                 </div>
-                <h3 className="font-bold text-gray-800 text-base md:text-lg">Nabung</h3>
-                <p className="text-[10px] md:text-xs text-gray-500 hidden md:block">Tambah saldo pernikahan</p>
+                <h3 className="font-bold text-gray-800 text-sm md:text-base">Nabung</h3>
+                <p className="text-[10px] text-gray-500 hidden md:block">Tambah saldo</p>
+            </button>
+
+            <button 
+                onClick={() => openTransactionModal('income')}
+                className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-5 flex flex-col items-center justify-center text-center shadow-sm border border-blue-100 group"
+            >
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 transition-transform">
+                    <PlusCircle size={20} />
+                </div>
+                <h3 className="font-bold text-gray-800 text-sm md:text-base">Pemasukan</h3>
+                <p className="text-[10px] text-gray-500 hidden md:block">Pendapatan lain</p>
             </button>
 
             <button 
                 onClick={() => openTransactionModal('withdrawal')}
-                className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-4 md:p-6 flex flex-col items-center justify-center text-center shadow-sm border border-rose-100 group"
+                className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-5 flex flex-col items-center justify-center text-center shadow-sm border border-rose-100 group"
             >
-                <div className="w-12 h-12 md:w-14 md:h-14 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-transform">
-                    <ArrowUpFromLine size={24} className="md:w-7 md:h-7" />
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 transition-transform">
+                    <ArrowUpFromLine size={20} />
                 </div>
-                <h3 className="font-bold text-gray-800 text-base md:text-lg">Pinjam</h3>
-                <p className="text-[10px] md:text-xs text-gray-500 hidden md:block">Ambil/pinjam uang tabungan</p>
+                <h3 className="font-bold text-gray-800 text-sm md:text-base">Pinjam</h3>
+                <p className="text-[10px] text-gray-500 hidden md:block">Ambil/pinjam uang</p>
             </button>
         </div>
       </div>
@@ -198,9 +211,13 @@ const Dashboard = () => {
             >
               {/* Colored dot + icon */}
               <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 ${
-                trx.type === 'deposit' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-500'
+                trx.type === 'deposit' ? 'bg-emerald-100 text-emerald-600'
+                : trx.type === 'income' ? 'bg-blue-100 text-blue-500'
+                : 'bg-rose-100 text-rose-500'
               }`}>
-                {trx.type === 'deposit' ? <ArrowDownToLine size={15} /> : <ArrowUpFromLine size={15} />}
+                {trx.type === 'deposit' ? <ArrowDownToLine size={15} />
+                : trx.type === 'income' ? <PlusCircle size={15} />
+                : <ArrowUpFromLine size={15} />}
               </div>
 
               {/* Info */}
@@ -208,9 +225,11 @@ const Dashboard = () => {
                 <p className="font-semibold text-gray-800 text-sm truncate">
                   {trx.user.name}
                   <span className={`ml-1.5 text-xs font-normal ${
-                    trx.type === 'deposit' ? 'text-emerald-500' : 'text-rose-400'
+                    trx.type === 'deposit' ? 'text-emerald-500'
+                    : trx.type === 'income' ? 'text-blue-500'
+                    : 'text-rose-400'
                   }`}>
-                    {trx.type === 'deposit' ? 'menabung' : 'meminjam'}
+                    {trx.type === 'deposit' ? 'menabung' : trx.type === 'income' ? 'pemasukan' : 'meminjam'}
                   </span>
                 </p>
                 <p className="text-[11px] text-gray-400 mt-0.5 truncate">
@@ -222,9 +241,11 @@ const Dashboard = () => {
               {/* Amount + Bukti */}
               <div className="text-right flex-shrink-0">
                 <p className={`font-bold text-sm tabular-nums ${
-                  trx.type === 'deposit' ? 'text-emerald-600' : 'text-rose-500'
+                  trx.type === 'deposit' ? 'text-emerald-600'
+                  : trx.type === 'income' ? 'text-blue-600'
+                  : 'text-rose-500'
                 }`}>
-                  {trx.type === 'deposit' ? '+' : '−'} Rp {trx.amount.toLocaleString('id-ID')}
+                  {trx.type === 'withdrawal' ? '−' : '+'} Rp {trx.amount.toLocaleString('id-ID')}
                 </p>
                 {trx.proofOfTransfer && (
                   <button
@@ -284,7 +305,11 @@ const Dashboard = () => {
       </AnimatePresence>
 
       {/* Transaction Modal directly from Dashboard */}
-      <Modal isOpen={isModalOpen} onClose={() => !uploading && setIsModalOpen(false)} title={type === 'deposit' ? "Catat Nabung 💖" : "Catat Pinjaman Uang 💸"}>
+      <Modal isOpen={isModalOpen} onClose={() => !uploading && setIsModalOpen(false)} title={
+        type === 'deposit' ? 'Catat Nabung 💖'
+        : type === 'income' ? 'Catat Pemasukan 🎉'
+        : 'Catat Pinjaman Uang 💸'
+      }>
         <form onSubmit={handleTransactionSubmit} className="space-y-4 text-left">
           
           <div>
@@ -342,7 +367,11 @@ const Dashboard = () => {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none transition-all bg-gray-50 focus:bg-white"
-              placeholder={type === 'deposit' ? "Menabung uang sisa belanja..." : "Pinjam untuk benerin motor"}
+              placeholder={
+                type === 'deposit' ? 'Menabung uang sisa belanja...'
+                : type === 'income' ? 'Bonus gaji, uang lebaran...'
+                : 'Pinjam untuk benerin motor'
+              }
             />
           </div>
 
@@ -358,8 +387,12 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <Button type="submit" variant={type === 'deposit' ? 'primary' : 'outline'} className="w-full mt-6 py-3 text-lg rounded-xl">
-            {uploading ? 'Menyimpan...' : (type === 'deposit' ? 'Simpan Tabungan' : 'Catat Uang Dipinjam')}
+          <Button type="submit" variant={type === 'withdrawal' ? 'outline' : 'primary'} className="w-full mt-6 py-3 text-lg rounded-xl">
+            {uploading ? 'Menyimpan...' : (
+              type === 'deposit' ? 'Simpan Tabungan'
+              : type === 'income' ? 'Catat Pemasukan'
+              : 'Catat Uang Dipinjam'
+            )}
           </Button>
         </form>
       </Modal>

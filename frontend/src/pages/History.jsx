@@ -5,7 +5,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, TrendingUp, TrendingDown, Image as ImageIcon, X } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, PlusCircle, Image as ImageIcon, X } from 'lucide-react';
 
 const History = () => {
   const [transactions, setTransactions] = useState([]);
@@ -126,8 +126,14 @@ const History = () => {
           {filteredTransactions.map((trx) => (
             <div key={trx._id} className="flex flex-row justify-between items-center p-3 sm:p-4 hover:bg-pink-50/50 rounded-2xl transition-colors border-b border-gray-50 last:border-0 gap-2 sm:gap-4">
               <div className="flex items-center gap-3 w-2/3">
-                <div className={`p-2 sm:p-3 rounded-2xl flex-shrink-0 ${trx.type === 'deposit' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
-                  {trx.type === 'deposit' ? <TrendingUp size={18} /> : <TrendingDown size={18} />}
+                <div className={`p-2 sm:p-3 rounded-2xl flex-shrink-0 ${
+                  trx.type === 'deposit' ? 'bg-emerald-100 text-emerald-600'
+                  : trx.type === 'income' ? 'bg-blue-100 text-blue-500'
+                  : 'bg-rose-100 text-rose-600'
+                }`}>
+                  {trx.type === 'deposit' ? <TrendingUp size={18} />
+                  : trx.type === 'income' ? <PlusCircle size={18} />
+                  : <TrendingDown size={18} />}
                 </div>
                 <div className="overflow-hidden">
                   <p className="font-bold text-gray-800 text-base truncate">{trx.user.name}</p>
@@ -137,11 +143,15 @@ const History = () => {
               </div>
               
               <div className="flex flex-col items-end flex-shrink-0 w-1/3">
-                <p className={`font-bold text-sm sm:text-base ${trx.type === 'deposit' ? 'text-emerald-500' : 'text-rose-500'}`}>
-                  {trx.type === 'deposit' ? '+ Rp' : '- Rp'} {trx.amount.toLocaleString('id-ID')}
+                <p className={`font-bold text-sm sm:text-base ${
+                  trx.type === 'deposit' ? 'text-emerald-500'
+                  : trx.type === 'income' ? 'text-blue-500'
+                  : 'text-rose-500'
+                }`}>
+                  {trx.type === 'withdrawal' ? '− Rp' : '+ Rp'} {trx.amount.toLocaleString('id-ID')}
                 </p>
                 <p className="text-right text-[11px] text-gray-500 font-medium">
-                  {trx.type === 'deposit' ? 'Nabung' : 'Pinjam'}
+                  {trx.type === 'deposit' ? 'Nabung' : trx.type === 'income' ? 'Pemasukan' : 'Pinjam'}
                 </p>
                 
                 {trx.proofOfTransfer && (

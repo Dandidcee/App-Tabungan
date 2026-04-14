@@ -26,8 +26,8 @@ export const createTransaction = async (req, res) => {
 
     const createdTransaction = await transaction.save();
 
-    // Update budget if it's a deposit
-    if (budgetId && type === 'deposit') {
+    // income & deposit both ADD to budget, withdrawal SUBTRACTS
+    if (budgetId && (type === 'deposit' || type === 'income')) {
       const budget = await Budget.findById(budgetId);
       if (budget) {
         budget.currentAmount += Number(amount);
@@ -50,6 +50,15 @@ export const createTransaction = async (req, res) => {
         triggeredBy: req.user._id,
         type: 'deposit',
         message: `💰 ${userName} menabung Rp ${formattedAmount}${notes ? ` — "${notes}"` : ''}`,
+        linkTo: '/history',
+        transactionId: createdTransaction._id,
+        amount: Number(amount),
+      });
+    } else if (type === 'income') {
+      await createNotification({
+        triggeredBy: req.user._id,
+        type: 'deposit',
+        message: `🎉 ${userName} pemasukan tambahan Rp ${formattedAmount}${notes ? ` — "${notes}"` : ''}`,
         linkTo: '/history',
         transactionId: createdTransaction._id,
         amount: Number(amount),
