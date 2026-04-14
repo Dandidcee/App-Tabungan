@@ -154,6 +154,34 @@ const Dashboard = () => {
             : type)        // external: just add (deposit or income)
         : type;
 
+      // Helper: resolve readable name from fundSource/category/budget ID
+      const getNameById = (id) => {
+        if (id === 'tabungan_utama') return 'Tabungan Bersama';
+        if (id === 'gaji') return 'Dompet Gaji';
+        const cat = categories.find(c => c._id === id);
+        if (cat) return `${cat.icon} ${cat.name}`;
+        const bgt = budgets.find(b => b._id === id);
+        if (bgt) return `🎯 ${bgt.title}`;
+        return id;
+      };
+
+      // Auto-generate smart notes if user didn't write custom notes
+      let finalNotes = notes;
+      if (!notes && (type === 'deposit' || type === 'income')) {
+        if (sourceMode === 'external') {
+          const destName = budgetId
+            ? getNameById(budgetId)
+            : getNameById(toCategory || fundSource);
+          finalNotes = `Income ke ${destName}`;
+        } else if (sourceMode === 'internal') {
+          const srcName = getNameById(fundSource);
+          const destName = budgetId
+            ? getNameById(budgetId)
+            : getNameById(toCategory);
+          finalNotes = `${srcName} transfer ke ${destName}`;
+        }
+      }
+
       // For external mode, send the destination as fundSource  
       // For internal mode, it's handled as allocation (fundSource → toCategory)
       await api.post('/api/transactions', {
@@ -162,7 +190,7 @@ const Dashboard = () => {
         budgetId: (finalFundSource === 'tabungan_utama' && budgetId) ? budgetId : undefined,
         fundSource: finalFundSource,
         toCategory: (type === 'allocation' || sourceMode === 'internal') ? toCategory : undefined,
-        notes,
+        notes: finalNotes,
         proofOfTransfer
       });
 
