@@ -139,21 +139,29 @@ const Dashboard = () => {
         proofOfTransfer = uploadRes.data.filePath;
       }
 
-      // For external mode: fundSource = destination the user picked
-      // For internal mode: fundSource = source to deduct, toCategory/budgetId = destination
+      // For deposit/income in external mode:
+      // - fundSource remains as selected destination (tabungan_utama or gaji or category)
+      // - type stays 'income' to just add to balance without deducting from anywhere else
+      const finalFundSource = (type === 'deposit' || type === 'income')
+        ? (sourceMode === 'external'
+            ? (toCategory || fundSource)  // destination chosen by user
+            : fundSource)                 // internal: deduct from fundSource
+        : fundSource;
+
       const finalType = (type === 'deposit' || type === 'income')
-        ? (sourceMode === 'internal' ? 'allocation' : type)
+        ? (sourceMode === 'internal'
+            ? 'allocation' // treat as allocation: deduct from source, add to destination
+            : type)        // external: just add (deposit or income)
         : type;
 
-      const finalBudgetId = budgetId || undefined;
-      const finalToCategory = (sourceMode === 'internal' && toCategory) ? toCategory : undefined;
-
+      // For external mode, send the destination as fundSource  
+      // For internal mode, it's handled as allocation (fundSource → toCategory)
       await api.post('/api/transactions', {
         amount: Number(amount),
         type: finalType,
-        budgetId: finalBudgetId,
-        fundSource,
-        toCategory: finalToCategory,
+        budgetId: (finalFundSource === 'tabungan_utama' && budgetId) ? budgetId : undefined,
+        fundSource: finalFundSource,
+        toCategory: sourceMode === 'internal' ? toCategory : undefined,
         notes,
         proofOfTransfer
       });
@@ -615,10 +623,13 @@ const Dashboard = () => {
                 <div onClick={() => setIsSelectOpen(isSelectOpen === 'dest' ? false : 'dest')} className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 rounded-xl flex justify-between items-center cursor-pointer">
                   <span className="font-medium text-gray-800 dark:text-slate-100 truncate">
                     {sourceMode === 'internal'
-                      ? (categories.find(c => c._id === toCategory)?.name
-                          || budgets.find(b => b._id === budgetId)?.title
-                          || 'Pilih tujuan...')
-                      : (fundSource === 'tabungan_utama' && budgetId ? budgets.find(b => b._id === budgetId)?.title
+                      ? (toCategory
+                          ? (categories.find(c => c._id === toCategory)?.name
+                            || budgets.find(b => b._id === toCategory)?.title
+                            || 'Pilih tujuan...')
+                          : 'Pilih tujuan...')
+                      : (fundSource === 'tabungan_utama' && budgetId
+                          ? `🎯 ${budgets.find(b => b._id === budgetId)?.title || 'Target'}`
                           : fundSource === 'tabungan_utama' ? '🌟 Tabungan Bersama (Utama)'
                           : fundSource === 'gaji' ? '💼 Dompet Gaji'
                           : categories.find(c => c._id === fundSource)?.name || 'Pilih tujuan...')}
@@ -628,46 +639,50 @@ const Dashboard = () => {
                 {isSelectOpen === 'dest' && (
                   <div className="absolute z-50 w-full mt-2 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
                     {sourceMode === 'internal' ? (
-                      // Internal: categories + tabungan target as destination
+                      // Internal mode: show categories + budget targets as destination
                       <>
+                        {categories.length > 0 && (
+                          <>
+                            <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Amplop Kategori</div>
+                            {categories.map(c => (
+                              <div key={c._id} onClick={() => { setToCategory(c._id); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400 border-b border-gray-50 dark:border-slate-700">{c.icon} {c.name}</div>
+                            ))}
+                          </>
+                        )}
                         {budgets.length > 0 && (
                           <>
-                            <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">🎯 Tabungan Target</div>
+                            <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Tabungan Target 🎯</div>
                             {budgets.map(b => (
-                              <div key={b._id} onClick={() => { setBudgetId(b._id); setToCategory(''); setFundSource('tabungan_utama'); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-rose-50 dark:hover:bg-rose-900/30 cursor-pointer font-semibold text-rose-600 dark:text-rose-400 pl-8">{b.icon || '🎯'} {b.title}</div>
+                              <div key={b._id} onClick={() => { setToCategory(b._id); setBudgetId(b._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-rose-50 dark:hover:bg-rose-900/30 cursor-pointer font-semibold text-rose-600 dark:text-rose-400 border-b border-gray-50 dark:border-slate-700">🎯 {b.title} (Rp {(b.currentAmount || 0).toLocaleString('id-ID')} / {(b.targetAmount || 0).toLocaleString('id-ID')})</div>
+                            ))}
+                          </>
+                        )}
+                        {categories.length === 0 && budgets.length === 0 && (
+                          <p className="text-center text-sm text-gray-400 py-4">Belum ada kategori atau target</p>
+                        )}
+                      </>
+                    ) : (
+                      // External mode: tabungan utama, gaji, categories, + budget targets
+                      <>
+                        <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Umum</div>
+                        <div onClick={() => { setFundSource('tabungan_utama'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer font-bold text-emerald-600 dark:text-emerald-400 border-b border-gray-50 dark:border-slate-700">🌟 Tabungan Bersama (Utama)</div>
+                        <div onClick={() => { setFundSource('gaji'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer font-bold text-emerald-700 dark:text-emerald-300 border-b border-gray-50 dark:border-slate-700">💼 Dompet Gaji</div>
+                        {budgets.length > 0 && (
+                          <>
+                            <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Tabungan Target 🎯</div>
+                            {budgets.map(b => (
+                              <div key={b._id} onClick={() => { setFundSource('tabungan_utama'); setBudgetId(b._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-rose-50 dark:hover:bg-rose-900/30 cursor-pointer font-semibold text-rose-600 dark:text-rose-400 border-b border-gray-50 dark:border-slate-700 pl-8">🎯 {b.title} (Rp {(b.currentAmount || 0).toLocaleString('id-ID')} / {(b.targetAmount || 0).toLocaleString('id-ID')})</div>
                             ))}
                           </>
                         )}
                         {categories.length > 0 && (
                           <>
-                            <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">📂 Amplop Kategori</div>
+                            <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Amplop Kategori</div>
                             {categories.map(c => (
-                              <div key={c._id} onClick={() => { setToCategory(c._id); setBudgetId(''); setFundSource(c._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400 pl-8">{c.icon} {c.name}</div>
+                              <div key={c._id} onClick={() => { setFundSource(c._id); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400 pl-8">{c.icon} {c.name}</div>
                             ))}
                           </>
                         )}
-                        {budgets.length === 0 && categories.length === 0 && (
-                          <p className="text-center text-sm text-gray-400 py-4">Belum ada target atau amplop</p>
-                        )}
-                      </>
-                    ) : (
-                      // External: tabungan utama, target, gaji, categories
-                      <>
-                        <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Publik</div>
-                        <div onClick={() => { setFundSource('tabungan_utama'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer font-bold text-emerald-600 dark:text-emerald-400 border-b border-gray-50 dark:border-slate-700">🌟 Tabungan Bersama (Utama)</div>
-                        {budgets.length > 0 && (
-                          <>
-                            <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">🎯 Tabungan Target</div>
-                            {budgets.map(b => (
-                              <div key={b._id} onClick={() => { setFundSource('tabungan_utama'); setBudgetId(b._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-rose-50 dark:hover:bg-rose-900/30 cursor-pointer font-semibold text-rose-600 dark:text-rose-400 pl-8">{b.icon || '🎯'} {b.title}</div>
-                            ))}
-                          </>
-                        )}
-                        <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Private</div>
-                        <div onClick={() => { setFundSource('gaji'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer font-bold text-emerald-700 dark:text-emerald-300 border-b border-gray-50 dark:border-slate-700">💼 Dompet Gaji</div>
-                        {categories.map(c => (
-                          <div key={c._id} onClick={() => { setFundSource(c._id); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400 pl-8">{c.icon} {c.name}</div>
-                        ))}
                       </>
                     )}
                   </div>
