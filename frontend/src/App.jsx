@@ -6,7 +6,6 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import History from './pages/History';
 import Budget from './pages/Budget';
-import { FallingFlowers } from './components/ui/FallingFlowers';
 
 function App() {
   const { user, loading } = useContext(AuthContext);
@@ -15,7 +14,6 @@ function App() {
 
   return (
     <div className="min-h-screen font-sans pb-16 md:pb-0 relative">
-      <FallingFlowers />
       <Navbar />
       <div className="max-w-5xl mx-auto p-4 md:p-8">
         <Routes>

@@ -92,8 +92,9 @@ const Dashboard = () => {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6 pb-24 md:pb-6"
     >
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-800">Halo, {user?.name} 💖</h1>
+      <div className="flex flex-col">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Halo, {user?.name} 💖</h1>
+        <p className="italic text-sm sm:text-base text-gray-500 mt-1">semangat nabungnya ya</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
@@ -152,21 +153,21 @@ const Dashboard = () => {
             <p className="text-center text-gray-500 py-6">Belum ada transaksi, mulailah menabung!</p>
           )}
           {transactions.map((trx) => (
-            <div key={trx._id} className="flex justify-between items-center p-4 bg-white rounded-2xl shadow-sm border border-gray-50 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-full ${trx.type === 'deposit' ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'}`}>
-                  {trx.type === 'deposit' ? <ArrowDownToLine size={20} /> : <ArrowUpFromLine size={20} />}
+            <div key={trx._id} className="flex justify-between items-center p-3 sm:p-4 bg-white rounded-2xl shadow-sm border border-gray-50 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-full ${trx.type === 'deposit' ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'}`}>
+                  {trx.type === 'deposit' ? <ArrowDownToLine size={16} /> : <ArrowUpFromLine size={16} />}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-800">{trx.user.name}</p>
+                  <p className="font-semibold text-gray-800 text-sm sm:text-base">{trx.user.name}</p>
                   <p className="text-xs text-gray-500">{new Date(trx.createdAt).toLocaleDateString('id-ID')}</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className={`font-bold ${trx.type === 'deposit' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                <p className={`font-bold text-sm sm:text-base ${trx.type === 'deposit' ? 'text-emerald-500' : 'text-rose-500'}`}>
                   {trx.type === 'deposit' ? '+ Rp' : '- Rp'} {trx.amount.toLocaleString('id-ID')}
                 </p>
-                <p className="text-[11px] text-gray-400 font-medium">{trx.type === 'deposit' ? 'Nabung' : 'Dipinjam'}</p>
+                <p className="text-[10px] sm:text-[11px] text-gray-400 font-medium">{trx.type === 'deposit' ? 'Nabung' : 'Dipinjam'}</p>
               </div>
             </div>
           ))}

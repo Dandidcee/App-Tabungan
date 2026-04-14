@@ -99,7 +99,7 @@ const History = () => {
             <button
               key={name}
               onClick={() => setFilterName(name)}
-              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
                 filterName === name 
                   ? 'bg-rose-500 text-white shadow-md' 
                   : 'bg-white text-gray-600 border border-pink-100 hover:bg-rose-50'
