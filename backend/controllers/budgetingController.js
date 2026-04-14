@@ -1,37 +1,20 @@
-import MonthlyBudget from '../models/MonthlyBudget.js';
+import PrivateCategory from '../models/PrivateCategory.js';
 
-export const getMonthlyBudget = async (req, res) => {
+export const getCategories = async (req, res) => {
   try {
-    const { month } = req.params; // Expect "YYYY-MM"
-    let budget = await MonthlyBudget.findOne({ user: req.user._id, month });
-    
-    if (!budget) {
-      budget = new MonthlyBudget({ user: req.user._id, month });
-      await budget.save();
-    }
-    
-    res.json(budget);
+    const categories = await PrivateCategory.find({ user: req.user._id });
+    res.json(categories);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-export const updateMonthlyBudget = async (req, res) => {
+export const createCategory = async (req, res) => {
   try {
-    const { month } = req.params;
-    const { income, keperluan, belanja } = req.body;
-
-    let budget = await MonthlyBudget.findOne({ user: req.user._id, month });
-    if (!budget) {
-      budget = new MonthlyBudget({ user: req.user._id, month });
-    }
-
-    budget.income = Number(income) || 0;
-    budget.keperluan = Number(keperluan) || 0;
-    budget.belanja = Number(belanja) || 0;
-
-    const updatedBudget = await budget.save();
-    res.json(updatedBudget);
+    const { name, icon } = req.body;
+    const category = new PrivateCategory({ user: req.user._id, name, icon });
+    const created = await category.save();
+    res.status(201).json(created);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -1,9 +1,9 @@
 import express from 'express';
-import { getMonthlyBudget, updateMonthlyBudget } from '../controllers/budgetingController.js';
+import { getCategories, createCategory } from '../controllers/budgetingController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.route('/:month').get(protect, getMonthlyBudget).post(protect, updateMonthlyBudget);
+router.route('/categories').get(protect, getCategories).post(protect, createCategory);
 
 export default router;

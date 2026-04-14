@@ -33,7 +33,29 @@ export const getBudgetTransactions = async (req, res) => {
 
 export const createTransaction = async (req, res) => {
   try {
-    const { amount, type, notes, budgetId, proofOfTransfer, fundSource } = req.body;
+    const { amount, type, notes, budgetId, proofOfTransfer, fundSource, toCategory } = req.body;
+
+    if (type === 'allocation') {
+      // Create double entry for Envelope Budgeting
+      const withdrawalTx = new Transaction({
+        user: req.user._id,
+        amount,
+        type: 'withdrawal',
+        notes: notes || 'Alokasi ke Kategori',
+        fundSource: fundSource || 'gaji'
+      });
+      await withdrawalTx.save();
+
+      const incomeTx = new Transaction({
+        user: req.user._id,
+        amount,
+        type: 'income',
+        notes: notes || 'Penerimaan Alokasi',
+        fundSource: toCategory
+      });
+      const createdAllocation = await incomeTx.save();
+      return res.status(201).json(createdAllocation);
+    }
 
     const transaction = new Transaction({
       user: req.user._id,
@@ -100,6 +122,8 @@ export const createTransaction = async (req, res) => {
 
     res.status(201).json(createdTransaction);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ message: error.message });
+    }
   }
 };

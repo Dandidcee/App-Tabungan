@@ -7,53 +7,13 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ArrowDownToLine, ArrowUpFromLine, PlusCircle, Activity, ChevronDown, Image as ImageIcon, X, ArrowRight, Settings, Wallet, ShoppingBag, Coffee } from 'lucide-react';
+import { Heart, ArrowDownToLine, ArrowUpFromLine, PlusCircle, Activity, ChevronDown, Image as ImageIcon, X, ArrowRight, Settings, Wallet, ShoppingBag, Coffee, Plus, AlertTriangle, RefreshCcw } from 'lucide-react';
 
 const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
 const getImageUrl = (path) => {
   if (!path) return null;
   if (path.startsWith('http')) return path;
   return `${getApiUrl()}${path}`;
-};
-
-// Circle Progress Component for Auto Budget
-const CircularProgress = ({ value, max, colorClass, size = 60, strokeWidth = 6, icon: Icon }) => {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const safeMax = max <= 0 ? 1 : max;
-  const safeValue = value < 0 ? 0 : value > safeMax ? safeMax : value;
-  const strokeDashoffset = circumference - (safeValue / safeMax) * circumference;
-
-  return (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-      {/* Background Circle */}
-      <svg className="transform -rotate-90 absolute inset-0" width={size} height={size}>
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          fill="transparent"
-          className="text-gray-100"
-        />
-        {/* Progress Circle */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          fill="transparent"
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
-          className={`transition-all duration-1000 ease-out ${colorClass}`}
-          strokeLinecap="round"
-        />
-      </svg>
-      {Icon && <Icon size={size * 0.4} className={colorClass} />}
-    </div>
-  );
 };
 
 const Dashboard = () => {
@@ -65,12 +25,12 @@ const Dashboard = () => {
   const [uangKeluar, setUangKeluar] = useState(0);
   const [imageModal, setImageModal] = useState(null);
   
-  // Auto Budgeting State
-  const [monthlyBudget, setMonthlyBudget] = useState({ income: 0, keperluan: 0, belanja: 0 });
+  // Auto Budgeting State (Envelope)
+  const [categories, setCategories] = useState([]);
   const [budgetTransactions, setBudgetTransactions] = useState([]);
-  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
-  const [budgetForm, setBudgetForm] = useState({ income: '', keperluan: '', belanja: '' });
-  const [savingBudget, setSavingBudget] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [categoryName, setCategoryName] = useState('');
+  const [categoryIcon, setCategoryIcon] = useState('🏷️');
 
   // Transaction Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -78,21 +38,26 @@ const Dashboard = () => {
   const [amount, setAmount] = useState('');
   const [budgetId, setBudgetId] = useState('');
   const [fundSource, setFundSource] = useState('tabungan_utama');
+  const [toCategory, setToCategory] = useState(''); // for allocation type
   const [notes, setNotes] = useState('');
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [isSelectOpen, setIsSelectOpen] = useState(false);
-  const { showToast } = useToast();
+  
+  // Reset Confirmation State
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
+  const { showToast } = useToast();
   const prevDataRef = useRef(null);
 
   const fetchData = useCallback(async () => {
     try {
       const monthStr = new Date().toISOString().substring(0, 7);
-      const [budgetsRes, transactionsRes, monthlyRes, budgetTxRes] = await Promise.all([
+      const [budgetsRes, transactionsRes, catsRes, budgetTxRes] = await Promise.all([
         api.get('/api/budget'),
         api.get('/api/transactions'),
-        api.get(`/api/budgeting/${monthStr}`),
+        api.get('/api/budgeting/categories'),
         api.get(`/api/transactions/budget/${monthStr}`),
       ]);
       const allTx = transactionsRes.data;
@@ -100,7 +65,7 @@ const Dashboard = () => {
       const newSignature = JSON.stringify({
         txIds: allTx.map(t => t._id + t.amount).join(','),
         budgetAmounts: budgetsRes.data.map(b => b._id + b.currentAmount).join(','),
-        monthly: monthlyRes.data.updatedAt,
+        cats: catsRes.data.map(c => c._id).join(','),
         budgetTxs: budgetTxRes.data.map(t => t._id).join(',')
       });
 
@@ -115,7 +80,7 @@ const Dashboard = () => {
       setBudgets(budgetsRes.data);
       setTransactions(allTx.reverse().slice(0, 5));
       
-      setMonthlyBudget(monthlyRes.data);
+      setCategories(catsRes.data);
       setBudgetTransactions(budgetTxRes.data);
     } catch (error) {
       console.error(error);
@@ -128,9 +93,10 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  const openTransactionModal = (txType) => {
+  const openTransactionModal = (txType, overrideSource = 'tabungan_utama', overrideToCat = '') => {
     setType(txType);
-    setFundSource('tabungan_utama');
+    setFundSource(overrideSource);
+    setToCategory(overrideToCat);
     setIsModalOpen(true);
   };
 
@@ -142,9 +108,7 @@ const Dashboard = () => {
       if (file) {
         const formData = new FormData();
         formData.append('proof', file);
-        const uploadRes = await api.post('/api/upload', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        const uploadRes = await api.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' }});
         proofOfTransfer = uploadRes.data.filePath;
       }
 
@@ -153,19 +117,15 @@ const Dashboard = () => {
         type,
         budgetId: (fundSource === 'tabungan_utama' && budgetId) ? budgetId : undefined,
         fundSource,
+        toCategory,
         notes,
         proofOfTransfer
       });
 
-      const msg = type === 'deposit' ? 'Berhasil nabung.' : type === 'income' ? 'Pemasukan dicatat!' : 'Pinjaman dicatat.';
+      const msg = type === 'deposit' ? 'Berhasil nabung.' : type === 'income' ? 'Pemasukan dicatat!' : type === 'allocation' ? 'Alokasi berhasil disedot.' : 'Pinjaman dicatat.';
       showToast(msg, 'success');
       setIsModalOpen(false);
-      setAmount('');
-      setNotes('');
-      setBudgetId('');
-      setFundSource('tabungan_utama');
-      setFile(null);
-      setIsSelectOpen(false);
+      setAmount(''); setNotes(''); setBudgetId(''); setFundSource('tabungan_utama'); setToCategory(''); setFile(null); setIsSelectOpen(false);
       fetchData();
     } catch (err) {
       showToast(err.response?.data?.message || 'Gagal menyimpan transaksi', 'error');
@@ -174,52 +134,68 @@ const Dashboard = () => {
     }
   };
 
-  const openBudgetModal = () => {
-    setBudgetForm({
-      income: monthlyBudget.income || '',
-      keperluan: monthlyBudget.keperluan || '',
-      belanja: monthlyBudget.belanja || ''
-    });
-    setIsBudgetModalOpen(true);
-  };
-
-  const handleBudgetSubmit = async (e) => {
+  const handleCategorySubmit = async (e) => {
     e.preventDefault();
-    setSavingBudget(true);
     try {
-      const monthStr = new Date().toISOString().substring(0, 7);
-      await api.post(`/api/budgeting/${monthStr}`, budgetForm);
-      showToast('Budget bulanan berhasil disimpan', 'success');
-      setIsBudgetModalOpen(false);
+      await api.post('/api/budgeting/categories', { name: categoryName, icon: categoryIcon });
+      showToast('Kategori baru berhasil dicetak!', 'success');
+      setIsCategoryModalOpen(false);
+      setCategoryName('');
       fetchData();
     } catch (err) {
-      showToast(err.response?.data?.message || 'Gagal menyimpan budget', 'error');
-    } finally {
-      setSavingBudget(false);
+      showToast(err.response?.data?.message || 'Gagal membuat kategori', 'error');
     }
   };
 
-  // Helper to calculate remaining budget
-  const getSisa = (category, baseAmount) => {
-    const txs = budgetTransactions.filter(t => t.fundSource === category);
-    const spent = txs.filter(t => t.type === 'withdrawal').reduce((a,c) => a + c.amount, 0);
-    const added = txs.filter(t => t.type === 'income' || t.type === 'deposit').reduce((a,c) => a + c.amount, 0);
-    return { sisa: baseAmount + added - spent, spent };
+  const handleResetData = async () => {
+    setIsResetting(true);
+    try {
+      await api.delete('/api/settings/reset');
+      showToast('Sistem barusan di-reset bersih!', 'success');
+      setIsResetModalOpen(false);
+      prevDataRef.current = null;
+      fetchData();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Gagal mereset data', 'error');
+    } finally {
+      setIsResetting(false);
+    }
   };
 
-  const gajiStats = getSisa('gaji', monthlyBudget.income);
-  const keperluanStats = getSisa('keperluan', monthlyBudget.keperluan);
-  const belanjaStats = getSisa('belanja', monthlyBudget.belanja);
+  // Envelopes logic
+  const gajiTx = budgetTransactions.filter(t => t.fundSource === 'gaji');
+  const gajiBalance = gajiTx.reduce((acc, t) => {
+    if (t.type === 'deposit' || t.type === 'income') return acc + t.amount;
+    if (t.type === 'withdrawal' || t.type === 'allocation') return acc - t.amount;
+    return acc;
+  }, 0);
+
+  const getEnvelopeBalance = (catId) => {
+    const envTxs = budgetTransactions.filter(t => t.fundSource === catId);
+    return envTxs.reduce((acc, t) => {
+      if (t.type === 'deposit' || t.type === 'income') return acc + t.amount;
+      if (t.type === 'withdrawal' || t.type === 'allocation') return acc - t.amount;
+      return acc;
+    }, 0);
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-6 pb-24 md:pb-6"
-    >
-      <div className="flex flex-col">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Halo, {user?.name} 💖</h1>
-        <p className="italic text-sm sm:text-base text-gray-500 mt-1">semangat nabungnya ya</p>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-24 md:pb-6">
+      <div className="flex justify-between items-start">
+        <div className="flex flex-col">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Halo, {user?.name} 💖</h1>
+          <p className="italic text-sm sm:text-base text-gray-500 mt-1">semangat nabungnya ya</p>
+        </div>
+        
+        {/* DANGER ZONE RESET BUTTON */}
+        <button 
+          onClick={() => setIsResetModalOpen(true)} 
+          className="text-rose-500 bg-rose-50 px-3 py-2 rounded-xl border border-rose-100 hover:bg-rose-100 transition-colors shadow-sm flex items-center gap-2 group"
+          title="Reset Keseluruhan (Danger Zone)"
+        >
+           <AlertTriangle size={18} className="group-hover:rotate-12 transition-transform" />
+           <span className="text-xs font-bold hidden sm:block">Reset Data</span>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
@@ -243,32 +219,23 @@ const Dashboard = () => {
         {/* Quick Actions */}
         <div className="col-span-1 flex flex-col gap-3">
           <div className="flex flex-row md:flex-col gap-3 flex-1">
-            <button 
-                onClick={() => openTransactionModal('deposit')}
-                className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-emerald-100 group"
-            >
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 transition-transform">
+            <button onClick={() => openTransactionModal('deposit')} className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-emerald-100 group">
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white transition-transform">
                     <ArrowDownToLine size={20} />
                 </div>
                 <h3 className="font-bold text-gray-800 text-sm md:text-base">Nabung</h3>
             </button>
 
-            <button 
-                onClick={() => openTransactionModal('withdrawal')}
-                className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-rose-100 group"
-            >
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 transition-transform">
+            <button onClick={() => openTransactionModal('withdrawal')} className="flex-1 glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-rose-100 group">
+                <div className="w-10 h-10 bg-gradient-to-br from-rose-100 to-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white transition-transform">
                     <ArrowUpFromLine size={20} />
                 </div>
                 <h3 className="font-bold text-gray-800 text-sm md:text-base">Pinjam/Pakai</h3>
             </button>
           </div>
 
-          <button 
-              onClick={() => openTransactionModal('income')}
-              className="glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-blue-100 group"
-          >
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 transition-transform">
+          <button onClick={() => openTransactionModal('income')} className="glass bg-white/60 hover:bg-white/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-blue-100 group">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white transition-transform">
                   <PlusCircle size={20} />
               </div>
               <h3 className="font-bold text-gray-800 text-sm md:text-base">Pemasukan</h3>
@@ -276,71 +243,70 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* AUTO BUDGETING DASHBOARD */}
+      {/* ENVELOPE BUDGETING DASHBOARD (Dynamic Categories) */}
       <div className="bg-gradient-to-br from-indigo-100 via-purple-50 to-purple-200 backdrop-blur-xl rounded-3xl shadow-lg border-2 border-white/80 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-300/30 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-        <div className="bg-white/50 backdrop-blur-md border-b border-white/60 px-5 py-4 flex items-center justify-between relative z-10">
+        <div className="bg-white/50 backdrop-blur-md border-b border-white/60 px-5 py-4 flex items-center justify-between relative z-10 flex-wrap gap-3">
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <PieChartIcon className="text-indigo-500" size={20} /> Auto Budgeting Bulanan
+            <Wallet className="text-indigo-500" size={20} /> Amplop Pribadi Anda
           </h3>
-          <button
-            onClick={openBudgetModal}
-            className="flex items-center gap-1.5 text-xs font-semibold bg-white border border-indigo-100 px-3 py-1.5 rounded-full text-indigo-600 hover:bg-indigo-50 hover:shadow-sm transition-all"
-          >
-            <Settings size={14} /> Atur Budget
+          <button onClick={() => setIsCategoryModalOpen(true)} className="flex items-center gap-1.5 text-xs font-semibold bg-white border border-indigo-100 px-3 py-1.5 rounded-full text-indigo-600 hover:bg-indigo-50 hover:shadow-sm transition-all shadow-sm">
+            <Plus size={14} /> Kategori Baru
           </button>
         </div>
         
-        <div className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-5 relative z-10">
-          {/* Gaji/Income */}
-          <div className="flex flex-col items-center p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white shadow-sm relative overflow-hidden group hover:shadow-md transition-all hover:-translate-y-0.5">
-            <div className="absolute top-2 left-2 bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">Private</div>
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-4">Sisa Gaji</p>
-            <div className="my-3 relative">
-              <CircularProgress 
-                value={gajiStats.sisa} 
-                max={monthlyBudget.income} 
-                colorClass="text-emerald-400" 
-                icon={Wallet} 
-                size={70} 
-              />
-            </div>
-            <h4 className="font-extrabold text-lg text-gray-800 tracking-tight">Rp {gajiStats.sisa.toLocaleString('id-ID')}</h4>
-            <p className="text-[11px] text-gray-400 mt-1 font-medium">Terpakai: Rp {gajiStats.spent.toLocaleString('id-ID')}</p>
+        <div className="p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 relative z-10">
+          {/* MASTER POOL: DOMPET GAJI */}
+          <div className="md:col-span-1 border-r-0 md:border-r border-indigo-100/50 pr-0 md:pr-5 mb-4 md:mb-0">
+             <div className="flex flex-col h-full items-center p-5 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-md text-white/90 relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                <div className="relative z-10 text-center flex flex-col items-center h-full w-full">
+                  <div className="bg-emerald-400 text-white text-[10px] font-bold px-3 py-0.5 rounded-full mb-3 shadow-inner">SUMBER DANA</div>
+                  <Wallet size={40} className="mb-2 opacity-90" />
+                  <p className="text-emerald-100 text-xs font-medium uppercase tracking-widest mt-1">Dompet Gaji</p>
+                  <h4 className="font-extrabold text-2xl tracking-tight text-white mt-1 mb-auto">Rp {gajiBalance.toLocaleString('id-ID')}</h4>
+                  
+                  <div className="w-full mt-4 flex gap-2">
+                     <button onClick={() => openTransactionModal('deposit', 'gaji')} className="flex-1 bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-colors py-2 rounded-xl text-xs font-bold shadow-sm">
+                        + Tambah
+                     </button>
+                     <button onClick={() => openTransactionModal('withdrawal', 'gaji')} className="flex-1 bg-black/10 hover:bg-black/20 backdrop-blur-sm transition-colors py-2 rounded-xl text-xs font-bold shadow-sm">
+                        - Pakai
+                     </button>
+                  </div>
+                </div>
+             </div>
           </div>
 
-          {/* Keperluan */}
-          <div className="flex flex-col items-center p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white shadow-sm relative overflow-hidden group hover:shadow-md transition-all hover:-translate-y-0.5">
-            <div className="absolute top-2 left-2 bg-gradient-to-r from-blue-100 to-blue-50 text-blue-600 border border-blue-100 text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">Private</div>
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-4">Keperluan</p>
-            <div className="my-3 relative">
-              <CircularProgress 
-                value={keperluanStats.sisa} 
-                max={monthlyBudget.keperluan} 
-                colorClass="text-blue-400" 
-                icon={Coffee} 
-                size={70} 
-              />
-            </div>
-            <h4 className="font-extrabold text-lg text-gray-800 tracking-tight">Rp {keperluanStats.sisa.toLocaleString('id-ID')}</h4>
-            <p className="text-[11px] text-gray-400 mt-1 font-medium">Terpakai: Rp {keperluanStats.spent.toLocaleString('id-ID')}</p>
-          </div>
+          {/* DYNAMIC ENVELOPES */}
+          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+             {categories.length === 0 && (
+                <div className="col-span-full border-2 border-dashed border-indigo-200/50 rounded-2xl p-6 flex flex-col items-center justify-center text-indigo-400 group cursor-pointer hover:bg-indigo-50/30 transition-colors" onClick={() => setIsCategoryModalOpen(true)}>
+                   <PlusCircle size={30} className="mb-2 opacity-50 group-hover:opacity-100 transition-opacity" />
+                   <p className="text-sm font-semibold">Buat Amplop Kategori</p>
+                   <p className="text-[10px] opacity-70 mt-1">Misal: Keperluan, Belanja, Cicilan Motor</p>
+                </div>
+             )}
 
-          {/* Belanja */}
-          <div className="flex flex-col items-center p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white shadow-sm relative overflow-hidden group hover:shadow-md transition-all hover:-translate-y-0.5">
-            <div className="absolute top-2 left-2 bg-gradient-to-r from-rose-100 to-rose-50 text-rose-600 border border-rose-100 text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">Private</div>
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-4">Sisa Belanja</p>
-            <div className="my-3 relative">
-              <CircularProgress 
-                value={belanjaStats.sisa} 
-                max={monthlyBudget.belanja} 
-                colorClass="text-rose-400" 
-                icon={ShoppingBag} 
-                size={70} 
-              />
-            </div>
-            <h4 className="font-extrabold text-lg text-gray-800 tracking-tight">Rp {belanjaStats.sisa.toLocaleString('id-ID')}</h4>
-            <p className="text-[11px] text-gray-400 mt-1 font-medium">Terpakai: Rp {belanjaStats.spent.toLocaleString('id-ID')}</p>
+             {categories.map(cat => {
+               const bal = getEnvelopeBalance(cat._id);
+               return (
+                 <div key={cat._id} className="flex flex-col items-center p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                    <p className="text-3xl mb-1 mt-2 group-hover:scale-110 transition-transform">{cat.icon}</p>
+                    <p className="text-gray-500 text-[11px] font-bold uppercase tracking-widest mt-1">{cat.name}</p>
+                    <h4 className="font-extrabold text-xl text-gray-800 tracking-tight mt-1 mb-auto">Rp {bal.toLocaleString('id-ID')}</h4>
+                    
+                    <div className="w-full mt-4 flex gap-1.5 pt-3 border-t border-indigo-50/50">
+                       <button onClick={() => openTransactionModal('allocation', 'gaji', cat._id)} className="flex-1 flex flex-col items-center justify-center text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 py-1.5 rounded-lg transition-colors">
+                          <ArrowDownToLine size={14} className="mb-0.5" /> Sedot Gaji
+                       </button>
+                       <button onClick={() => openTransactionModal('withdrawal', cat._id)} className="flex-1 flex flex-col items-center justify-center text-[10px] font-bold text-rose-500 bg-rose-50 hover:bg-rose-100 py-1.5 rounded-lg transition-colors">
+                          <ArrowUpFromLine size={14} className="mb-0.5" /> Pakai
+                       </button>
+                    </div>
+                 </div>
+               );
+             })}
           </div>
         </div>
       </div>
@@ -351,164 +317,138 @@ const Dashboard = () => {
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
             <Activity className="text-rose-400" size={20} /> Transaksi Publik Terakhir
           </h3>
-          <button
-            onClick={() => navigate('/history')}
-            className="flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-white/60 border border-rose-100 px-3 py-1.5 rounded-full transition-all hover:shadow-sm"
-          >
+          <button onClick={() => navigate('/history')} className="flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-white/60 border border-rose-100 px-3 py-1.5 rounded-full transition-all hover:shadow-sm">
             Lihat Semua <ArrowRight size={13} />
           </button>
         </div>
 
         <div className="px-5 py-2 relative z-10">
           {transactions.length === 0 && (
-            <div className="text-center py-8">
-              <Heart size={32} className="mx-auto text-rose-200 mb-2" />
-              <p className="text-gray-500 text-sm">Belum ada transaksi di tabungan utama.</p>
-            </div>
+             <p className="text-center text-gray-500 text-sm py-8">Belum ada transaksi publik.</p>
           )}
           {transactions.map((trx) => (
             <div key={trx._id} className="flex items-center gap-3 py-3 px-1 border-b border-rose-50/50 last:border-0 hover:bg-white/40 transition-colors rounded-xl mx-[-4px] px-2">
-               <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border border-white ${
-                trx.type === 'deposit' ? 'bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600'
-                : trx.type === 'income' ? 'bg-gradient-to-br from-blue-100 to-blue-50 text-blue-500'
-                : 'bg-gradient-to-br from-rose-100 to-rose-50 text-rose-500'
-              }`}>
-                {trx.type === 'deposit' ? <ArrowDownToLine size={15} /> : trx.type === 'income' ? <PlusCircle size={15} /> : <ArrowUpFromLine size={15} />}
-              </div>
-
+               <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border border-white ${trx.type === 'deposit' ? 'bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600' : trx.type === 'income' ? 'bg-gradient-to-br from-blue-100 to-blue-50 text-blue-500' : 'bg-gradient-to-br from-rose-100 to-rose-50 text-rose-500'}`}>
+                  {trx.type === 'deposit' ? <ArrowDownToLine size={15} /> : trx.type === 'income' ? <PlusCircle size={15} /> : <ArrowUpFromLine size={15} />}
+               </div>
                <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-800 text-sm truncate">
-                  {trx.user.name}
-                  <span className={`ml-1.5 text-[11px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
-                    trx.type === 'deposit' ? 'bg-emerald-50 text-emerald-600' : trx.type === 'income' ? 'bg-blue-50 text-blue-600' : 'bg-rose-50 text-rose-500'
-                  }`}>
-                    {trx.type === 'deposit' ? 'menabung' : trx.type === 'income' ? 'pemasukan' : 'meminjam'}
-                  </span>
-                </p>
-                <p className="text-[11px] text-gray-500 mt-1 truncate">
-                  {new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})}
-                  {trx.notes ? <span className="text-gray-400"> • {trx.notes}</span> : ''}
-                </p>
-              </div>
-
+                  <p className="font-semibold text-gray-800 text-sm truncate">{trx.user.name} <span className="ml-1.5 text-[11px] font-bold uppercase">{trx.type}</span></p>
+                  <p className="text-[11px] text-gray-500 mt-1">{new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric', month:'short'})} {trx.notes && `• ${trx.notes}`}</p>
+               </div>
                <div className="text-right flex-shrink-0">
-                <p className={`font-extrabold text-sm tracking-tight tabular-nums ${
-                  trx.type === 'deposit' ? 'text-emerald-500' : trx.type === 'income' ? 'text-blue-500' : 'text-rose-500'
-                }`}>
-                  {trx.type === 'withdrawal' ? '−' : '+'} Rp {trx.amount.toLocaleString('id-ID')}
-                </p>
-                {trx.proofOfTransfer && (
-                  <button onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))} className="mt-1 flex items-center justify-end gap-1 w-full text-[10px] font-semibold text-gray-400 hover:text-rose-500 transition-colors">
-                    <ImageIcon size={10} /> bukti
-                  </button>
-                )}
-              </div>
+                  <p className={`font-extrabold text-sm ${trx.type === 'withdrawal' ? 'text-rose-500' : 'text-emerald-500'}`}>{trx.type === 'withdrawal' ? '−' : '+'} Rp {trx.amount.toLocaleString('id-ID')}</p>
+                  {trx.proofOfTransfer && <button onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))} className="mt-1 flex items-center justify-end gap-1 w-full text-[10px] text-gray-400"><ImageIcon size={10} /> bukti</button>}
+               </div>
             </div>
           ))}
         </div>
       </div>
 
       <AnimatePresence>
-        {/* Loading Overlay */}
         {uploading && (
            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-             <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} className="bg-white p-6 md:p-8 rounded-3xl flex flex-col items-center justify-center shadow-2xl relative overflow-hidden max-w-xs w-full">
-               <div className="absolute inset-0 bg-gradient-to-r from-rose-50/50 to-pink-50/50 z-0"></div>
-               <div className="relative z-10">
-                 <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }} className="bg-rose-100 p-4 rounded-full text-rose-500 mb-4 shadow-sm">
-                   <Activity size={32} />
-                 </motion.div>
-               </div>
-               <h3 className="font-bold text-gray-800 text-lg relative z-10">{file ? 'Mengunggah...' : 'Menyimpan...'}</h3>
-               <p className="text-xs text-gray-500 mt-2 text-center relative z-10">Tunggu sebentar ya 💖</p>
-               <div className="w-full bg-pink-100 h-1.5 mt-5 rounded-full overflow-hidden relative z-10">
-                 <motion.div initial={{ width: "0%" }} animate={{ width: "100%" }} transition={{ duration: 2, repeat: Infinity }} className="bg-rose-500 h-full rounded-full"></motion.div>
-               </div>
+             <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} className="bg-white p-6 md:p-8 rounded-3xl flex flex-col items-center justify-center shadow-2xl">
+               <Activity size={32} className="text-rose-500 animate-pulse mb-4" />
+               <h3 className="font-bold relative z-10">Menyimpan...</h3>
              </motion.div>
            </div>
         )}
-        
-        {/* Image Modal */}
         {imageModal && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setImageModal(null)}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative max-w-3xl w-full max-h-[90vh] bg-white rounded-2xl overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
-              <button onClick={() => setImageModal(null)} className="absolute top-3 right-3 bg-rose-500 text-white rounded-full p-1.5 shadow-md hover:bg-rose-600 z-10"><X size={18} /></button>
-              <img src={imageModal} className="max-w-full max-h-[80vh] object-contain w-full" onError={(e) => { e.currentTarget.classList.add('hidden'); e.currentTarget.nextSibling.classList.remove('hidden'); }} />
-              <div className="hidden p-8 text-center text-gray-500"><p className="text-lg">❌ Gambar tidak dapat dimuat</p></div>
-              <div className="p-3 bg-gray-50 text-center border-t"><a href={imageModal} target="_blank" rel="noreferrer" className="text-rose-500 text-sm font-semibold hover:underline">Buka di Tab Baru</a></div>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative max-w-3xl w-full bg-white rounded-2xl overflow-hidden p-2" onClick={e => e.stopPropagation()}>
+               <button onClick={() => setImageModal(null)} className="absolute top-4 right-4 bg-rose-500 text-white rounded-full p-1.5"><X size={18} /></button>
+               <img src={imageModal} className="w-full max-h-[80vh] object-contain rounded-xl" />
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      {/* Budget Configuration Modal */}
-      <Modal isOpen={isBudgetModalOpen} onClose={() => !savingBudget && setIsBudgetModalOpen(false)} title="Atur Budget Bulanan 💼">
-        <form onSubmit={handleBudgetSubmit} className="space-y-4 text-left">
-          <div className="bg-purple-50 p-3 rounded-xl border border-purple-100 mb-4">
-            <p className="text-xs text-purple-700 font-medium leading-relaxed">
-              Ini adalah catatan pribadi Anda. <br/>Data Gaji, Keperluan, & Belanja tidak akan campur ke riwayat publik pasangan/Tabungan Utama.
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Target Gaji Bulanan (Rp)</label>
-            <input type="number" required value={budgetForm.income} onChange={(e) => setBudgetForm({...budgetForm, income: e.target.value})} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 outline-none bg-gray-50 focus:bg-white font-semibold" placeholder="Berapa target saldo gaji?"/>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Target Keperluan (Rp)</label>
-            <input type="number" required value={budgetForm.keperluan} onChange={(e) => setBudgetForm({...budgetForm, keperluan: e.target.value})} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 outline-none bg-gray-50 focus:bg-white font-semibold" placeholder="Berapa budget keperluan?"/>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Target Belanja/Jajan (Rp)</label>
-            <input type="number" required value={budgetForm.belanja} onChange={(e) => setBudgetForm({...budgetForm, belanja: e.target.value})} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 outline-none bg-gray-50 focus:bg-white font-semibold" placeholder="Berapa sisa buat belanja?"/>
-          </div>
-          <Button type="submit" variant="primary" className="w-full mt-6 py-3 text-lg rounded-xl bg-purple-600 hover:bg-purple-700">
-            {savingBudget ? 'Menyimpan...' : 'Simpan Budget'}
-          </Button>
-        </form>
+      {/* Reset Confirmation Modal */}
+      <Modal isOpen={isResetModalOpen} onClose={() => !isResetting && setIsResetModalOpen(false)} title="Peringatan Bahaya! ☠️">
+         <div className="text-center p-2 space-y-4">
+             <AlertTriangle size={60} className="mx-auto text-rose-500 animate-pulse" />
+             <p className="text-sm font-semibold text-gray-700">Apakah Anda Yakin Ingin Menghapus Semuanya?</p>
+             <p className="text-xs text-gray-500 bg-rose-50 p-3 rounded-xl border border-rose-100">Semua Uang, History Public & Private, serta File Bukti Gambar akan <b>hangus selamanya</b> dari Server (kembali ke 0). Akun login Anda akan tetap aman.</p>
+             
+             <div className="flex gap-3 mt-6">
+                <Button onClick={() => setIsResetModalOpen(false)} variant="outline" className="flex-1 py-3 bg-gray-50 border-0">Batal JANGAN!</Button>
+                <Button onClick={handleResetData} className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-200">
+                   {isResetting ? <RefreshCcw className="animate-spin h-5 w-5 mx-auto" /> : 'Ya, Hapus Semua'}
+                </Button>
+             </div>
+         </div>
+      </Modal>
+
+      {/* Add New Category Custom (Envelope) Modal */}
+      <Modal isOpen={isCategoryModalOpen} onClose={() => setIsCategoryModalOpen(false)} title="Cetakan Amplop Baru ✉️">
+         <form onSubmit={handleCategorySubmit} className="space-y-4 text-left">
+           <div>
+             <label className="block text-sm font-bold text-gray-700 mb-1">Nama Kategori (Amplop)</label>
+             <input type="text" required value={categoryName} onChange={(e) => setCategoryName(e.target.value)} className="w-full px-4 py-3 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-300 outline-none bg-indigo-50/30 text-indigo-900 font-semibold" placeholder="Contoh: Belanja Bulanan" />
+           </div>
+           <div>
+             <label className="block text-sm font-bold text-gray-700 mb-1">Pilih Ikon (Emoji)</label>
+             <div className="flex gap-2 text-2xl flex-wrap">
+               {['🏷️', '🛒', '☕', '🍔', '🛵', '💄', '💍', '🎮', '💊', '🎁'].map(em => (
+                 <button type="button" key={em} onClick={() => setCategoryIcon(em)} className={`p-2 rounded-xl transition-all ${categoryIcon === em ? 'bg-indigo-100 scale-110 shadow-sm border border-indigo-200' : 'bg-gray-50 opacity-50 hover:opacity-100'}`}>
+                   {em}
+                 </button>
+               ))}
+             </div>
+           </div>
+           <Button type="submit" variant="primary" className="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-lg rounded-xl shadow-[0_8px_20px_rgb(79,70,229,0.2)]" disabled={!categoryName}>
+             Cetak Kartu {categoryIcon}
+           </Button>
+         </form>
       </Modal>
 
       {/* Transaction Modal */}
       <Modal isOpen={isModalOpen} onClose={() => !uploading && setIsModalOpen(false)} title={
-        type === 'deposit' ? 'Catat Nabung 💖' : type === 'income' ? 'Catat Pemasukan 🎉' : 'Catat Pemakaian 💸'
+        type === 'deposit' ? 'Top-Up Saldo 💖' : type === 'income' ? 'Catat Pemasukan 🎉' : type === 'allocation' ? 'Sedot dari Gaji 💧' : 'Catat Pemakaian 💸'
       }>
         <form onSubmit={handleTransactionSubmit} className="space-y-4 text-left">
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Pilih Sumber Dana / Tujuan</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+               {type === 'allocation' ? 'Tujuan Aliran Dana' : 'Pilih Sumber Dana / Tujuan'}
+            </label>
             <div className="relative">
-              <div onClick={() => setIsSelectOpen(!isSelectOpen)} className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 flex justify-between items-center cursor-pointer">
-                <span className={`truncate font-medium ${fundSource === 'tabungan_utama' ? 'text-emerald-600' : 'text-purple-600'}`}>
-                  {fundSource === 'tabungan_utama' && budgetId ? budgets.find(b => b._id === budgetId)?.title 
-                   : fundSource === 'tabungan_utama' ? '🌟 Tabungan Bersama (Utama)'
+              <div onClick={() => setIsSelectOpen(!isSelectOpen)} className={`w-full px-4 py-3 border rounded-xl flex justify-between items-center cursor-pointer ${type === 'allocation' ? 'bg-indigo-50 border-indigo-100' : 'bg-gray-50 border-gray-200'}`}>
+                <span className="truncate font-medium text-gray-800">
+                  {type === 'allocation' ? (
+                     categories.find(c => c._id === toCategory)?.name || 'Pilih Amplop...'
+                  ) : fundSource === 'tabungan_utama' && budgetId ? budgets.find(b => b._id === budgetId)?.title 
+                   : fundSource === 'tabungan_utama' ? '🌟 Tabungan Bersama (Utama Publik)'
                    : fundSource === 'gaji' ? '💼 Saldo Gaji (Pribadi)'
-                   : fundSource === 'keperluan' ? '☕ Saldo Keperluan (Pribadi)'
-                   : '🛍️ Saldo Belanja (Pribadi)'}
+                   : categories.find(c => c._id === fundSource)?.name || '...'}
                 </span>
-                <ChevronDown size={18} className={`text-gray-400 transition-transform ${isSelectOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown size={18} className="text-gray-400" />
               </div>
               
               {isSelectOpen && (
-                <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl max-h-60 overflow-y-auto">
-                  <div className="text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-2 bg-gray-50">Publik (Dilihat Bersama)</div>
-                  <div onClick={() => { setFundSource('tabungan_utama'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-rose-50 cursor-pointer border-b border-gray-50 text-emerald-600 font-bold transition-colors">
-                    🌟 Tabungan Bersama (Utama)
-                  </div>
-                  {budgets.map(b => (
-                    <div key={b._id} onClick={() => { setFundSource('tabungan_utama'); setBudgetId(b._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-rose-50 cursor-pointer border-b border-gray-50 text-gray-700 pl-8">
-                      <p className="font-medium">{b.title}</p>
-                    </div>
-                  ))}
+                <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
+                  {type === 'allocation' ? (
+                     <div className="py-2">
+                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-1">Pilih Amplop Penerima</div>
+                        {categories.map(c => (
+                           <div key={c._id} onClick={() => { setToCategory(c._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 cursor-pointer border-b border-gray-50 text-indigo-700 font-semibold">{c.icon} {c.name}</div>
+                        ))}
+                     </div>
+                  ) : (
+                     <>
+                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-2 bg-gray-50">Publik (Dilihat Bersama)</div>
+                        <div onClick={() => { setFundSource('tabungan_utama'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 cursor-pointer border-b border-gray-50 text-emerald-600 font-bold transition-colors">🌟 Tabungan Bersama (Utama)</div>
+                        {budgets.map(b => (
+                           <div key={b._id} onClick={() => { setFundSource('tabungan_utama'); setBudgetId(b._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-rose-50 cursor-pointer border-b border-gray-50 text-gray-700 pl-8 font-medium truncate">{b.title}</div>
+                        ))}
 
-                  <div className="text-xs font-bold text-gray-400 py-2 uppercase tracking-wider px-4 bg-gray-50">Private (Hanya Anda)</div>
-                  <div onClick={() => { setFundSource('gaji'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-purple-50 cursor-pointer border-b border-gray-50 text-purple-700 font-semibold">
-                    💼 Potong dari Gaji
-                  </div>
-                  <div onClick={() => { setFundSource('keperluan'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-50 text-blue-700 font-semibold">
-                    ☕ Potong dari Keperluan
-                  </div>
-                  <div onClick={() => { setFundSource('belanja'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-rose-50 cursor-pointer border-b border-gray-50 text-rose-600 font-semibold">
-                    🛍️ Potong dari Belanja
-                  </div>
+                        <div className="text-xs font-bold text-gray-400 py-2 uppercase tracking-wider px-4 bg-gray-50">Private (Dompet Anda)</div>
+                        <div onClick={() => { setFundSource('gaji'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 cursor-pointer border-b border-emerald-100 text-emerald-700 font-bold bg-emerald-50/30">💼 Dompet Gaji Utama</div>
+                        {categories.map(c => (
+                           <div key={c._id} onClick={() => { setFundSource(c._id); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 cursor-pointer border-b border-gray-50 text-indigo-700 font-semibold truncate pl-8">{c.icon} {c.name}</div>
+                        ))}
+                     </>
+                  )}
                 </div>
               )}
             </div>
@@ -516,21 +456,23 @@ const Dashboard = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nominal (Rp)</label>
-            <input type="number" required value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none bg-gray-50 text-lg font-semibold" placeholder="100000"/>
+            <input type="number" required value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-300 bg-gray-50 text-xl font-extrabold text-indigo-900 shadow-inner" placeholder="100000"/>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Keterangan Singkat</label>
-            <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none bg-gray-50" placeholder="Keterangan..." />
+            <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 outline-none bg-gray-50" placeholder={type === 'allocation' ? 'Sisihkan gaji buat...' : 'Keterangan'} />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Bukti Gambar (Opsional)</label>
-            <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rose-50 file:text-rose-600"/>
-          </div>
+          {type !== 'allocation' && (
+             <div>
+               <label className="block text-sm font-medium text-gray-700 mb-1">Bukti Gambar (Opsional)</label>
+               <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rose-50 file:text-rose-600"/>
+             </div>
+          )}
 
-          <Button type="submit" variant={type === 'withdrawal' ? 'outline' : 'primary'} className="w-full mt-6 py-3 text-lg rounded-xl">
-            {uploading ? 'Menyimpan...' : 'Simpan Transaksi'}
+          <Button type="submit" variant={type === 'withdrawal' ? 'outline' : 'primary'} className={`w-full mt-6 py-3 text-lg rounded-xl shadow-md ${type === 'allocation' ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : ''}`} disabled={type === 'allocation' && !toCategory}>
+            {uploading ? 'Menyimpan...' : type === 'allocation' ? 'Transfer Saldo' : 'Konfirmasi Transaksi'}
           </Button>
         </form>
       </Modal>
@@ -538,13 +480,5 @@ const Dashboard = () => {
     </motion.div>
   );
 };
-
-// Simple standalone SVG Icon trick
-const PieChartIcon = ({ size, className }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
-    <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
-  </svg>
-);
 
 export default Dashboard;
