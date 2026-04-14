@@ -1,8 +1,9 @@
 import Budget from '../models/Budget.js';
 
+// GET: Ambil hanya Auto Budgeting milik akun yang login (Privat)
 export const getBudgets = async (req, res) => {
   try {
-    const budgets = await Budget.find({});
+    const budgets = await Budget.find({ createdBy: req.user._id });
     res.json(budgets);
   } catch (error) {
     res.status(500).json({ message: error.message });

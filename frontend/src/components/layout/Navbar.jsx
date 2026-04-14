@@ -41,7 +41,7 @@ export const Navbar = () => {
       </nav>
 
       {/* Bottom Navigation (Mobile Only) */}
-      <nav className="md:hidden glass fixed bottom-0 left-0 right-0 z-50 border-t border-pink-100 px-6 py-3 flex justify-between items-center pb-safe">
+      <nav className="md:hidden bg-white/95 backdrop-blur-xl fixed bottom-0 left-0 right-0 z-50 border-t border-pink-100 px-6 py-3 flex justify-between items-center pb-safe shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
         <Link to="/" className={`flex flex-col items-center gap-1 ${isActive('/') ? 'text-rose-500' : 'text-gray-400'}`}>
           <Heart size={24} className={isActive('/') ? 'fill-rose-100' : ''} />
           <span className="text-[10px] font-semibold">Beranda</span>

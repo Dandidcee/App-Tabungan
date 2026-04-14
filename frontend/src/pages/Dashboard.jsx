@@ -182,7 +182,7 @@ const Dashboard = () => {
               onChange={(e) => setBudgetId(e.target.value)}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none transition-all bg-gray-50 focus:bg-white"
             >
-              <option value="">-- Bebas (Jangan dialokasikan) --</option>
+              <option value="">-- Masukkan ke Tabungan Bersama (Utama) --</option>
               {budgets.map(b => (
                 <option key={b._id} value={b._id}>{b.title} (Kurang Rp {(b.targetAmount - b.currentAmount).toLocaleString('id-ID')})</option>
               ))}
