@@ -17,13 +17,13 @@ const App = () => {
   if (loading) return <div className="min-h-screen flex items-center justify-center text-rose-400">Loading...</div>;
 
   return (
-    <div className="min-h-screen font-sans pb-16 md:pb-0 relative overflow-x-hidden text-gray-800 dark:text-dark-text transition-colors duration-300">
+    <div className="min-h-screen font-sans flex flex-col relative overflow-x-hidden text-gray-800 dark:text-dark-text transition-colors duration-300">
       {/* Huge Background Hearts */}
       <Heart size={400} className="fixed -top-32 -left-32 text-rose-200/40 dark:text-rose-500/10 -z-10 rotate-12" />
       <Heart size={500} className="fixed -bottom-40 -right-40 text-pink-200/40 dark:text-pink-500/10 -z-10 -rotate-12" />
       
       <Navbar />
-      <div className="max-w-5xl mx-auto p-4 md:p-8">
+      <div className="max-w-5xl mx-auto p-4 md:p-8 flex-1 w-full">
         <Routes>
           <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
           <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
@@ -34,6 +34,12 @@ const App = () => {
           <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
         </Routes>
       </div>
+
+      {user && (
+        <footer className="text-center py-6 mt-auto text-xs md:text-sm text-gray-400 dark:text-slate-600 font-medium">
+          &copy; dandidce 2026 tabungan
+        </footer>
+      )}
     </div>
   );
 }
