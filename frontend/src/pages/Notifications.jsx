@@ -108,15 +108,6 @@ const Notifications = () => {
         </div>
       </div>
 
-      {/* Legend pills */}
-      <div className="flex flex-wrap gap-2">
-        {Object.entries(TYPE_CONFIG).map(([key, cfg]) => (
-          <span key={key} className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full ${cfg.bg} ${cfg.color}`}>
-            {cfg.icon} {cfg.label}
-          </span>
-        ))}
-      </div>
-
       {/* Notification List */}
       <div className="bg-white/80 glass rounded-3xl p-4 md:p-6 shadow-sm border border-pink-50">
         {notifications.length === 0 ? (
