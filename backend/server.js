@@ -11,6 +11,7 @@ import authRoutes from './routes/authRoutes.js';
 import budgetRoutes from './routes/budgetRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import budgetingRoutes from './routes/budgetingRoutes.js';
 
 dotenv.config();
 
@@ -49,6 +50,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/budget', budgetRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/budgeting', budgetingRoutes);
 
 // Upload Endpoint
 app.post('/api/upload', upload.single('proof'), (req, res) => {

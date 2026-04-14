@@ -4,7 +4,27 @@ import { createNotification } from './notificationController.js';
 
 export const getTransactions = async (req, res) => {
   try {
-    const transactions = await Transaction.find({}).populate('user', 'name email');
+    const transactions = await Transaction.find({
+      $or: [{ fundSource: 'tabungan_utama' }, { fundSource: { $exists: false } }, { fundSource: null }]
+    }).populate('user', 'name email');
+    res.json(transactions);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getBudgetTransactions = async (req, res) => {
+  try {
+    const { month } = req.params; // YYYY-MM
+    // Construct date range for the month
+    const startDate = new Date(`${month}-01T00:00:00.000Z`);
+    const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 1);
+
+    const transactions = await Transaction.find({
+      user: req.user._id,
+      fundSource: { $ne: 'tabungan_utama' },
+      createdAt: { $gte: startDate, $lt: endDate }
+    });
     res.json(transactions);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -13,7 +33,7 @@ export const getTransactions = async (req, res) => {
 
 export const createTransaction = async (req, res) => {
   try {
-    const { amount, type, notes, budgetId, proofOfTransfer } = req.body;
+    const { amount, type, notes, budgetId, proofOfTransfer, fundSource } = req.body;
 
     const transaction = new Transaction({
       user: req.user._id,
@@ -21,7 +41,8 @@ export const createTransaction = async (req, res) => {
       type,
       notes,
       budgetId,
-      proofOfTransfer
+      proofOfTransfer,
+      fundSource: fundSource || 'tabungan_utama'
     });
 
     const createdTransaction = await transaction.save();
@@ -41,37 +62,40 @@ export const createTransaction = async (req, res) => {
       }
     }
 
-    // === Auto-create notification for all users ===
+    // === Auto-create notification for all users ONLY IF public ===
+    const isPublic = transaction.fundSource === 'tabungan_utama';
     const formattedAmount = Number(amount).toLocaleString('id-ID');
     const userName = req.user.name;
 
-    if (type === 'deposit') {
-      await createNotification({
-        triggeredBy: req.user._id,
-        type: 'deposit',
-        message: `💰 ${userName} menabung Rp ${formattedAmount}${notes ? ` — "${notes}"` : ''}`,
-        linkTo: '/history',
-        transactionId: createdTransaction._id,
-        amount: Number(amount),
-      });
-    } else if (type === 'income') {
-      await createNotification({
-        triggeredBy: req.user._id,
-        type: 'deposit',
-        message: `🎉 ${userName} pemasukan tambahan Rp ${formattedAmount}${notes ? ` — "${notes}"` : ''}`,
-        linkTo: '/history',
-        transactionId: createdTransaction._id,
-        amount: Number(amount),
-      });
-    } else if (type === 'withdrawal') {
-      await createNotification({
-        triggeredBy: req.user._id,
-        type: 'withdrawal',
-        message: `💸 ${userName} meminjam Rp ${formattedAmount}${notes ? ` — "${notes}"` : ''}`,
-        linkTo: '/history',
-        transactionId: createdTransaction._id,
-        amount: Number(amount),
-      });
+    if (isPublic) {
+      if (type === 'deposit') {
+        await createNotification({
+          triggeredBy: req.user._id,
+          type: 'deposit',
+          message: `💰 ${userName} menabung Rp ${formattedAmount}${notes ? ` — "${notes}"` : ''}`,
+          linkTo: '/history',
+          transactionId: createdTransaction._id,
+          amount: Number(amount),
+        });
+      } else if (type === 'income') {
+        await createNotification({
+          triggeredBy: req.user._id,
+          type: 'deposit',
+          message: `🎉 ${userName} pemasukan tambahan Rp ${formattedAmount}${notes ? ` — "${notes}"` : ''}`,
+          linkTo: '/history',
+          transactionId: createdTransaction._id,
+          amount: Number(amount),
+        });
+      } else if (type === 'withdrawal') {
+        await createNotification({
+          triggeredBy: req.user._id,
+          type: 'withdrawal',
+          message: `💸 ${userName} meminjam Rp ${formattedAmount}${notes ? ` — "${notes}"` : ''}`,
+          linkTo: '/history',
+          transactionId: createdTransaction._id,
+          amount: Number(amount),
+        });
+      }
     }
 
     res.status(201).json(createdTransaction);

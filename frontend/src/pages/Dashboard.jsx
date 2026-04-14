@@ -7,13 +7,53 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ArrowDownToLine, ArrowUpFromLine, PlusCircle, Activity, ChevronDown, Image as ImageIcon, X, ArrowRight } from 'lucide-react';
+import { Heart, ArrowDownToLine, ArrowUpFromLine, PlusCircle, Activity, ChevronDown, X, ArrowRight, Settings, Wallet, ShoppingBag, Coffee } from 'lucide-react';
 
 const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
 const getImageUrl = (path) => {
   if (!path) return null;
   if (path.startsWith('http')) return path;
   return `${getApiUrl()}${path}`;
+};
+
+// Circle Progress Component for Auto Budget
+const CircularProgress = ({ value, max, colorClass, size = 60, strokeWidth = 6, icon: Icon }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const safeMax = max <= 0 ? 1 : max;
+  const safeValue = value < 0 ? 0 : value > safeMax ? safeMax : value;
+  const strokeDashoffset = circumference - (safeValue / safeMax) * circumference;
+
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+      {/* Background Circle */}
+      <svg className="transform -rotate-90 absolute inset-0" width={size} height={size}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          className="text-gray-100"
+        />
+        {/* Progress Circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          className={`transition-all duration-1000 ease-out ${colorClass}`}
+          strokeLinecap="round"
+        />
+      </svg>
+      {Icon && <Icon size={size * 0.4} className={colorClass} />}
+    </div>
+  );
 };
 
 const Dashboard = () => {
@@ -25,11 +65,19 @@ const Dashboard = () => {
   const [uangKeluar, setUangKeluar] = useState(0);
   const [imageModal, setImageModal] = useState(null);
   
+  // Auto Budgeting State
+  const [monthlyBudget, setMonthlyBudget] = useState({ income: 0, keperluan: 0, belanja: 0 });
+  const [budgetTransactions, setBudgetTransactions] = useState([]);
+  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
+  const [budgetForm, setBudgetForm] = useState({ income: '', keperluan: '', belanja: '' });
+  const [savingBudget, setSavingBudget] = useState(false);
+
   // Transaction Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [type, setType] = useState('deposit');
   const [amount, setAmount] = useState('');
   const [budgetId, setBudgetId] = useState('');
+  const [fundSource, setFundSource] = useState('tabungan_utama');
   const [notes, setNotes] = useState('');
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -40,28 +88,35 @@ const Dashboard = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      const [budgetsRes, transactionsRes] = await Promise.all([
+      const monthStr = new Date().toISOString().substring(0, 7);
+      const [budgetsRes, transactionsRes, monthlyRes, budgetTxRes] = await Promise.all([
         api.get('/api/budget'),
         api.get('/api/transactions'),
+        api.get(`/api/budgeting/${monthStr}`),
+        api.get(`/api/transactions/budget/${monthStr}`),
       ]);
       const allTx = transactionsRes.data;
 
-      // ── Anti-flicker: only update state if data actually changed ──
       const newSignature = JSON.stringify({
         txIds: allTx.map(t => t._id + t.amount).join(','),
-        budgetAmounts: budgetsRes.data.map(b => b._id + b.currentAmount).join(',')
+        budgetAmounts: budgetsRes.data.map(b => b._id + b.currentAmount).join(','),
+        monthly: monthlyRes.data.updatedAt,
+        budgetTxs: budgetTxRes.data.map(t => t._id).join(',')
       });
 
-      if (prevDataRef.current === newSignature) return; // Nothing changed
+      if (prevDataRef.current === newSignature) return;
       prevDataRef.current = newSignature;
 
-      // income & deposit both ADD to total, withdrawal subtracts
       const deposits = allTx.filter(t => (t.type === 'deposit' || t.type === 'income') && !t.budgetId).reduce((a, c) => a + c.amount, 0);
       const withdrawals = allTx.filter(t => t.type === 'withdrawal' && !t.budgetId).reduce((a, c) => a + c.amount, 0);
+      
       setTotalTabungan(deposits - withdrawals);
       setUangKeluar(withdrawals);
       setBudgets(budgetsRes.data);
       setTransactions(allTx.reverse().slice(0, 5));
+      
+      setMonthlyBudget(monthlyRes.data);
+      setBudgetTransactions(budgetTxRes.data);
     } catch (error) {
       console.error(error);
     }
@@ -69,13 +124,13 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchData();
-    // Poll every 10 seconds for real-time updates
     const interval = setInterval(fetchData, 10000);
     return () => clearInterval(interval);
   }, [fetchData]);
 
   const openTransactionModal = (txType) => {
     setType(txType);
+    setFundSource('tabungan_utama');
     setIsModalOpen(true);
   };
 
@@ -96,17 +151,19 @@ const Dashboard = () => {
       await api.post('/api/transactions', {
         amount: Number(amount),
         type,
-        budgetId: budgetId || undefined,
+        budgetId: (fundSource === 'tabungan_utama' && budgetId) ? budgetId : undefined,
+        fundSource,
         notes,
         proofOfTransfer
       });
 
-      const msg = type === 'deposit' ? 'Asyik! Berhasil nabung.' : type === 'income' ? 'Pemasukan tambahan dicatat!' : 'Uang pinjaman dicatat.';
+      const msg = type === 'deposit' ? 'Berhasil nabung.' : type === 'income' ? 'Pemasukan dicatat!' : 'Pinjaman dicatat.';
       showToast(msg, 'success');
       setIsModalOpen(false);
       setAmount('');
       setNotes('');
       setBudgetId('');
+      setFundSource('tabungan_utama');
       setFile(null);
       setIsSelectOpen(false);
       fetchData();
@@ -116,6 +173,43 @@ const Dashboard = () => {
       setUploading(false);
     }
   };
+
+  const openBudgetModal = () => {
+    setBudgetForm({
+      income: monthlyBudget.income || '',
+      keperluan: monthlyBudget.keperluan || '',
+      belanja: monthlyBudget.belanja || ''
+    });
+    setIsBudgetModalOpen(true);
+  };
+
+  const handleBudgetSubmit = async (e) => {
+    e.preventDefault();
+    setSavingBudget(true);
+    try {
+      const monthStr = new Date().toISOString().substring(0, 7);
+      await api.post(`/api/budgeting/${monthStr}`, budgetForm);
+      showToast('Budget bulanan berhasil disimpan', 'success');
+      setIsBudgetModalOpen(false);
+      fetchData();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Gagal menyimpan budget', 'error');
+    } finally {
+      setSavingBudget(false);
+    }
+  };
+
+  // Helper to calculate remaining budget
+  const getSisa = (category, baseAmount) => {
+    const txs = budgetTransactions.filter(t => t.fundSource === category);
+    const spent = txs.filter(t => t.type === 'withdrawal').reduce((a,c) => a + c.amount, 0);
+    const added = txs.filter(t => t.type === 'income' || t.type === 'deposit').reduce((a,c) => a + c.amount, 0);
+    return { sisa: baseAmount + added - spent, spent };
+  };
+
+  const gajiStats = getSisa('gaji', monthlyBudget.income);
+  const keperluanStats = getSisa('keperluan', monthlyBudget.keperluan);
+  const belanjaStats = getSisa('belanja', monthlyBudget.belanja);
 
   return (
     <motion.div
@@ -146,7 +240,7 @@ const Dashboard = () => {
           <Heart size={200} className="absolute -right-10 -bottom-10 text-white/10" />
         </Card>
 
-        {/* Quick Actions — 3 buttons */}
+        {/* Quick Actions */}
         <div className="col-span-1 flex flex-col gap-3">
           <div className="flex flex-row md:flex-col gap-3 flex-1">
             <button 
@@ -157,7 +251,6 @@ const Dashboard = () => {
                     <ArrowDownToLine size={20} />
                 </div>
                 <h3 className="font-bold text-gray-800 text-sm md:text-base">Nabung</h3>
-                <p className="text-[10px] text-gray-500 hidden md:block">Tambah saldo</p>
             </button>
 
             <button 
@@ -167,8 +260,7 @@ const Dashboard = () => {
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 transition-transform">
                     <ArrowUpFromLine size={20} />
                 </div>
-                <h3 className="font-bold text-gray-800 text-sm md:text-base">Pinjam</h3>
-                <p className="text-[10px] text-gray-500 hidden md:block">Ambil/pinjam uang</p>
+                <h3 className="font-bold text-gray-800 text-sm md:text-base">Pinjam/Pakai</h3>
             </button>
           </div>
 
@@ -180,16 +272,82 @@ const Dashboard = () => {
                   <PlusCircle size={20} />
               </div>
               <h3 className="font-bold text-gray-800 text-sm md:text-base">Pemasukan</h3>
-              <p className="text-[10px] text-gray-500 hidden md:block">Pendapatan lain</p>
           </button>
         </div>
       </div>
 
+      {/* AUTO BUDGETING DASHBOARD */}
+      <div className="bg-white rounded-3xl shadow-md border border-purple-100 overflow-hidden relative">
+        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-purple-100 px-5 py-4 flex items-center justify-between">
+          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <PieChartIcon className="text-purple-500" size={20} /> Auto Budgeting Bulanan
+          </h3>
+          <button
+            onClick={openBudgetModal}
+            className="flex items-center gap-1.5 text-xs font-semibold bg-white border border-purple-200 px-3 py-1.5 rounded-full text-purple-600 hover:bg-purple-50 transition-colors shadow-sm"
+          >
+            <Settings size={14} /> Atur Budget
+          </button>
+        </div>
+        
+        <div className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-5">
+          {/* Gaji/Income */}
+          <div className="flex flex-col items-center p-4 bg-gray-50 rounded-2xl border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="absolute top-2 left-2 bg-emerald-100 text-emerald-600 text-[10px] font-bold px-2 py-0.5 rounded-full">Private</div>
+            <p className="text-gray-500 text-xs font-medium uppercase tracking-wider mt-4">Sisa Gaji</p>
+            <div className="my-3">
+              <CircularProgress 
+                value={gajiStats.sisa} 
+                max={monthlyBudget.income} 
+                colorClass="text-emerald-500" 
+                icon={Wallet} 
+                size={70} 
+              />
+            </div>
+            <h4 className="font-bold text-lg text-gray-800">Rp {gajiStats.sisa.toLocaleString('id-ID')}</h4>
+            <p className="text-[11px] text-gray-400 mt-1">Terpakai: Rp {gajiStats.spent.toLocaleString('id-ID')}</p>
+          </div>
+
+          {/* Keperluan */}
+          <div className="flex flex-col items-center p-4 bg-gray-50 rounded-2xl border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="absolute top-2 left-2 bg-blue-100 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded-full">Private</div>
+            <p className="text-gray-500 text-xs font-medium uppercase tracking-wider mt-4">Keperluan</p>
+            <div className="my-3">
+              <CircularProgress 
+                value={keperluanStats.sisa} 
+                max={monthlyBudget.keperluan} 
+                colorClass="text-blue-500" 
+                icon={Coffee} 
+                size={70} 
+              />
+            </div>
+            <h4 className="font-bold text-lg text-gray-800">Rp {keperluanStats.sisa.toLocaleString('id-ID')}</h4>
+            <p className="text-[11px] text-gray-400 mt-1">Terpakai: Rp {keperluanStats.spent.toLocaleString('id-ID')}</p>
+          </div>
+
+          {/* Belanja */}
+          <div className="flex flex-col items-center p-4 bg-gray-50 rounded-2xl border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="absolute top-2 left-2 bg-rose-100 text-rose-600 text-[10px] font-bold px-2 py-0.5 rounded-full">Private</div>
+            <p className="text-gray-500 text-xs font-medium uppercase tracking-wider mt-4">Sisa Belanja</p>
+            <div className="my-3">
+              <CircularProgress 
+                value={belanjaStats.sisa} 
+                max={monthlyBudget.belanja} 
+                colorClass="text-rose-500" 
+                icon={ShoppingBag} 
+                size={70} 
+              />
+            </div>
+            <h4 className="font-bold text-lg text-gray-800">Rp {belanjaStats.sisa.toLocaleString('id-ID')}</h4>
+            <p className="text-[11px] text-gray-400 mt-1">Terpakai: Rp {belanjaStats.spent.toLocaleString('id-ID')}</p>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white rounded-3xl shadow-md border border-pink-50 overflow-hidden">
-        {/* Card Header */}
         <div className="bg-gradient-to-r from-rose-50 to-pink-50 border-b border-pink-100 px-5 py-4 flex items-center justify-between">
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <Activity className="text-rose-400" size={20} /> Transaksi Terakhir
+            <Activity className="text-rose-400" size={20} /> Transaksi Publik Terakhir
           </h3>
           <button
             onClick={() => navigate('/history')}
@@ -203,33 +361,24 @@ const Dashboard = () => {
           {transactions.length === 0 && (
             <div className="text-center py-8">
               <Heart size={32} className="mx-auto text-rose-200 mb-2" />
-              <p className="text-gray-500 text-sm">Belum ada transaksi,<br/>mulailah menabung!</p>
+              <p className="text-gray-500 text-sm">Belum ada transaksi di tabungan utama.</p>
             </div>
           )}
           {transactions.map((trx) => (
-            <div
-              key={trx._id}
-              className="flex items-center gap-3 py-3 px-1 border-b border-gray-50 last:border-0"
-            >
-              {/* Colored dot + icon */}
-              <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 ${
+            <div key={trx._id} className="flex items-center gap-3 py-3 px-1 border-b border-gray-50 last:border-0">
+               <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 ${
                 trx.type === 'deposit' ? 'bg-emerald-100 text-emerald-600'
                 : trx.type === 'income' ? 'bg-blue-100 text-blue-500'
                 : 'bg-rose-100 text-rose-500'
               }`}>
-                {trx.type === 'deposit' ? <ArrowDownToLine size={15} />
-                : trx.type === 'income' ? <PlusCircle size={15} />
-                : <ArrowUpFromLine size={15} />}
+                {trx.type === 'deposit' ? <ArrowDownToLine size={15} /> : trx.type === 'income' ? <PlusCircle size={15} /> : <ArrowUpFromLine size={15} />}
               </div>
 
-              {/* Info */}
-              <div className="flex-1 min-w-0">
+               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-800 text-sm truncate">
                   {trx.user.name}
                   <span className={`ml-1.5 text-xs font-normal ${
-                    trx.type === 'deposit' ? 'text-emerald-500'
-                    : trx.type === 'income' ? 'text-blue-500'
-                    : 'text-rose-400'
+                    trx.type === 'deposit' ? 'text-emerald-500' : trx.type === 'income' ? 'text-blue-500' : 'text-rose-400'
                   }`}>
                     {trx.type === 'deposit' ? 'menabung' : trx.type === 'income' ? 'pemasukan' : 'meminjam'}
                   </span>
@@ -240,22 +389,14 @@ const Dashboard = () => {
                 </p>
               </div>
 
-              {/* Amount + Bukti */}
-              <div className="text-right flex-shrink-0">
+               <div className="text-right flex-shrink-0">
                 <p className={`font-bold text-sm tabular-nums ${
-                  trx.type === 'deposit' ? 'text-emerald-600'
-                  : trx.type === 'income' ? 'text-blue-600'
-                  : 'text-rose-500'
+                  trx.type === 'deposit' ? 'text-emerald-600' : trx.type === 'income' ? 'text-blue-600' : 'text-rose-500'
                 }`}>
                   {trx.type === 'withdrawal' ? '−' : '+'} Rp {trx.amount.toLocaleString('id-ID')}
                 </p>
                 {trx.proofOfTransfer && (
-                  <button
-                    onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))}
-                    className="mt-0.5 text-[10px] font-medium text-blue-400 hover:text-blue-600 underline underline-offset-2 transition-colors"
-                  >
-                    lihat bukti
-                  </button>
+                  <button onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))} className="mt-0.5 text-[10px] font-medium text-blue-400 hover:text-blue-600 underline underline-offset-2 transition-colors">lihat bukti</button>
                 )}
               </div>
             </div>
@@ -263,183 +404,129 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Loading Overlay Overlay & Image Viewer Modal */}
       <AnimatePresence>
+        {/* Loading Overlay */}
         {uploading && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-white p-6 md:p-8 rounded-3xl flex flex-col items-center justify-center shadow-2xl relative overflow-hidden max-w-xs w-full"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-rose-50/50 to-pink-50/50 z-0"></div>
-              
-              <div className="relative z-10">
-                {/* Heart Beating Animation */}
-                <motion.div
-                  animate={{ 
-                    scale: [1, 1.2, 1],
-                  }}
-                  transition={{ 
-                    duration: 1,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                  className="bg-rose-100 p-4 rounded-full text-rose-500 mb-4 shadow-sm"
-                >
-                  <Activity size={32} />
-                </motion.div>
-              </div>
-
-              <h3 className="font-bold text-gray-800 text-lg relative z-10">{file ? 'Mengunggah Gambar...' : 'Menyimpan...'}</h3>
-              <p className="text-xs text-gray-500 mt-2 text-center relative z-10">
-                Tunggu sebentar ya, transaksi kamu sedang dicatat dengan penuh cinta 💖
-              </p>
-
-              {/* Progress bar placeholder */}
-              <div className="w-full bg-pink-100 h-1.5 mt-5 rounded-full overflow-hidden relative z-10">
-                <motion.div 
-                  initial={{ width: "0%" }} 
-                  animate={{ width: "100%" }} 
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="bg-rose-500 h-full rounded-full"
-                ></motion.div>
-              </div>
-            </motion.div>
-          </div>
+           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+             <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} className="bg-white p-6 md:p-8 rounded-3xl flex flex-col items-center justify-center shadow-2xl relative overflow-hidden max-w-xs w-full">
+               <div className="absolute inset-0 bg-gradient-to-r from-rose-50/50 to-pink-50/50 z-0"></div>
+               <div className="relative z-10">
+                 <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }} className="bg-rose-100 p-4 rounded-full text-rose-500 mb-4 shadow-sm">
+                   <Activity size={32} />
+                 </motion.div>
+               </div>
+               <h3 className="font-bold text-gray-800 text-lg relative z-10">{file ? 'Mengunggah...' : 'Menyimpan...'}</h3>
+               <p className="text-xs text-gray-500 mt-2 text-center relative z-10">Tunggu sebentar ya 💖</p>
+               <div className="w-full bg-pink-100 h-1.5 mt-5 rounded-full overflow-hidden relative z-10">
+                 <motion.div initial={{ width: "0%" }} animate={{ width: "100%" }} transition={{ duration: 2, repeat: Infinity }} className="bg-rose-500 h-full rounded-full"></motion.div>
+               </div>
+             </motion.div>
+           </div>
         )}
-
+        
+        {/* Image Modal */}
         {imageModal && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-            onClick={() => setImageModal(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative max-w-3xl w-full max-h-[90vh] bg-white rounded-2xl overflow-hidden shadow-2xl"
-              onClick={e => e.stopPropagation()}
-            >
-              <button
-                onClick={() => setImageModal(null)}
-                className="absolute top-3 right-3 bg-rose-500 text-white rounded-full p-1.5 shadow-md hover:bg-rose-600 z-10"
-              >
-                <X size={18} />
-              </button>
-              <img
-                src={imageModal}
-                alt="Bukti Transfer"
-                className="max-w-full max-h-[80vh] object-contain w-full"
-                onError={(e) => {
-                  e.currentTarget.classList.add('hidden');
-                  e.currentTarget.nextSibling.classList.remove('hidden');
-                }}
-              />
-              <div className="hidden p-8 text-center text-gray-500">
-                <p className="text-lg">❌ Gambar tidak dapat dimuat</p>
-                <p className="text-sm mt-1 text-gray-400">File mungkin dihapus dari server</p>
-              </div>
-              <div className="p-3 bg-gray-50 text-center border-t">
-                <a href={imageModal} target="_blank" rel="noreferrer" className="text-rose-500 text-sm font-semibold hover:underline">
-                  Buka di Tab Baru
-                </a>
-              </div>
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setImageModal(null)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative max-w-3xl w-full max-h-[90vh] bg-white rounded-2xl overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+              <button onClick={() => setImageModal(null)} className="absolute top-3 right-3 bg-rose-500 text-white rounded-full p-1.5 shadow-md hover:bg-rose-600 z-10"><X size={18} /></button>
+              <img src={imageModal} className="max-w-full max-h-[80vh] object-contain w-full" onError={(e) => { e.currentTarget.classList.add('hidden'); e.currentTarget.nextSibling.classList.remove('hidden'); }} />
+              <div className="hidden p-8 text-center text-gray-500"><p className="text-lg">❌ Gambar tidak dapat dimuat</p></div>
+              <div className="p-3 bg-gray-50 text-center border-t"><a href={imageModal} target="_blank" rel="noreferrer" className="text-rose-500 text-sm font-semibold hover:underline">Buka di Tab Baru</a></div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      {/* Transaction Modal directly from Dashboard */}
+      {/* Budget Configuration Modal */}
+      <Modal isOpen={isBudgetModalOpen} onClose={() => !savingBudget && setIsBudgetModalOpen(false)} title="Atur Budget Bulanan 💼">
+        <form onSubmit={handleBudgetSubmit} className="space-y-4 text-left">
+          <div className="bg-purple-50 p-3 rounded-xl border border-purple-100 mb-4">
+            <p className="text-xs text-purple-700 font-medium leading-relaxed">
+              Ini adalah catatan pribadi Anda. <br/>Data Gaji, Keperluan, & Belanja tidak akan campur ke riwayat publik pasangan/Tabungan Utama.
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Target Gaji Bulanan (Rp)</label>
+            <input type="number" required value={budgetForm.income} onChange={(e) => setBudgetForm({...budgetForm, income: e.target.value})} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 outline-none bg-gray-50 focus:bg-white font-semibold" placeholder="Berapa target saldo gaji?"/>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Target Keperluan (Rp)</label>
+            <input type="number" required value={budgetForm.keperluan} onChange={(e) => setBudgetForm({...budgetForm, keperluan: e.target.value})} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 outline-none bg-gray-50 focus:bg-white font-semibold" placeholder="Berapa budget keperluan?"/>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Target Belanja/Jajan (Rp)</label>
+            <input type="number" required value={budgetForm.belanja} onChange={(e) => setBudgetForm({...budgetForm, belanja: e.target.value})} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 outline-none bg-gray-50 focus:bg-white font-semibold" placeholder="Berapa sisa buat belanja?"/>
+          </div>
+          <Button type="submit" variant="primary" className="w-full mt-6 py-3 text-lg rounded-xl bg-purple-600 hover:bg-purple-700">
+            {savingBudget ? 'Menyimpan...' : 'Simpan Budget'}
+          </Button>
+        </form>
+      </Modal>
+
+      {/* Transaction Modal */}
       <Modal isOpen={isModalOpen} onClose={() => !uploading && setIsModalOpen(false)} title={
-        type === 'deposit' ? 'Catat Nabung 💖'
-        : type === 'income' ? 'Catat Pemasukan 🎉'
-        : 'Catat Pinjaman Uang 💸'
+        type === 'deposit' ? 'Catat Nabung 💖' : type === 'income' ? 'Catat Pemasukan 🎉' : 'Catat Pemakaian 💸'
       }>
         <form onSubmit={handleTransactionSubmit} className="space-y-4 text-left">
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nominal (Rp)</label>
-            <input
-              type="number"
-              required
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none transition-all bg-gray-50 focus:bg-white text-lg font-semibold"
-              placeholder="100000"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Alokasikan ke Target Nikah (Jika Ada)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Pilih Sumber Dana / Tujuan</label>
             <div className="relative">
-              <div 
-                onClick={() => setIsSelectOpen(!isSelectOpen)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 flex justify-between items-center cursor-pointer transition-colors"
-              >
-                <span className="truncate font-medium text-gray-700">
-                  {budgetId ? budgets.find(b => b._id === budgetId)?.title : '-- Masukkan ke Tabungan Bersama (Utama) --'}
+              <div onClick={() => setIsSelectOpen(!isSelectOpen)} className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 flex justify-between items-center cursor-pointer">
+                <span className={`truncate font-medium ${fundSource === 'tabungan_utama' ? 'text-emerald-600' : 'text-purple-600'}`}>
+                  {fundSource === 'tabungan_utama' && budgetId ? budgets.find(b => b._id === budgetId)?.title 
+                   : fundSource === 'tabungan_utama' ? '🌟 Tabungan Bersama (Utama)'
+                   : fundSource === 'gaji' ? '💼 Saldo Gaji (Pribadi)'
+                   : fundSource === 'keperluan' ? '☕ Saldo Keperluan (Pribadi)'
+                   : '🛍️ Saldo Belanja (Pribadi)'}
                 </span>
                 <ChevronDown size={18} className={`text-gray-400 transition-transform ${isSelectOpen ? 'rotate-180' : ''}`} />
               </div>
               
               {isSelectOpen && (
-                <div className="absolute z-50 w-full mt-2 bg-white border border-pink-100 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] max-h-60 overflow-y-auto">
-                  <div 
-                    onClick={() => { setBudgetId(''); setIsSelectOpen(false); }}
-                    className="px-4 py-3 hover:bg-rose-50 cursor-pointer border-b border-gray-50 text-emerald-600 font-bold transition-colors"
-                  >
+                <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                  <div className="text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-2 bg-gray-50">Publik (Dilihat Bersama)</div>
+                  <div onClick={() => { setFundSource('tabungan_utama'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-rose-50 cursor-pointer border-b border-gray-50 text-emerald-600 font-bold transition-colors">
                     🌟 Tabungan Bersama (Utama)
                   </div>
                   {budgets.map(b => (
-                    <div 
-                      key={b._id} 
-                      onClick={() => { setBudgetId(b._id); setIsSelectOpen(false); }}
-                      className="px-4 py-3 hover:bg-rose-50 cursor-pointer border-b border-gray-50 text-gray-700 transition-colors"
-                    >
+                    <div key={b._id} onClick={() => { setFundSource('tabungan_utama'); setBudgetId(b._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-rose-50 cursor-pointer border-b border-gray-50 text-gray-700 pl-8">
                       <p className="font-medium">{b.title}</p>
-                      <p className="text-xs text-rose-400 mt-0.5">Sisa: Rp {(b.targetAmount - b.currentAmount).toLocaleString('id-ID')}</p>
                     </div>
                   ))}
+
+                  <div className="text-xs font-bold text-gray-400 py-2 uppercase tracking-wider px-4 bg-gray-50">Private (Hanya Anda)</div>
+                  <div onClick={() => { setFundSource('gaji'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-purple-50 cursor-pointer border-b border-gray-50 text-purple-700 font-semibold">
+                    💼 Potong dari Gaji
+                  </div>
+                  <div onClick={() => { setFundSource('keperluan'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-50 text-blue-700 font-semibold">
+                    ☕ Potong dari Keperluan
+                  </div>
+                  <div onClick={() => { setFundSource('belanja'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-rose-50 cursor-pointer border-b border-gray-50 text-rose-600 font-semibold">
+                    🛍️ Potong dari Belanja
+                  </div>
                 </div>
               )}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Catatan / Keterangan</label>
-            <input
-              type="text"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none transition-all bg-gray-50 focus:bg-white"
-              placeholder={
-                type === 'deposit' ? 'Menabung uang sisa belanja...'
-                : type === 'income' ? 'Bonus gaji, uang lebaran...'
-                : 'Pinjam untuk benerin motor'
-              }
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nominal (Rp)</label>
+            <input type="number" required value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none bg-gray-50 text-lg font-semibold" placeholder="100000"/>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Bukti Gambar Transaksi (Opsional)</label>
-            <div className="relative">
-                <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none transition-all bg-gray-50 focus:bg-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rose-50 file:text-rose-600 hover:file:bg-rose-100"
-                />
-            </div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Keterangan Singkat</label>
+            <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none bg-gray-50" placeholder="Keterangan..." />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Bukti Gambar (Opsional)</label>
+            <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rose-50 file:text-rose-600"/>
           </div>
 
           <Button type="submit" variant={type === 'withdrawal' ? 'outline' : 'primary'} className="w-full mt-6 py-3 text-lg rounded-xl">
-            {uploading ? 'Menyimpan...' : (
-              type === 'deposit' ? 'Simpan Tabungan'
-              : type === 'income' ? 'Catat Pemasukan'
-              : 'Catat Uang Dipinjam'
-            )}
+            {uploading ? 'Menyimpan...' : 'Simpan Transaksi'}
           </Button>
         </form>
       </Modal>
@@ -447,5 +534,13 @@ const Dashboard = () => {
     </motion.div>
   );
 };
+
+// Simple standalone SVG Icon trick
+const PieChartIcon = ({ size, className }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+    <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+  </svg>
+);
 
 export default Dashboard;
