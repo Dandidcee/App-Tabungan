@@ -1,19 +1,29 @@
 import { useEffect, useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
-import { motion } from 'framer-motion';
-import { Heart, ArrowDownToLine, ArrowUpFromLine, Activity, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, ArrowDownToLine, ArrowUpFromLine, Activity, ChevronDown, Image as ImageIcon, X, ArrowRight } from 'lucide-react';
+
+const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
+const getImageUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  return `${getApiUrl()}${path}`;
+};
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [budgets, setBudgets] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [totalTabungan, setTotalTabungan] = useState(0);
   const [uangKeluar, setUangKeluar] = useState(0);
+  const [imageModal, setImageModal] = useState(null);
   
   // Transaction Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -149,38 +159,122 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <Card className="glass bg-white/80">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <Activity className="text-rose-400" /> Transaksi Terakhir
+      <div className="bg-white rounded-3xl shadow-md border border-pink-50 overflow-hidden">
+        {/* Card Header */}
+        <div className="bg-gradient-to-r from-rose-50 to-pink-50 border-b border-pink-100 px-5 py-4 flex items-center justify-between">
+          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <Activity className="text-rose-400" size={20} /> Transaksi Terakhir
           </h3>
+          <button
+            onClick={() => navigate('/history')}
+            className="flex items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-700 transition-colors"
+          >
+            Lihat Semua <ArrowRight size={13} />
+          </button>
         </div>
-        
-        <div className="space-y-3">
+
+        <div className="p-4 space-y-2">
           {transactions.length === 0 && (
-            <p className="text-center text-gray-500 py-6">Belum ada transaksi, mulailah menabung!</p>
+            <div className="text-center py-8">
+              <Heart size={32} className="mx-auto text-rose-200 mb-2" />
+              <p className="text-gray-500 text-sm">Belum ada transaksi,<br/>mulailah menabung!</p>
+            </div>
           )}
           {transactions.map((trx) => (
-            <div key={trx._id} className="flex justify-between items-center p-3 sm:p-4 bg-white rounded-2xl shadow-sm border border-gray-50 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full ${trx.type === 'deposit' ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'}`}>
-                  {trx.type === 'deposit' ? <ArrowDownToLine size={16} /> : <ArrowUpFromLine size={16} />}
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-800 text-sm sm:text-base">{trx.user.name}</p>
-                  <p className="text-xs text-gray-500">{new Date(trx.createdAt).toLocaleDateString('id-ID')}</p>
-                </div>
+            <div
+              key={trx._id}
+              className={`flex items-center gap-3 p-3 rounded-2xl border transition-colors ${
+                trx.type === 'deposit'
+                  ? 'bg-emerald-50/60 border-emerald-100'
+                  : 'bg-rose-50/60 border-rose-100'
+              }`}
+            >
+              {/* Icon */}
+              <div className={`p-2.5 rounded-xl flex-shrink-0 ${
+                trx.type === 'deposit' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
+              }`}>
+                {trx.type === 'deposit' ? <ArrowDownToLine size={16} /> : <ArrowUpFromLine size={16} />}
               </div>
-              <div className="text-right">
-                <p className={`font-bold text-sm sm:text-base ${trx.type === 'deposit' ? 'text-emerald-500' : 'text-rose-500'}`}>
-                  {trx.type === 'deposit' ? '+ Rp' : '- Rp'} {trx.amount.toLocaleString('id-ID')}
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="font-bold text-gray-800 text-sm truncate">{trx.user.name}</p>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                    trx.type === 'deposit' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                  }`}>
+                    {trx.type === 'deposit' ? 'Nabung' : 'Pinjam'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-400 mt-0.5">
+                  {new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
+                  {trx.notes ? ` · ${trx.notes}` : ''}
                 </p>
-                <p className="text-[10px] sm:text-[11px] text-gray-400 font-medium">{trx.type === 'deposit' ? 'Nabung' : 'Dipinjam'}</p>
+              </div>
+
+              {/* Amount + Bukti */}
+              <div className="text-right flex-shrink-0">
+                <p className={`font-extrabold text-sm ${
+                  trx.type === 'deposit' ? 'text-emerald-600' : 'text-rose-600'
+                }`}>
+                  {trx.type === 'deposit' ? '+' : '-'} Rp {trx.amount.toLocaleString('id-ID')}
+                </p>
+                {trx.proofOfTransfer && (
+                  <button
+                    onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))}
+                    className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-full transition-colors ml-auto"
+                  >
+                    <ImageIcon size={11} /> Bukti
+                  </button>
+                )}
               </div>
             </div>
           ))}
         </div>
-      </Card>
+      </div>
+
+      {/* Image Viewer Modal */}
+      <AnimatePresence>
+        {imageModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={() => setImageModal(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-w-3xl w-full max-h-[90vh] bg-white rounded-2xl overflow-hidden shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setImageModal(null)}
+                className="absolute top-3 right-3 bg-rose-500 text-white rounded-full p-1.5 shadow-md hover:bg-rose-600 z-10"
+              >
+                <X size={18} />
+              </button>
+              <img
+                src={imageModal}
+                alt="Bukti Transfer"
+                className="max-w-full max-h-[80vh] object-contain w-full"
+                onError={(e) => {
+                  e.currentTarget.classList.add('hidden');
+                  e.currentTarget.nextSibling.classList.remove('hidden');
+                }}
+              />
+              <div className="hidden p-8 text-center text-gray-500">
+                <p className="text-lg">❌ Gambar tidak dapat dimuat</p>
+                <p className="text-sm mt-1 text-gray-400">File mungkin dihapus dari server</p>
+              </div>
+              <div className="p-3 bg-gray-50 text-center border-t">
+                <a href={imageModal} target="_blank" rel="noreferrer" className="text-rose-500 text-sm font-semibold hover:underline">
+                  Buka di Tab Baru
+                </a>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Transaction Modal directly from Dashboard */}
       <Modal isOpen={isModalOpen} onClose={() => !uploading && setIsModalOpen(false)} title={type === 'deposit' ? "Catat Nabung 💖" : "Catat Pinjaman Uang 💸"}>
