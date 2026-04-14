@@ -35,7 +35,7 @@ export const Navbar = () => {
       <nav className="glass sticky top-0 z-40 border-b border-pink-100 px-6 py-4 hidden md:flex justify-between items-center shadow-sm">
         <Link to="/" className="flex items-center gap-2 text-rose-500 font-bold text-xl">
           <Heart className="text-rose-400 fill-rose-100" />
-          <span>Tabungan Nikah</span>
+          <span>Tabungan Bersama</span>
         </Link>
         
         <div className="flex items-center gap-8">
@@ -55,7 +55,7 @@ export const Navbar = () => {
       <div className="md:hidden flex justify-between items-center p-4 bg-white/50 backdrop-blur-sm border-b border-pink-100">
         <div className="flex items-center gap-2 text-rose-500 font-bold text-lg">
           <Heart className="text-rose-400 fill-rose-100" size={20} />
-          <span>Tabungan Nikah</span>
+          <span>Tabungan Bersama</span>
         </div>
         <Link to="/notifications" className="relative p-2 text-gray-500 hover:text-rose-500 transition-colors">
           <Bell size={20} />

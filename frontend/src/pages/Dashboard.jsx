@@ -43,10 +43,6 @@ const Dashboard = () => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [isSelectOpen, setIsSelectOpen] = useState(false);
-  
-  // Reset Confirmation State
-  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
 
   // Category Deletion State
   const [categoryToDelete, setCategoryToDelete] = useState(null);
@@ -150,21 +146,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleResetData = async () => {
-    setIsResetting(true);
-    try {
-      await api.delete('/api/settings/reset');
-      showToast('Sistem barusan di-reset bersih!', 'success');
-      setIsResetModalOpen(false);
-      prevDataRef.current = null;
-      fetchData();
-    } catch (err) {
-      showToast(err.response?.data?.message || 'Gagal mereset data', 'error');
-    } finally {
-      setIsResetting(false);
-    }
-  };
-
   const promptDeleteCategory = (id, name) => {
     setCategoryToDelete({ id, name });
   };
@@ -212,16 +193,6 @@ const Dashboard = () => {
             <p className="italic text-sm md:text-base text-gray-500 mt-0.5">semangat nabungnya ya</p>
           </div>
         </div>
-        
-        {/* DANGER ZONE RESET BUTTON */}
-        <button 
-          onClick={() => setIsResetModalOpen(true)} 
-          className="text-rose-500 bg-rose-50 px-3 py-2 rounded-xl border border-rose-100 hover:bg-rose-100 transition-colors shadow-sm flex items-center gap-2 group"
-          title="Reset Keseluruhan (Danger Zone)"
-        >
-           <AlertTriangle size={18} className="group-hover:rotate-12 transition-transform" />
-           <span className="text-xs font-bold hidden sm:block">Reset Data</span>
-        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">

@@ -67,7 +67,7 @@ const Budget = () => {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-20 md:pb-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Target Tabungan Nikah 💖</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Tabungan Target 🎯</h1>
         <button 
           onClick={() => setIsModalOpen(true)} 
           className="md:hidden w-10 h-10 bg-rose-500 rounded-full text-white flex shrink-0 items-center justify-center shadow-md hover:bg-rose-600 transition-colors"
@@ -80,6 +80,13 @@ const Budget = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {budgets.length === 0 && (
+          <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+            <span className="text-6xl mb-4">🎯</span>
+            <h3 className="text-lg font-bold text-gray-500 mb-2">Anda belum memiliki Tabungan Target</h3>
+            <p className="text-sm text-gray-400">Silahkan klik tombol <span className="font-bold text-rose-500">+</span> untuk menambahkan Target baru</p>
+          </div>
+        )}
         {budgets.map((budget) => {
           const progress = Math.min((budget.currentAmount / budget.targetAmount) * 100, 100);
           return (
