@@ -19,3 +19,21 @@ export const createCategory = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const deleteCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    // We only delete if it belongs to the user
+    await PrivateCategory.findOneAndDelete({ _id: id, user: req.user._id });
+    
+    // (Optional) We can also optionally nuke all transactions inside it, 
+    // or just let them be orphaned (they won't show up in the frontend dynamically).
+    // The user requested to delete the card. We will clean up the transactions to be tidy.
+    const Transaction = (await import('../models/Transaction.js')).default;
+    await Transaction.deleteMany({ fundSource: id, user: req.user._id });
+
+    res.json({ message: 'Category deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

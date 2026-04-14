@@ -162,6 +162,17 @@ const Dashboard = () => {
     }
   };
 
+  const handleDeleteCategory = async (id, name) => {
+    if(!window.confirm(`Yakin ingin mereset/menghapus amplop "${name}" selamanya?`)) return;
+    try {
+      await api.delete(`/api/budgeting/categories/${id}`);
+      showToast(`Budget ${name} berhasil dihapus!`, 'success');
+      fetchData();
+    } catch (err) {
+      showToast('Gagal menghapus budget', 'error');
+    }
+  };
+
   // Envelopes logic
   const gajiTx = budgetTransactions.filter(t => t.fundSource === 'gaji');
   const gajiBalance = gajiTx.reduce((acc, t) => {
@@ -243,12 +254,11 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* ENVELOPE BUDGETING DASHBOARD (Dynamic Categories) */}
       <div className="bg-gradient-to-br from-indigo-100 via-purple-50 to-purple-200 backdrop-blur-xl rounded-3xl shadow-lg border-2 border-white/80 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-300/30 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
         <div className="bg-white/50 backdrop-blur-md border-b border-white/60 px-5 py-4 flex items-center justify-between relative z-10 flex-wrap gap-3">
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <Wallet className="text-indigo-500" size={20} /> Amplop Pribadi Anda
+            <Wallet className="text-indigo-500" size={20} /> Budget Bulanan
           </h3>
           <button onClick={() => setIsCategoryModalOpen(true)} className="flex items-center gap-1.5 text-xs font-semibold bg-white border border-indigo-100 px-3 py-1.5 rounded-full text-indigo-600 hover:bg-indigo-50 hover:shadow-sm transition-all shadow-sm">
             <Plus size={14} /> Kategori Baru
@@ -258,19 +268,19 @@ const Dashboard = () => {
         <div className="p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 relative z-10">
           {/* MASTER POOL: DOMPET GAJI */}
           <div className="md:col-span-1 border-r-0 md:border-r border-indigo-100/50 pr-0 md:pr-5 mb-4 md:mb-0">
-             <div className="flex flex-col h-full items-center p-5 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-md text-white/90 relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+             <div className="flex flex-col h-full items-center p-5 bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600 rounded-2xl shadow-md text-white/90 relative overflow-hidden group">
+                <Heart size={150} className="absolute -right-8 -bottom-8 text-white/10 pointer-events-none" />
                 <div className="relative z-10 text-center flex flex-col items-center h-full w-full">
-                  <div className="bg-emerald-400 text-white text-[10px] font-bold px-3 py-0.5 rounded-full mb-3 shadow-inner">SUMBER DANA</div>
-                  <Wallet size={40} className="mb-2 opacity-90" />
-                  <p className="text-emerald-100 text-xs font-medium uppercase tracking-widest mt-1">Dompet Gaji</p>
+                  <div className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-3 py-0.5 rounded-full mb-3 shadow-inner">SUMBER DANA</div>
+                  <Wallet size={40} className="mb-2 opacity-90 text-white" />
+                  <p className="text-rose-100 text-xs font-medium uppercase tracking-widest mt-1">Dompet Gaji</p>
                   <h4 className="font-extrabold text-2xl tracking-tight text-white mt-1 mb-auto">Rp {gajiBalance.toLocaleString('id-ID')}</h4>
                   
                   <div className="w-full mt-4 flex gap-2">
-                     <button onClick={() => openTransactionModal('deposit', 'gaji')} className="flex-1 bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-colors py-2 rounded-xl text-xs font-bold shadow-sm">
+                     <button onClick={() => openTransactionModal('deposit', 'gaji')} className="flex-1 bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-colors py-2 rounded-xl text-xs font-bold shadow-sm text-white">
                         + Tambah
                      </button>
-                     <button onClick={() => openTransactionModal('withdrawal', 'gaji')} className="flex-1 bg-black/10 hover:bg-black/20 backdrop-blur-sm transition-colors py-2 rounded-xl text-xs font-bold shadow-sm">
+                     <button onClick={() => openTransactionModal('withdrawal', 'gaji')} className="flex-1 bg-black/10 hover:bg-black/20 backdrop-blur-sm transition-colors py-2 rounded-xl text-xs font-bold shadow-sm text-white">
                         - Pakai
                      </button>
                   </div>
@@ -292,6 +302,9 @@ const Dashboard = () => {
                const bal = getEnvelopeBalance(cat._id);
                return (
                  <div key={cat._id} className="flex flex-col items-center p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                    <button onClick={() => handleDeleteCategory(cat._id, cat.name)} className="absolute top-2 right-2 text-rose-300 hover:text-rose-600 transition-colors p-1" title="Reset/Hapus Budget ini">
+                      <X size={15} />
+                    </button>
                     <p className="text-3xl mb-1 mt-2 group-hover:scale-110 transition-transform">{cat.icon}</p>
                     <p className="text-gray-500 text-[11px] font-bold uppercase tracking-widest mt-1">{cat.name}</p>
                     <h4 className="font-extrabold text-xl text-gray-800 tracking-tight mt-1 mb-auto">Rp {bal.toLocaleString('id-ID')}</h4>

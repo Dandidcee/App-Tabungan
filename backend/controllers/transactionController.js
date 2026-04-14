@@ -35,6 +35,39 @@ export const createTransaction = async (req, res) => {
   try {
     const { amount, type, notes, budgetId, proofOfTransfer, fundSource, toCategory } = req.body;
 
+    // --- NEW: Insufficient Balance Validation ---
+    if (type === 'withdrawal' || type === 'allocation') {
+      let balance = 0;
+      const actualSource = fundSource || 'tabungan_utama';
+      
+      if (actualSource === 'tabungan_utama') {
+        if (budgetId) {
+          const budget = await Budget.findById(budgetId);
+          balance = budget ? budget.currentAmount : 0;
+        } else {
+          const publicTx = await Transaction.find({
+            $or: [{ fundSource: 'tabungan_utama' }, { fundSource: { $exists: false } }, { fundSource: null }]
+          });
+          balance = publicTx.reduce((acc, t) => {
+            if (t.type === 'deposit' || t.type === 'income') return acc + t.amount;
+            if (t.type === 'withdrawal') return acc - t.amount;
+            return acc;
+          }, 0);
+        }
+      } else {
+        const privateTx = await Transaction.find({ user: req.user._id, fundSource: actualSource });
+        balance = privateTx.reduce((acc, t) => {
+          if (t.type === 'deposit' || t.type === 'income') return acc + t.amount;
+          if (t.type === 'withdrawal' || t.type === 'allocation') return acc - t.amount;
+          return acc;
+        }, 0);
+      }
+
+      if (Number(amount) > balance) {
+        return res.status(400).json({ message: `Gagal! Saldo Anda tidak cukup (Sisa: Rp ${balance.toLocaleString('id-ID')}).` });
+      }
+    }
+
     if (type === 'allocation') {
       // Create double entry for Envelope Budgeting
       const withdrawalTx = new Transaction({
