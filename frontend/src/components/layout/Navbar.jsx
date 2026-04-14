@@ -48,14 +48,6 @@ export const Navbar = () => {
             <Bell size={20} />
             <BadgeCount count={unreadCount} />
           </Link>
-
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-2 text-gray-500 hover:text-rose-500 bg-rose-50 px-4 py-2 rounded-full transition-colors ml-4"
-          >
-            <LogOut size={16} />
-            <span className="font-medium text-sm">Keluar</span>
-          </button>
         </div>
       </nav>
 
@@ -65,11 +57,10 @@ export const Navbar = () => {
           <Heart className="text-rose-400 fill-rose-100" size={20} />
           <span>Tabungan Nikah</span>
         </div>
-        {/* Hanya tombol Keluar di header atas mobile — Notif sudah ada di bottom nav */}
-        <button onClick={handleLogout} className="flex items-center gap-1.5 text-gray-500 hover:text-rose-500 bg-white px-3 py-2 rounded-full shadow-sm border border-gray-100 text-sm font-medium">
-          <LogOut size={15} />
-          <span>Keluar</span>
-        </button>
+        <Link to="/notifications" className="relative p-2 text-gray-500 hover:text-rose-500 transition-colors">
+          <Bell size={20} />
+          <BadgeCount count={unreadCount} mobile={true} />
+        </Link>
       </div>
 
       {/* Bottom Navigation (Mobile Only) */}
@@ -85,17 +76,6 @@ export const Navbar = () => {
         <Link to="/history" className={`flex flex-col items-center gap-1 ${isActive('/history') ? 'text-rose-500' : 'text-gray-400'}`}>
           <Activity size={24} />
           <span className="text-[10px] font-semibold">Riwayat</span>
-        </Link>
-        <Link to="/notifications" className={`relative flex flex-col items-center gap-1 ${isActive('/notifications') ? 'text-rose-500' : 'text-gray-400'}`}>
-          <div className="relative">
-            <Bell size={24} />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full flex items-center justify-center font-bold text-[9px] leading-none">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </div>
-          <span className="text-[10px] font-semibold">Notif</span>
         </Link>
         <Link to="/account" className={`flex flex-col items-center gap-1 ${isActive('/account') ? 'text-rose-500' : 'text-gray-400'}`}>
           <User size={24} className={isActive('/account') ? 'fill-rose-100' : ''} />

@@ -2,8 +2,9 @@ import { useState, useContext, useEffect, useRef } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import api from '../services/api';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Mail, Lock, Camera, Save, CameraOff } from 'lucide-react';
+import { User, Mail, Lock, Camera, Save, CameraOff, LogOut } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 const emojis = ['👋', '😎', '💖', '🚀', '🔥', '✨', '👑', '💸', '🤑', '⭐', '🦄', '🎉', '🌟'];
@@ -16,8 +17,14 @@ const getImageUrl = (path) => {
 };
 
 const Account = () => {
-  const { user, updateUser } = useContext(AuthContext);
+  const { user, updateUser, logout } = useContext(AuthContext);
   const { showToast } = useToast();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -186,6 +193,17 @@ const Account = () => {
              {isUpdating ? 'Menyimpan...' : <><Save size={20} /> Simpan Perubahan</>}
           </Button>
         </form>
+
+        <div className="mt-10 pt-6 border-t border-gray-100 flex flex-col items-center">
+          <p className="text-sm text-gray-400 mb-3">Selesai mengatur profil?</p>
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-rose-500 hover:text-white hover:bg-rose-500 bg-rose-50 px-6 py-3 rounded-xl transition-all font-bold shadow-sm"
+          >
+            <LogOut size={18} />
+            Keluar dari Akun
+          </button>
+        </div>
       </div>
     </motion.div>
   );
