@@ -6,7 +6,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { motion } from 'framer-motion';
-import { Heart, ArrowDownToLine, ArrowUpFromLine, Activity } from 'lucide-react';
+import { Heart, ArrowDownToLine, ArrowUpFromLine, Activity, ChevronDown } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
@@ -19,7 +19,9 @@ const Dashboard = () => {
   const [amount, setAmount] = useState('');
   const [budgetId, setBudgetId] = useState('');
   const [notes, setNotes] = useState('');
+  const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [isSelectOpen, setIsSelectOpen] = useState(false);
   const { showToast } = useToast();
 
   const fetchData = async () => {
@@ -51,12 +53,22 @@ const Dashboard = () => {
     e.preventDefault();
     setUploading(true);
     try {
+      let proofOfTransfer = '';
+      if (file) {
+        const formData = new FormData();
+        formData.append('proof', file);
+        const uploadRes = await api.post('/api/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        proofOfTransfer = uploadRes.data.filePath;
+      }
+
       await api.post('/api/transactions', {
         amount: Number(amount),
         type,
         budgetId: budgetId || undefined,
         notes,
-        proofOfTransfer: ''
+        proofOfTransfer
       });
 
       showToast(type === 'deposit' ? 'Asyik! Berhasil nabung.' : 'Uang pinjaman dicatat.', 'success');
@@ -64,6 +76,8 @@ const Dashboard = () => {
       setAmount('');
       setNotes('');
       setBudgetId('');
+      setFile(null);
+      setIsSelectOpen(false);
       fetchData();
     } catch (err) {
       showToast(err.response?.data?.message || 'Gagal menyimpan transaksi', 'error');
@@ -177,16 +191,38 @@ const Dashboard = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Alokasikan ke Target Nikah (Jika Ada)</label>
-            <select
-              value={budgetId}
-              onChange={(e) => setBudgetId(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none transition-all bg-gray-50 focus:bg-white"
-            >
-              <option value="">-- Masukkan ke Tabungan Bersama (Utama) --</option>
-              {budgets.map(b => (
-                <option key={b._id} value={b._id}>{b.title} (Kurang Rp {(b.targetAmount - b.currentAmount).toLocaleString('id-ID')})</option>
-              ))}
-            </select>
+            <div className="relative">
+              <div 
+                onClick={() => setIsSelectOpen(!isSelectOpen)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 flex justify-between items-center cursor-pointer transition-colors"
+              >
+                <span className="truncate font-medium text-gray-700">
+                  {budgetId ? budgets.find(b => b._id === budgetId)?.title : '-- Masukkan ke Tabungan Bersama (Utama) --'}
+                </span>
+                <ChevronDown size={18} className={`text-gray-400 transition-transform ${isSelectOpen ? 'rotate-180' : ''}`} />
+              </div>
+              
+              {isSelectOpen && (
+                <div className="absolute z-50 w-full mt-2 bg-white border border-pink-100 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] max-h-60 overflow-y-auto">
+                  <div 
+                    onClick={() => { setBudgetId(''); setIsSelectOpen(false); }}
+                    className="px-4 py-3 hover:bg-rose-50 cursor-pointer border-b border-gray-50 text-emerald-600 font-bold transition-colors"
+                  >
+                    🌟 Tabungan Bersama (Utama)
+                  </div>
+                  {budgets.map(b => (
+                    <div 
+                      key={b._id} 
+                      onClick={() => { setBudgetId(b._id); setIsSelectOpen(false); }}
+                      className="px-4 py-3 hover:bg-rose-50 cursor-pointer border-b border-gray-50 text-gray-700 transition-colors"
+                    >
+                      <p className="font-medium">{b.title}</p>
+                      <p className="text-xs text-rose-400 mt-0.5">Sisa: Rp {(b.targetAmount - b.currentAmount).toLocaleString('id-ID')}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div>
@@ -198,6 +234,18 @@ const Dashboard = () => {
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none transition-all bg-gray-50 focus:bg-white"
               placeholder={type === 'deposit' ? "Menabung uang sisa belanja..." : "Pinjam untuk benerin motor"}
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Bukti Gambar Transaksi (Opsional)</label>
+            <div className="relative">
+                <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none transition-all bg-gray-50 focus:bg-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rose-50 file:text-rose-600 hover:file:bg-rose-100"
+                />
+            </div>
           </div>
 
           <Button type="submit" variant={type === 'deposit' ? 'primary' : 'outline'} className="w-full mt-6 py-3 text-lg rounded-xl">
