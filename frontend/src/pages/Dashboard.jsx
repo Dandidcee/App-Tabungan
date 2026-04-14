@@ -161,7 +161,7 @@ const Dashboard = () => {
         type: finalType,
         budgetId: (finalFundSource === 'tabungan_utama' && budgetId) ? budgetId : undefined,
         fundSource: finalFundSource,
-        toCategory: sourceMode === 'internal' ? toCategory : undefined,
+        toCategory: (type === 'allocation' || sourceMode === 'internal') ? toCategory : undefined,
         notes,
         proofOfTransfer
       });
@@ -722,9 +722,6 @@ const Dashboard = () => {
                       <>
                         <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Publik (Dilihat Bersama)</div>
                         <div onClick={() => { setFundSource('tabungan_utama'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-emerald-600 dark:text-emerald-400 font-bold transition-colors">🌟 Tabungan Bersama (Utama)</div>
-                        {budgets.map(b => (
-                          <div key={b._id} onClick={() => { setFundSource('tabungan_utama'); setBudgetId(b._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-rose-50 dark:hover:bg-rose-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-gray-700 dark:text-slate-300 pl-8 font-medium truncate">{b.title}</div>
-                        ))}
                         <div className="text-xs font-bold text-gray-400 dark:text-slate-500 py-2 uppercase tracking-wider px-4 bg-gray-50 dark:bg-slate-900/50">Private (Dompet Anda)</div>
                         <div onClick={() => { setFundSource('gaji'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 cursor-pointer border-b border-emerald-100 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50/30 dark:bg-emerald-900/20">💼 Dompet Gaji Utama</div>
                         {categories.map(c => (

@@ -67,7 +67,12 @@ export const createTransaction = async (req, res) => {
   try {
     const { amount, type, notes, budgetId, proofOfTransfer, fundSource, toCategory } = req.body;
 
-    // --- NEW: Insufficient Balance Validation ---
+    // --- Tabungan Target is RECEIVE-ONLY (no withdrawal/transfer out) ---
+    if (budgetId && (type === 'withdrawal')) {
+      return res.status(400).json({ message: 'Tabungan Target hanya bisa menerima dana, tidak bisa ditarik atau dipinjam.' });
+    }
+
+    // --- Insufficient Balance Validation ---
     if (type === 'withdrawal' || type === 'allocation') {
       let balance = 0;
       const actualSource = fundSource || 'tabungan_utama';
