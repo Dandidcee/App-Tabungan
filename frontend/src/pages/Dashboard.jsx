@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
+import CurrencyInput from '../components/ui/CurrencyInput';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, ArrowDownToLine, ArrowUpFromLine, PlusCircle, Activity, ChevronDown, Image as ImageIcon, X, ArrowRight, Settings, Wallet, ShoppingBag, Coffee, Plus, AlertTriangle, RefreshCcw } from 'lucide-react';
 
@@ -482,7 +483,13 @@ const Dashboard = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nominal (Rp)</label>
-            <input type="number" required value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-300 bg-gray-50 text-xl font-extrabold text-indigo-900 shadow-inner" placeholder="100000"/>
+            <CurrencyInput
+              required
+              value={amount}
+              onChange={setAmount}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-300 bg-gray-50 text-xl font-extrabold text-indigo-900 shadow-inner"
+              placeholder="1.000.000"
+            />
           </div>
 
           <div>

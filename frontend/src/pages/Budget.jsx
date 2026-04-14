@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { motion } from 'framer-motion';
 import { Plus, Target, Calendar } from 'lucide-react';
+import CurrencyInput from '../components/ui/CurrencyInput';
 
 const Budget = () => {
   const [budgets, setBudgets] = useState([]);
@@ -144,13 +145,12 @@ const Budget = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Target Nominal (Rp)</label>
-            <input
-              type="number"
+            <CurrencyInput
               required
               value={targetAmount}
-              onChange={(e) => setTargetAmount(e.target.value)}
+              onChange={setTargetAmount}
               className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-rose-200 outline-none"
-              placeholder="5000000"
+              placeholder="5.000.000"
             />
           </div>
           <div>
