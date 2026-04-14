@@ -4,8 +4,9 @@ import { useToast } from '../context/ToastContext';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Mail, Lock, Camera, Save, CameraOff, LogOut } from 'lucide-react';
+import { User, Mail, Lock, Camera, Save, CameraOff, LogOut, AlertTriangle, RefreshCcw } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { Modal } from '../components/ui/Modal';
 
 const emojis = ['👋', '😎', '💖', '🚀', '🔥', '✨', '👑', '💸', '🤑', '⭐', '🦄', '🎉', '🌟'];
 
@@ -34,6 +35,8 @@ const Account = () => {
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -84,6 +87,21 @@ const Account = () => {
       showToast(err.response?.data?.message || 'Gagal memperbarui profil', 'error');
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleResetData = async () => {
+    setIsResetting(true);
+    try {
+      await api.delete('/api/settings/reset');
+      showToast('Sistem barusan di-reset bersih!', 'success');
+      setIsResetModalOpen(false);
+      // Wait for 1s then reload to pull completely empty states
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Gagal mereset data', 'error');
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -194,17 +212,42 @@ const Account = () => {
           </Button>
         </form>
 
-        <div className="mt-10 pt-6 border-t border-gray-100 flex flex-col items-center">
-          <p className="text-sm text-gray-400 mb-3">Logout dari akun?</p>
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-2 text-rose-500 hover:text-white hover:bg-rose-500 bg-rose-50 px-6 py-3 rounded-xl transition-all font-bold shadow-sm"
-          >
-            <LogOut size={18} />
-            Keluar dari Akun
-          </button>
+        <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col items-center">
+          <p className="text-sm text-gray-400 mb-3">Pilihan Lainnya</p>
+          <div className="flex gap-4">
+             <button 
+               onClick={handleLogout}
+               className="flex items-center gap-2 text-rose-500 hover:text-white hover:bg-rose-500 bg-rose-50 px-6 py-3 rounded-xl transition-all font-bold shadow-sm"
+             >
+               <LogOut size={18} />
+               Keluar
+             </button>
+             <button 
+               onClick={() => setIsResetModalOpen(true)}
+               className="flex items-center gap-2 text-red-600 hover:text-white hover:bg-red-600 bg-red-50 border border-red-100 px-6 py-3 rounded-xl transition-all font-bold shadow-sm group"
+             >
+               <AlertTriangle size={18} className="group-hover:animate-pulse" />
+               Reset Database
+             </button>
+          </div>
         </div>
       </div>
+
+      {/* Reset Confirmation Modal */}
+      <Modal isOpen={isResetModalOpen} onClose={() => !isResetting && setIsResetModalOpen(false)} title="PERINGATAN ❗">
+         <div className="text-center p-2 space-y-4">
+             <AlertTriangle size={60} className="mx-auto text-yellow-500 animate-pulse" />
+             <p className="text-sm font-semibold text-gray-700">Apakah anda ingin menghapus semua data</p>
+             <p className="text-xs text-gray-500 bg-yellow-50 p-3 rounded-xl border border-yellow-100 text-center">Aksi ini akan menghapus semua data (transaksi, riwayat, dll) yang ada di server</p>
+             
+             <div className="flex gap-3 mt-6">
+                <Button onClick={() => setIsResetModalOpen(false)} variant="outline" className="flex-1 py-3 bg-gray-50 border-0">Batal</Button>
+                <Button onClick={handleResetData} className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-200">
+                   {isResetting ? <RefreshCcw className="animate-spin h-5 w-5 mx-auto" /> : 'Lanjutkan'}
+                </Button>
+             </div>
+         </div>
+      </Modal>
     </motion.div>
   );
 };
