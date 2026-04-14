@@ -195,7 +195,7 @@ const Account = () => {
         </form>
 
         <div className="mt-10 pt-6 border-t border-gray-100 flex flex-col items-center">
-          <p className="text-sm text-gray-400 mb-3">Selesai mengatur profil?</p>
+          <p className="text-sm text-gray-400 mb-3">Logout dari akun?</p>
           <button 
             onClick={handleLogout}
             className="flex items-center gap-2 text-rose-500 hover:text-white hover:bg-rose-500 bg-rose-50 px-6 py-3 rounded-xl transition-all font-bold shadow-sm"
