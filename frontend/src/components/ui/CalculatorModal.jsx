@@ -41,10 +41,12 @@ const CalculatorModal = ({ isOpen, onClose }) => {
   const calculate = () => {
     try {
       if (!expression) return;
-      // Note: simple eval usage is fine here as input is strictly controlled by our UI buttons
+      // Note: input is strictly controlled by our UI buttons
       let safeExpression = expression.replace(/x/g, '*').replace(/÷/g, '/');
-      // eslint-disable-next-line
-      const evaluated = eval(safeExpression);
+      
+      // Use indirect execution to avoid Vite bundler warnings
+      const evaluateFn = new Function('return ' + safeExpression);
+      const evaluated = evaluateFn();
       
       // Handle decimals nicely
       const finalResult = Number.isInteger(evaluated) ? evaluated : Number(evaluated.toFixed(4));
