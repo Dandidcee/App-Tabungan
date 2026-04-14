@@ -127,25 +127,7 @@ const History = () => {
         </div>
       </Card>
 
-      {/* Transaction Entry Modal */}
-      <Modal isOpen={isModalOpen} onClose={() => !uploading && setIsModalOpen(false)} title="Catat Transaksi">
-        <form onSubmit={handleSubmit} className="space-y-4 text-left">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Transaksi</label>
-            <div className="flex gap-2">
-              <button 
-                type="button" 
-                onClick={() => setType('deposit')}
-                className={`flex-1 py-2 rounded-xl border ${type === 'deposit' ? 'bg-emerald-100 border-emerald-500 text-emerald-700 font-bold' : 'bg-gray-50 text-gray-500 border-gray-200'}`}
-              >
-                Menabung
-              </button>
-              <button 
-                type="button" 
-                onClick={() => setType('withdrawal')}
-                className={`flex-1 py-2 rounded-xl border ${type === 'withdrawal' ? 'bg-rose-100 border-rose-500 text-rose-700 font-bold' : 'bg-gray-50 text-gray-500 border-gray-200'}`}
-              >
-                Menarik
+
       {/* Image View Modal (No close on click outside for simplicity, just a big X) */}
       <AnimatePresence>
         {imageModal && (
