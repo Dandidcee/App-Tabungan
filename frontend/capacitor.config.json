@@ -1,0 +1,8 @@
+{
+  "appId": "com.tabunganbersama.app",
+  "appName": "TabunganBersama",
+  "webDir": "dist",
+  "server": {
+    "cleartext": true
+  }
+}
