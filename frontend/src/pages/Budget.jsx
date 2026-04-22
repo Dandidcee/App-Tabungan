@@ -72,7 +72,7 @@ const Budget = () => {
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-slate-100">Tabungan Target 🎯</h1>
         <button 
           onClick={() => setIsModalOpen(true)} 
-          className="md:hidden w-10 h-10 bg-rose-500 rounded-full text-white flex shrink-0 items-center justify-center shadow-md hover:bg-rose-600 transition-colors"
+          className="btn-circle md:hidden w-11 h-11 btn-pill-rose text-white shadow-lg"
         >
           <Plus size={20} />
         </button>

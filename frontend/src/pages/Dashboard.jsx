@@ -292,34 +292,34 @@ const Dashboard = () => {
         {/* Quick Actions */}
         <div className="col-span-1 flex flex-col gap-3">
           <div className="flex flex-row gap-3 flex-1">
-            <button onClick={() => openTransactionModal('deposit')} className="flex-1 glass bg-white/60 dark:bg-slate-800/60 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-emerald-100 dark:border-emerald-900/30 group">
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-900/20 dark:to-emerald-800/20 text-emerald-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white dark:border-slate-700 transition-transform">
-                    <ArrowDownToLine size={20} />
+            <button onClick={() => openTransactionModal('deposit')} className="btn-pill btn-pill-emerald flex-1 py-3 md:py-4 flex-col h-full rounded-3xl" style={{borderRadius:'1.5rem'}}>
+                <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center mb-1.5">
+                    <ArrowDownToLine size={22} />
                 </div>
-                <h3 className="font-bold text-gray-800 dark:text-slate-200 text-sm md:text-base">Nabung</h3>
+                <span className="text-sm font-bold tracking-wide">Nabung</span>
             </button>
  
-            <button onClick={() => openTransactionModal('withdrawal')} className="flex-1 glass bg-white/60 dark:bg-slate-800/60 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-rose-100 dark:border-rose-900/30 group">
-                <div className="w-10 h-10 bg-gradient-to-br from-rose-100 to-rose-50 dark:from-rose-900/20 dark:to-rose-800/20 text-rose-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white dark:border-slate-700 transition-transform">
-                    <ArrowUpFromLine size={20} />
+            <button onClick={() => openTransactionModal('withdrawal')} className="btn-pill btn-pill-rose flex-1 py-3 md:py-4 flex-col h-full rounded-3xl" style={{borderRadius:'1.5rem'}}>
+                <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center mb-1.5">
+                    <ArrowUpFromLine size={22} />
                 </div>
-                <h3 className="font-bold text-gray-800 dark:text-slate-200 text-sm md:text-base">Pinjam</h3>
+                <span className="text-sm font-bold tracking-wide">Pinjam</span>
             </button>
           </div>
 
           <div className="flex flex-row gap-3 flex-1">
-            <button onClick={() => openTransactionModal('income')} className="flex-1 glass bg-white/60 dark:bg-slate-800/60 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-blue-100 dark:border-blue-900/30 group">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/20 dark:to-blue-800/20 text-blue-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white dark:border-slate-700 transition-transform">
-                    <PlusCircle size={20} />
+            <button onClick={() => openTransactionModal('income')} className="btn-pill btn-pill-blue flex-1 py-3 md:py-4 flex-col h-full rounded-3xl" style={{borderRadius:'1.5rem'}}>
+                <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center mb-1.5">
+                    <PlusCircle size={22} />
                 </div>
-                <h3 className="font-bold text-gray-800 dark:text-slate-200 text-sm md:text-base">Pemasukan</h3>
+                <span className="text-sm font-bold tracking-wide">Pemasukan</span>
             </button>
 
-            <button onClick={() => setIsCalculatorOpen(true)} className="flex-1 glass bg-white/60 dark:bg-slate-800/60 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all rounded-3xl p-3 md:p-4 flex flex-col items-center justify-center text-center shadow-sm border border-purple-100 dark:border-purple-900/30 group">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-50 dark:from-purple-900/20 dark:to-purple-800/20 text-purple-500 rounded-full flex items-center justify-center mb-1.5 md:mb-2 group-hover:scale-110 shadow-sm border border-white dark:border-slate-700 transition-transform">
-                    <Calculator size={20} />
+            <button onClick={() => setIsCalculatorOpen(true)} className="btn-pill btn-pill-indigo flex-1 py-3 md:py-4 flex-col h-full rounded-3xl" style={{borderRadius:'1.5rem'}}>
+                <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center mb-1.5">
+                    <Calculator size={22} />
                 </div>
-                <h3 className="font-bold text-gray-800 dark:text-slate-200 text-sm md:text-base">Kalkulator</h3>
+                <span className="text-sm font-bold tracking-wide">Kalkulator</span>
             </button>
           </div>
         </div>
@@ -331,7 +331,7 @@ const Dashboard = () => {
           <h3 className="text-lg font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
             <Wallet className="text-indigo-500 dark:text-indigo-400" size={20} /> Budget Bulanan
           </h3>
-          <button onClick={() => setIsCategoryModalOpen(true)} className="flex items-center gap-1.5 text-xs font-semibold bg-white dark:bg-slate-800 border border-indigo-100 dark:border-slate-700 px-3 py-1.5 rounded-full text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-700 hover:shadow-sm transition-all shadow-sm">
+          <button onClick={() => setIsCategoryModalOpen(true)} className="btn-pill btn-pill-indigo btn-pill-sm">
             <Plus size={14} /> Kategori Baru
           </button>
         </div>
@@ -348,10 +348,10 @@ const Dashboard = () => {
                   <h4 className="font-extrabold text-2xl tracking-tight text-white mt-1 mb-auto">Rp {gajiBalance.toLocaleString('id-ID')}</h4>
                   
                   <div className="w-full mt-4 flex gap-2">
-                     <button onClick={() => openTransactionModal('deposit', 'gaji')} className="flex-1 bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-colors py-2 rounded-xl text-xs font-bold shadow-sm text-white">
+                     <button onClick={() => openTransactionModal('deposit', 'gaji')} className="btn-pill btn-pill-sm flex-1 text-white font-bold" style={{background:'rgba(255,255,255,0.22)',boxShadow:'0 2px 8px rgba(0,0,0,0.15)'}}>
                         + Tambah
                      </button>
-                     <button onClick={() => openTransactionModal('withdrawal', 'gaji')} className="flex-1 bg-black/10 hover:bg-black/20 backdrop-blur-sm transition-colors py-2 rounded-xl text-xs font-bold shadow-sm text-white">
+                     <button onClick={() => openTransactionModal('withdrawal', 'gaji')} className="btn-pill btn-pill-sm flex-1 text-white font-bold" style={{background:'rgba(0,0,0,0.15)',boxShadow:'0 2px 8px rgba(0,0,0,0.10)'}}>
                         - Pakai
                      </button>
                   </div>
@@ -410,11 +410,11 @@ const Dashboard = () => {
                     </p>
                     
                     <div className="w-full mt-2 flex gap-1.5 pt-3 border-t border-indigo-50/50 dark:border-slate-700/50">
-                       <button onClick={() => openTransactionModal('allocation', 'gaji', cat._id)} className="flex-1 flex flex-col items-center justify-center text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 py-1.5 rounded-lg transition-colors">
-                          <ArrowDownToLine size={14} className="mb-0.5" /> Sedot Gaji
+                       <button onClick={() => openTransactionModal('allocation', 'gaji', cat._id)} className="btn-pill btn-pill-indigo btn-pill-sm flex-1 flex-col gap-0.5 py-2" style={{borderRadius:'0.75rem'}}>
+                          <ArrowDownToLine size={13} /> Sedot Gaji
                        </button>
-                       <button onClick={() => openTransactionModal('withdrawal', cat._id)} className="flex-1 flex flex-col items-center justify-center text-[10px] font-bold text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/40 py-1.5 rounded-lg transition-colors">
-                          <ArrowUpFromLine size={14} className="mb-0.5" /> Pakai
+                       <button onClick={() => openTransactionModal('withdrawal', cat._id)} className="btn-pill btn-pill-rose btn-pill-sm flex-1 flex-col gap-0.5 py-2" style={{borderRadius:'0.75rem'}}>
+                          <ArrowUpFromLine size={13} /> Pakai
                        </button>
                     </div>
                  </div>
@@ -452,7 +452,7 @@ const Dashboard = () => {
                 📂 Budget
               </button>
             </div>
-            <button onClick={() => navigate('/history')} className="flex items-center gap-1 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 bg-white/60 dark:bg-slate-800 border border-rose-100 dark:border-slate-700 px-3 py-1.5 rounded-full transition-all hover:shadow-sm">
+            <button onClick={() => navigate('/history')} className="btn-pill btn-pill-rose btn-pill-sm">
               Lihat Semua <ArrowRight size={13} />
             </button>
           </div>
@@ -535,7 +535,7 @@ const Dashboard = () => {
         {imageModal && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setImageModal(null)}>
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative max-w-3xl w-full bg-white dark:bg-slate-800 rounded-2xl overflow-hidden p-2" onClick={e => e.stopPropagation()}>
-               <button onClick={() => setImageModal(null)} className="absolute top-4 right-4 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-1.5 transition-colors"><X size={18} /></button>
+               <button onClick={() => setImageModal(null)} className="btn-circle absolute top-4 right-4 bg-rose-500 hover:bg-rose-600 text-white p-1.5"><X size={18} /></button>
                <img src={imageModal} className="w-full max-h-[80vh] object-contain rounded-xl" />
             </motion.div>
           </div>

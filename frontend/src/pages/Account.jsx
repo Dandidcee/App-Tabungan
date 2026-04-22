@@ -222,16 +222,16 @@ const Account = () => {
           <div className="flex gap-4">
              <button 
                onClick={handleLogout}
-               className="flex items-center gap-2 text-rose-500 hover:text-white hover:bg-rose-500 bg-rose-50 dark:bg-rose-900/10 px-6 py-3 rounded-xl transition-all font-bold shadow-sm"
+               className="btn-pill btn-pill-ghost"
              >
                <LogOut size={18} />
                Keluar
              </button>
              <button 
                onClick={() => setIsResetModalOpen(true)}
-               className="flex items-center gap-2 text-red-600 dark:text-red-400 hover:text-white hover:bg-red-600 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 px-6 py-3 rounded-xl transition-all font-bold shadow-sm group"
+               className="btn-pill" style={{background:'linear-gradient(135deg,#ef4444,#dc2626)',color:'#fff',boxShadow:'0 4px 15px rgba(239,68,68,0.4)'}}
              >
-               <AlertTriangle size={18} className="group-hover:animate-pulse" />
+               <AlertTriangle size={18} />
                Reset Database
              </button>
           </div>
