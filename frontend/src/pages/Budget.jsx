@@ -72,11 +72,11 @@ const Budget = () => {
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-slate-100">Tabungan Target 🎯</h1>
         <button 
           onClick={() => setIsModalOpen(true)} 
-          className="btn-circle md:hidden w-11 h-11 btn-pill-rose text-white shadow-lg"
+          className="btn-circle md:!hidden w-11 h-11 btn-pill-rose text-white shadow-lg"
         >
           <Plus size={20} />
         </button>
-        <Button onClick={() => setIsModalOpen(true)} className="hidden md:flex items-center gap-2">
+        <Button onClick={() => setIsModalOpen(true)} className="!hidden md:!inline-flex items-center gap-2">
           <Plus size={18} /> Buat Target
         </Button>
       </div>
