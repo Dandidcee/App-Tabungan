@@ -76,11 +76,15 @@ const Recap = () => {
   const incomePercent = total === 0 ? 0 : Math.round((totalIncome / total) * 100);
   const expensePercent = total === 0 ? 0 : 100 - incomePercent;
   
-  // Circumference of SVG circle where r=16 -> c = 2 * PI * 16 ≈ 100.53
+  // Circumference of SVG circle where r=16 -> c = 2 * PI * 15.9155 ≈ 100
   const circumference = 2 * Math.PI * 15.9155;
-  const incomeDasharray = `${(incomePercent * circumference) / 100} ${circumference}`;
-  const expenseDasharray = `${(expensePercent * circumference) / 100} ${circumference}`;
-  const expenseOffset = circumference - ((incomePercent * circumference) / 100);
+  const incomeLength = (incomePercent * circumference) / 100;
+  const expenseLength = (expensePercent * circumference) / 100;
+  
+  const incomeDasharray = `${incomeLength} ${circumference}`;
+  const expenseDasharray = `${expenseLength} ${circumference}`;
+  // To start the expense dash immediately after the income dash, we offset it backwards
+  const expenseOffset = -incomeLength;
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
