@@ -11,21 +11,21 @@ export const Button = ({ children, onClick, variant = 'primary', className = '',
 
   const variants = {
     primary: [
-      "bg-gradient-to-b from-rose-400 to-rose-600 text-white",
-      "shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_6px_0_#9f0d2c,0_8px_16px_rgba(225,29,72,0.4)]",
-      "active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_0px_0_#9f0d2c] active:translate-y-1",
+      "bg-gradient-to-b from-rose-300 to-rose-500 text-white",
+      "shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_6px_0_#be123c,0_8px_16px_rgba(225,29,72,0.3)]",
+      "active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_0px_0_#be123c] active:translate-y-1",
       "hover:brightness-110",
     ].join(' '),
     secondary: [
-      "bg-gradient-to-b from-emerald-400 to-emerald-600 text-white",
-      "shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_6px_0_#065f46,0_8px_16px_rgba(5,150,105,0.4)]",
-      "active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_0px_0_#065f46] active:translate-y-1",
+      "bg-gradient-to-b from-emerald-300 to-emerald-500 text-white",
+      "shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_6px_0_#047857,0_8px_16px_rgba(16,185,129,0.3)]",
+      "active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_0px_0_#047857] active:translate-y-1",
       "hover:brightness-110",
     ].join(' '),
     outline: [
-      "bg-white border-2 border-rose-500 text-rose-600",
-      "shadow-[0_6px_0_rgba(225,29,72,0.25),0_8px_16px_rgba(225,29,72,0.15)]",
-      "active:shadow-[0_0px_0_rgba(225,29,72,0.2)] active:translate-y-1",
+      "bg-white border-2 border-rose-400 text-rose-500",
+      "shadow-[0_6px_0_rgba(225,29,72,0.2),0_8px_16px_rgba(225,29,72,0.15)]",
+      "active:shadow-[0_0px_0_rgba(225,29,72,0.15)] active:translate-y-1",
       "hover:bg-rose-50",
     ].join(' '),
   };

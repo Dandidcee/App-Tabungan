@@ -48,10 +48,10 @@ export const Navbar = () => {
           
           <div className="flex items-center gap-3 ml-2 border-l border-pink-100 dark:border-slate-700 pl-4">
             <ThemeToggle />
-            <Link to="/notifications" className="relative p-2 text-gray-500 dark:text-slate-400 hover:text-rose-500 transition-colors">
+            <button onClick={() => isActive('/notifications') ? navigate(-1) : navigate('/notifications')} className={`relative p-2 transition-colors ${isActive('/notifications') ? 'text-rose-500' : 'text-gray-500 dark:text-slate-400 hover:text-rose-500'}`}>
               <Bell size={20} />
               <BadgeCount count={unreadCount} />
-            </Link>
+            </button>
           </div>
         </div>
       </nav>
@@ -64,10 +64,10 @@ export const Navbar = () => {
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Link to="/notifications" className="relative p-2 text-gray-500 dark:text-slate-400 hover:text-rose-500 transition-colors">
+          <button onClick={() => isActive('/notifications') ? navigate(-1) : navigate('/notifications')} className={`relative p-2 transition-colors ${isActive('/notifications') ? 'text-rose-500' : 'text-gray-500 dark:text-slate-400 hover:text-rose-500'}`}>
             <Bell size={20} />
             <BadgeCount count={unreadCount} mobile={true} />
-          </Link>
+          </button>
         </div>
       </div>
 
