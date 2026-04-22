@@ -27,7 +27,8 @@ const Login = () => {
         showToast('Berhasil membuat akun', 'success');
       }
     } catch (err) {
-      showToast(err.response?.data?.message || 'Terjadi kesalahan', 'error');
+      const msg = err?.response?.data?.message || err?.message || 'Terjadi kesalahan';
+      showToast(`Error: ${msg}`, 'error');
     }
   };
 

@@ -14,4 +14,19 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Auto logout ketika server mengembalikan 401 (user dihapus / token tidak valid)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Hapus semua data sesi lokal
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      // Redirect ke halaman login
+      window.location.href = '/';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
