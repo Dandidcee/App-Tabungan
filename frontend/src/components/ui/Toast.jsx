@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { CheckCircle, AlertCircle, Info, X } from 'lucide-react';
 
 const Toast = ({ message, type = 'success', onClose }) => {
@@ -9,9 +9,9 @@ const Toast = ({ message, type = 'success', onClose }) => {
   };
 
   const bgMap = {
-    success: 'bg-emerald-50 border-emerald-200',
-    error: 'bg-rose-50 border-rose-200',
-    info: 'bg-blue-50 border-blue-200',
+    success: 'bg-white border-emerald-200',
+    error: 'bg-white border-rose-200',
+    info: 'bg-white border-blue-200',
   };
 
   const textMap = {
@@ -22,11 +22,11 @@ const Toast = ({ message, type = 'success', onClose }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 50, scale: 0.9 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 50, scale: 0.9 }}
-      transition={{ type: "spring", damping: 25, stiffness: 300 }}
-      className={`fixed top-8 right-4 md:top-8 md:right-8 z-[9999] min-w-[300px] max-w-[90vw] p-4 rounded-2xl border shadow-xl flex items-center gap-3 backdrop-blur-md ${bgMap[type]}`}
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.15, ease: 'easeOut' }}
+      className={`fixed top-4 left-4 right-4 z-[9999] max-w-sm mx-auto p-4 rounded-2xl border shadow-lg flex items-center gap-3 ${bgMap[type]}`}
     >
       <div className="shrink-0">{iconMap[type]}</div>
       <p className={`flex-1 font-bold text-sm ${textMap[type]}`}>{message}</p>

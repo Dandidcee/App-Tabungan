@@ -97,7 +97,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 10000);
+    const interval = setInterval(fetchData, 30000); // 30s — kurangi load CPU
     return () => clearInterval(interval);
   }, [fetchData]);
 
@@ -256,7 +256,7 @@ const Dashboard = () => {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pb-24 md:pb-6">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }} className="space-y-6 pb-24 md:pb-6">
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-3 md:gap-4">
           {user?.profilePicture && (
@@ -525,16 +525,16 @@ const Dashboard = () => {
 
       <AnimatePresence>
         {uploading && (
-           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-             <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl flex flex-col items-center justify-center shadow-2xl">
+           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40">
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl flex flex-col items-center justify-center shadow-2xl">
                <Activity size={32} className="text-rose-500 animate-pulse mb-4" />
                <h3 className="font-bold relative z-10 dark:text-slate-200">Menyimpan...</h3>
              </motion.div>
            </div>
         )}
         {imageModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setImageModal(null)}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative max-w-3xl w-full bg-white dark:bg-slate-800 rounded-2xl overflow-hidden p-2" onClick={e => e.stopPropagation()}>
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80" onClick={() => setImageModal(null)}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} className="relative max-w-3xl w-full bg-white dark:bg-slate-800 rounded-2xl overflow-hidden p-2" onClick={e => e.stopPropagation()}>
                <button onClick={() => setImageModal(null)} className="btn-circle absolute top-4 right-4 bg-rose-500 hover:bg-rose-600 text-white p-1.5"><X size={18} /></button>
                <img src={imageModal} className="w-full max-h-[80vh] object-contain rounded-xl" />
             </motion.div>

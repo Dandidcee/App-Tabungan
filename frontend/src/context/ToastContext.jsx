@@ -2,6 +2,7 @@ import { createContext, useState, useRef, useCallback, useEffect, useContext } f
 import api from '../services/api';
 import Toast from '../components/ui/Toast';
 import { AnimatePresence } from 'framer-motion';
+import { requestNotificationPermission, sendNativeNotification } from '../services/nativeNotification';
 
 export const ToastContext = createContext();
 
@@ -12,6 +13,8 @@ export const ToastProvider = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [localToast, setLocalToast] = useState(null);
   const pollingRef = useRef(null);
+  // Track IDs of notifications we've already shown natively to avoid duplicates
+  const shownNativeIds = useRef(new Set());
 
   // ── Fetch all notifications from API ──────────────────────────────────────
   const fetchNotifications = useCallback(async () => {
@@ -21,7 +24,17 @@ export const ToastProvider = ({ children }) => {
 
       const { data } = await api.get('/api/notifications');
       setNotifications(data);
-      setUnreadCount(data.filter(n => !n.read).length);
+
+      const unread = data.filter(n => !n.read);
+      setUnreadCount(unread.length);
+
+      // Kirim native notification untuk notif baru yang belum pernah dikirim
+      for (const notif of unread) {
+        if (!shownNativeIds.current.has(notif._id)) {
+          shownNativeIds.current.add(notif._id);
+          await sendNativeNotification('TabunganBersama 🌸', notif.message);
+        }
+      }
     } catch {
       // Silently fail (user may not be logged in yet)
     }
@@ -30,6 +43,8 @@ export const ToastProvider = ({ children }) => {
   // ── Start / stop polling based on token presence ──────────────────────────
   const startPolling = useCallback(() => {
     if (pollingRef.current) return; // already running
+    // Minta izin notifikasi saat mulai polling (sekali saja)
+    requestNotificationPermission();
     fetchNotifications();
     pollingRef.current = setInterval(fetchNotifications, 15000); // every 15s
   }, [fetchNotifications]);
@@ -51,10 +66,7 @@ export const ToastProvider = ({ children }) => {
   // ── Local toast (for instant feedback, also goes to notif list) ──────────
   const showToast = (message, type = 'success') => {
     setLocalToast({ message, type });
-    // Reset toast after 3s
     setTimeout(() => setLocalToast(null), 3000);
-    
-    // Just trigger a refresh so real DB notification shows up immediately in the notification list
     setTimeout(fetchNotifications, 500);
   };
 
@@ -75,6 +87,7 @@ export const ToastProvider = ({ children }) => {
       await api.delete('/api/notifications');
       setNotifications([]);
       setUnreadCount(0);
+      shownNativeIds.current.clear();
     } catch {
       //
     }

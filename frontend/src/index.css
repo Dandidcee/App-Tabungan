@@ -70,15 +70,14 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* ─── Action Button — Style Seperti Referensi ─── */
-/* Rounded-2xl, bottom shadow tebal, bukan pill */
+/* ─── Action Button — GPU Accelerated ─── */
 .btn-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
   padding: 0.55rem 1.2rem;
-  border-radius: 14px;       /* rounded-2xl bukan pill */
+  border-radius: 14px;
   font-weight: 700;
   font-size: 0.8125rem;
   line-height: 1.25;
@@ -86,15 +85,16 @@ body {
   user-select: none;
   border: none;
   outline: none;
-  transition: all 0.1s ease-out;
+  /* GPU-accelerated: hanya animasikan transform, bukan top/layout */
+  transition: transform 0.08s ease-out, filter 0.08s ease-out;
   letter-spacing: 0.01em;
-  position: relative;
-  top: 0;
+  will-change: transform;
+  transform: translateZ(0); /* Force GPU layer */
 }
 
-/* Tenggelam 4px saat ditekan — persis seperti referensi */
+/* Tenggelam 4px saat ditekan — GPU accelerated */
 .btn-pill:active {
-  top: 4px;
+  transform: translateY(4px) translateZ(0);
   box-shadow: none !important;
 }
 
@@ -195,9 +195,9 @@ body {
   border: none;
   cursor: pointer;
   font-weight: 700;
-  position: relative;
-  top: 0;
-  transition: all 0.1s ease-out;
+  transition: transform 0.08s ease-out, filter 0.08s ease-out;
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .btn-circle:hover {
@@ -205,8 +205,7 @@ body {
 }
 
 .btn-circle:active {
-  top: 3px;
-  filter: brightness(0.95);
+  transform: translateY(3px) translateZ(0);
 }
 
 

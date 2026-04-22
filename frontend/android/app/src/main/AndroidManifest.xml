@@ -50,4 +50,8 @@
 
     <!-- File picker support -->
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+
+    <!-- Native Notifications -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 </manifest>
