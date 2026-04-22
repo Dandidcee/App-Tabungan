@@ -3,47 +3,39 @@ import { motion } from 'framer-motion';
 export const Button = ({ children, onClick, variant = 'primary', className = '', type = 'button', disabled, ...props }) => {
   const baseStyle = [
     "inline-flex items-center justify-center gap-2",
-    "px-5 py-2.5 rounded-full font-bold text-sm",
-    "focus:outline-none focus:ring-2 focus:ring-offset-2",
-    "transition-all duration-200 ease-out",
-    "cursor-pointer select-none",
+    "px-5 py-2.5 rounded-full font-extrabold text-sm tracking-wide",
+    "focus:outline-none",
+    "cursor-pointer select-none relative",
     "disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none",
   ].join(' ');
 
   const variants = {
     primary: [
-      "bg-gradient-to-r from-rose-500 to-pink-500 text-white",
-      "shadow-[0_4px_15px_rgba(225,29,72,0.4)]",
-      "hover:shadow-[0_6px_20px_rgba(225,29,72,0.55)]",
-      "hover:from-rose-400 hover:to-pink-400",
-      "focus:ring-rose-400",
-      "active:shadow-[0_2px_8px_rgba(225,29,72,0.3)]",
+      "bg-gradient-to-b from-rose-400 to-rose-600 text-white",
+      "shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_6px_0_#9f0d2c,0_8px_16px_rgba(225,29,72,0.4)]",
+      "active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_0px_0_#9f0d2c] active:translate-y-1",
+      "hover:brightness-110",
     ].join(' '),
     secondary: [
-      "bg-gradient-to-r from-emerald-500 to-teal-500 text-white",
-      "shadow-[0_4px_15px_rgba(16,185,129,0.4)]",
-      "hover:shadow-[0_6px_20px_rgba(16,185,129,0.55)]",
-      "hover:from-emerald-400 hover:to-teal-400",
-      "focus:ring-emerald-400",
+      "bg-gradient-to-b from-emerald-400 to-emerald-600 text-white",
+      "shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_6px_0_#065f46,0_8px_16px_rgba(5,150,105,0.4)]",
+      "active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_0px_0_#065f46] active:translate-y-1",
+      "hover:brightness-110",
     ].join(' '),
     outline: [
-      "bg-transparent border-2 border-rose-400 text-rose-500",
-      "dark:border-rose-500 dark:text-rose-400",
-      "hover:bg-rose-500 hover:text-white hover:border-rose-500",
-      "dark:hover:bg-rose-500 dark:hover:text-white",
-      "shadow-[0_2px_8px_rgba(225,29,72,0.15)]",
-      "hover:shadow-[0_4px_15px_rgba(225,29,72,0.35)]",
-      "focus:ring-rose-400",
+      "bg-white border-2 border-rose-500 text-rose-600",
+      "shadow-[0_6px_0_rgba(225,29,72,0.25),0_8px_16px_rgba(225,29,72,0.15)]",
+      "active:shadow-[0_0px_0_rgba(225,29,72,0.2)] active:translate-y-1",
+      "hover:bg-rose-50",
     ].join(' '),
   };
 
   return (
     <motion.button
       type={type}
-      whileHover={!disabled ? { scale: 1.04, y: -1 } : {}}
-      whileTap={!disabled ? { scale: 0.96, y: 0 } : {}}
-      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-      className={`${baseStyle} ${variants[variant] ?? variants.primary} ${className}`}
+      whileTap={!disabled ? { y: 4 } : {}}
+      transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+      className={`${baseStyle} ${variants[variant] ?? variants.primary} transition-[filter,box-shadow] duration-100 ${className}`}
       onClick={onClick}
       disabled={disabled}
       {...props}
