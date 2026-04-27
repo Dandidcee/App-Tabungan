@@ -104,8 +104,8 @@ const Dashboard = () => {
       if (prevDataRef.current === newSignature) return;
       prevDataRef.current = newSignature;
 
-      const deposits = allTx.filter(t => (t.type === 'deposit' || t.type === 'income') && !t.budgetId).reduce((a, c) => a + c.amount, 0);
-      const withdrawals = allTx.filter(t => t.type === 'withdrawal' && !t.budgetId).reduce((a, c) => a + c.amount, 0);
+      const deposits = allTx.filter(t => !t.isTransfer && (t.type === 'deposit' || t.type === 'income') && !t.budgetId).reduce((a, c) => a + c.amount, 0);
+      const withdrawals = allTx.filter(t => !t.isTransfer && t.type === 'withdrawal' && !t.budgetId).reduce((a, c) => a + c.amount, 0);
 
       setTotalTabungan(deposits - withdrawals);
       setUangKeluar(withdrawals);
