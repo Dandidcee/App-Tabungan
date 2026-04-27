@@ -292,23 +292,24 @@ const Account = () => {
             </div>
           </div>
           
-          <div className="flex flex-col items-center">
+          <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-800 flex flex-col items-center">
             <p className="text-sm text-gray-400 dark:text-slate-500 mb-3 font-semibold uppercase tracking-wider text-center">Lainnya</p>
-          <div className="flex gap-4">
-             <button 
-               onClick={handleLogout}
-               className="btn-pill btn-pill-ghost"
-             >
-               <LogOut size={18} />
-               Keluar
-             </button>
-             <button 
-               onClick={() => setIsResetModalOpen(true)}
-               className="btn-pill btn-pill-rose"
-             >
-               <AlertTriangle size={18} />
-               Reset Database
-             </button>
+            <div className="flex gap-4">
+               <button 
+                 onClick={handleLogout}
+                 className="btn-pill btn-pill-ghost"
+               >
+                 <LogOut size={18} />
+                 Keluar
+               </button>
+               <button 
+                 onClick={() => setIsResetModalOpen(true)}
+                 className="btn-pill btn-pill-rose"
+               >
+                 <AlertTriangle size={18} />
+                 Reset Database
+               </button>
+            </div>
           </div>
         </div>
       </div>
