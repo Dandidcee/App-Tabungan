@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { X } from 'lucide-react';
 
@@ -6,7 +7,7 @@ const MODAL_TRANSITION = { duration: 0.2, ease: [0.32, 0.72, 0, 1] };
 export const Modal = ({ isOpen, onClose, title, children }) => {
   const dragControls = useDragControls();
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && [
           /* Backdrop */
@@ -66,6 +67,7 @@ export const Modal = ({ isOpen, onClose, title, children }) => {
             </div>
           </motion.div>
       ]}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
