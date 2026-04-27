@@ -25,28 +25,40 @@ const App = () => {
   const directionRef = useRef(1);
 
   const [isLocked, setIsLocked] = useState(false);
+  const isVerifying = useRef(false); // Guard: prevent multiple concurrent biometric dialogs
 
   // --- Biometric Authentication Logic ---
   const checkBiometric = async () => {
     const biometricEnabled = localStorage.getItem('isBiometricEnabled') === 'true';
-    if (!biometricEnabled) return;
+    if (!biometricEnabled) {
+      setIsLocked(false);
+      return;
+    }
+
+    // If already verifying, don't open a second dialog
+    if (isVerifying.current) return;
 
     try {
       const result = await NativeBiometric.isAvailable();
-      if (!result.isAvailable) return;
+      if (!result.isAvailable) {
+        setIsLocked(false);
+        return;
+      }
 
-      setIsLocked(true); // lock the screen immediately
+      isVerifying.current = true; // Set guard BEFORE showing dialog
       await NativeBiometric.verifyIdentity({
         reason: "Silakan verifikasi sidik jari untuk membuka aplikasi",
         title: "Buka Tabungan Bersama",
         subtitle: "Gunakan Sidik Jari / Passkey Anda",
         description: "Akses tabungan Anda dengan aman"
       });
-      // If success, unlock
+      // Success: unlock
       setIsLocked(false);
     } catch (error) {
+      // Failed or cancelled: stays locked, but allow retry
       console.error("Biometric verification failed", error);
-      // Stays locked if user cancels or fails
+    } finally {
+      isVerifying.current = false; // Always release the guard
     }
   };
 
@@ -54,21 +66,37 @@ const App = () => {
     if (!user) return;
 
     // Check biometric on initial load if enabled
-    checkBiometric();
+    const biometricEnabled = localStorage.getItem('isBiometricEnabled') === 'true';
+    if (biometricEnabled) {
+      setIsLocked(true);
+      checkBiometric();
+    }
 
     // Listen to app state changes (background/foreground)
-    const listener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-      const biometricEnabled = localStorage.getItem('isBiometricEnabled') === 'true';
-      if (isActive && biometricEnabled) {
-        checkBiometric();
-      } else if (!isActive && biometricEnabled) {
-        // Lock screen in background to hide content from task switcher
-        setIsLocked(true);
+    const listenerPromise = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      const enabled = localStorage.getItem('isBiometricEnabled') === 'true';
+      if (!enabled) return;
+
+      if (!isActive) {
+        // App going to background: lock, but don't trigger verify yet
+        // Only lock if not currently mid-verification (otherwise we'd interrupt it)
+        if (!isVerifying.current) {
+          setIsLocked(true);
+        }
+      } else {
+        // App coming to foreground: trigger verify only if locked
+        setIsLocked(prev => {
+          if (prev) {
+            // Delayed slightly to let the app fully foreground before showing dialog
+            setTimeout(() => checkBiometric(), 300);
+          }
+          return prev;
+        });
       }
     });
 
     return () => {
-      listener.then(l => l.remove());
+      listenerPromise.then(l => l.remove());
     };
   }, [user]);
 
