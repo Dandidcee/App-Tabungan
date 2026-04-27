@@ -3,8 +3,7 @@ import api, { getImageUrl } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import { Card } from '../components/ui/Card';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUp, TrendingDown, PlusCircle, Image as ImageIcon, X, ArrowDownToLine, ArrowUpFromLine, Wallet, RefreshCcw } from 'lucide-react';
-import { CategoryIcon } from '../components/ui/CategoryIcon';
+import { TrendingUp, TrendingDown, PlusCircle, Image as ImageIcon, X, ArrowDownToLine, ArrowUpFromLine, Wallet } from 'lucide-react';
 
 const History = () => {
   const [activeTab, setActiveTab] = useState('public'); // 'public' | 'budget'
@@ -98,8 +97,8 @@ const History = () => {
       return 'Transfer Internal';
     }
     if (trx.fundSource === 'gaji' && trx.type === 'withdrawal') return 'Keluar dari Gaji';
-    if (trx.type === 'income') return <span className="inline-flex items-center gap-1">Masuk → <CategoryIcon name={trx.categoryIcon} size={14} className="flex-shrink-0" /> <span className="truncate">{trx.categoryName}</span></span>;
-    if (trx.type === 'withdrawal') return <span className="inline-flex items-center gap-1">Pakai dari <CategoryIcon name={trx.categoryIcon} size={14} className="flex-shrink-0" /> <span className="truncate">{trx.categoryName}</span></span>;
+    if (trx.type === 'income') return `Masuk → ${trx.categoryIcon} ${trx.categoryName}`;
+    if (trx.type === 'withdrawal') return `Pakai dari ${trx.categoryIcon} ${trx.categoryName}`;
     return trx.categoryName;
   };
 
@@ -255,8 +254,8 @@ const History = () => {
                     <p className={`font-bold text-sm sm:text-base ${getBudgetAmountColor(trx)}`}>
                       {trx.type === 'withdrawal' ? '− Rp' : '+ Rp'} {trx.amount.toLocaleString('id-ID')}
                     </p>
-                    <p className="text-right text-[11px] text-gray-500 dark:text-slate-400 font-medium truncate max-w-[100px] inline-flex items-center justify-end gap-1">
-                      <CategoryIcon name={trx.categoryIcon} size={12} className="flex-shrink-0" /> <span className="truncate">{trx.categoryName}</span>
+                    <p className="text-right text-[11px] text-gray-500 dark:text-slate-400 font-medium truncate max-w-[100px]">
+                      {trx.categoryIcon} {trx.categoryName}
                     </p>
                   </div>
                 </div>

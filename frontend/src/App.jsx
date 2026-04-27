@@ -9,8 +9,10 @@ import Budget from './pages/Budget';
 import Account from './pages/Account';
 import Recap from './pages/Recap';
 import Notifications from './pages/Notifications';
-import { Heart, Loader2 } from 'lucide-react';
+import { Heart, Loader2, Fingerprint } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { App as CapacitorApp } from '@capacitor/app';
+import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 
 const ROUTES = ['/', '/budget', '/history', '/rekap', '/account'];
 
@@ -21,6 +23,54 @@ const App = () => {
   const [direction, setDirection] = useState(1);
   const prevPath = useRef(location.pathname);
   const directionRef = useRef(1);
+
+  const [isLocked, setIsLocked] = useState(false);
+
+  // --- Biometric Authentication Logic ---
+  const checkBiometric = async () => {
+    const biometricEnabled = localStorage.getItem('isBiometricEnabled') === 'true';
+    if (!biometricEnabled) return;
+
+    try {
+      const result = await NativeBiometric.isAvailable();
+      if (!result.isAvailable) return;
+
+      setIsLocked(true); // lock the screen immediately
+      await NativeBiometric.verifyIdentity({
+        reason: "Silakan verifikasi sidik jari untuk membuka aplikasi",
+        title: "Buka Tabungan Bersama",
+        subtitle: "Gunakan Sidik Jari / Passkey Anda",
+        description: "Akses tabungan Anda dengan aman"
+      });
+      // If success, unlock
+      setIsLocked(false);
+    } catch (error) {
+      console.error("Biometric verification failed", error);
+      // Stays locked if user cancels or fails
+    }
+  };
+
+  useEffect(() => {
+    if (!user) return;
+
+    // Check biometric on initial load if enabled
+    checkBiometric();
+
+    // Listen to app state changes (background/foreground)
+    const listener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      const biometricEnabled = localStorage.getItem('isBiometricEnabled') === 'true';
+      if (isActive && biometricEnabled) {
+        checkBiometric();
+      } else if (!isActive && biometricEnabled) {
+        // Lock screen in background to hide content from task switcher
+        setIsLocked(true);
+      }
+    });
+
+    return () => {
+      listener.then(l => l.remove());
+    };
+  }, [user]);
 
   // Calculate direction synchronously during render to avoid 1-frame lag
   if (prevPath.current !== location.pathname) {
@@ -52,6 +102,31 @@ const App = () => {
 
   return (
     <div className="min-h-screen font-sans pb-16 md:pb-0 relative overflow-x-hidden text-gray-800 dark:text-dark-text transition-colors duration-300">
+      
+      {/* Biometric Lock Screen Overlay */}
+      <AnimatePresence>
+        {isLocked && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] bg-white dark:bg-slate-900 flex flex-col items-center justify-center p-6"
+          >
+            <div className="w-24 h-24 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 rounded-full flex items-center justify-center mb-6 animate-pulse">
+              <Fingerprint size={50} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-slate-100 mb-2">Aplikasi Terkunci</h2>
+            <p className="text-gray-500 dark:text-slate-400 text-center mb-8">
+              Buka kunci dengan Sidik Jari atau Passkey untuk melanjutkan.
+            </p>
+            <button 
+              onClick={checkBiometric}
+              className="px-8 py-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-all flex items-center gap-3"
+            >
+              <Fingerprint size={24} /> Sentuh Sensor
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Huge Background Hearts */}
       <Heart size={400} className="fixed -top-32 -left-32 text-rose-200/40 dark:text-rose-500/10 -z-10 rotate-12" />
       <Heart size={500} className="fixed -bottom-40 -right-40 text-pink-200/40 dark:text-pink-500/10 -z-10 -rotate-12" />

@@ -3,7 +3,7 @@ import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Mail, Lock, Camera, Save, CameraOff, LogOut, AlertTriangle, RefreshCcw } from 'lucide-react';
+import { User, Mail, Lock, Camera, Save, CameraOff, LogOut, AlertTriangle, RefreshCcw, Fingerprint, ShieldCheck } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { setIndonesianValidity } from '../utils/validation';
@@ -11,6 +11,7 @@ import { setIndonesianValidity } from '../utils/validation';
 const emojis = ['👋', '😎', '💖', '🚀', '🔥', '✨', '👑', '💸', '🤑', '⭐', '🦄', '🎉', '🌟'];
 
 import api, { getImageUrl } from '../services/api';
+import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 
 const Account = () => {
   const { user, updateUser, logout } = useContext(AuthContext);
@@ -34,6 +35,39 @@ const Account = () => {
   const [isResetting, setIsResetting] = useState(false);
   const [imageError, setImageError] = useState(false);
   const fileInputRef = useRef(null);
+
+  const [isBiometricEnabled, setIsBiometricEnabled] = useState(() => localStorage.getItem('isBiometricEnabled') === 'true');
+
+  const handleToggleBiometric = async () => {
+    if (isBiometricEnabled) {
+      // Matikan
+      localStorage.setItem('isBiometricEnabled', 'false');
+      setIsBiometricEnabled(false);
+      showToast('Kunci Sidik Jari dimatikan', 'success');
+      return;
+    }
+
+    // Aktifkan
+    try {
+      const result = await NativeBiometric.isAvailable();
+      if (!result.isAvailable) {
+        return showToast('Perangkat tidak mendukung Sidik Jari / Biometrik', 'error');
+      }
+
+      await NativeBiometric.verifyIdentity({
+        reason: "Sentuh sensor sidik jari untuk mengaktifkan Passkey",
+        title: "Aktivasi Passkey / Sidik Jari",
+        subtitle: "Verifikasi identitas",
+        description: "Pastikan ini adalah Anda"
+      });
+
+      localStorage.setItem('isBiometricEnabled', 'true');
+      setIsBiometricEnabled(true);
+      showToast('Kunci Sidik Jari berhasil diaktifkan!', 'success');
+    } catch (err) {
+      showToast('Gagal memverifikasi Sidik Jari', 'error');
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -230,13 +264,36 @@ const Account = () => {
             </div>
           </div>
 
-          <button type="submit" disabled={isUpdating} className="btn-pill btn-pill-indigo w-full mt-6 py-4 text-lg flex justify-center items-center gap-2">
+         <button type="submit" disabled={isUpdating} className="btn-pill btn-pill-indigo w-full mt-6 py-4 text-lg flex justify-center items-center gap-2">
              {isUpdating ? 'Menyimpan...' : <><Save size={20} /> Simpan Perubahan</>}
           </button>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-800 flex flex-col items-center">
-          <p className="text-sm text-gray-400 dark:text-slate-500 mb-3">Pilihan Lainnya</p>
+        <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-800">
+          <p className="text-sm text-gray-400 dark:text-slate-500 mb-4 font-semibold uppercase tracking-wider text-center">Keamanan & Akses</p>
+          
+          <div className="bg-gray-50 dark:bg-slate-800/50 rounded-2xl p-4 flex items-center justify-between border border-gray-100 dark:border-slate-700 mb-6">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-xl ${isBiometricEnabled ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-200 text-gray-500 dark:bg-slate-700 dark:text-slate-400'}`}>
+                <Fingerprint size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-800 dark:text-slate-200">Passkey / Sidik Jari</h3>
+                <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">Kunci aplikasi saat diminimize</p>
+              </div>
+            </div>
+            
+            {/* Custom Toggle Switch */}
+            <div 
+              onClick={handleToggleBiometric}
+              className={`w-12 h-6 flex items-center bg-gray-300 dark:bg-slate-600 rounded-full p-1 cursor-pointer transition-colors duration-300 ${isBiometricEnabled ? 'bg-emerald-500 dark:bg-emerald-500' : ''}`}
+            >
+              <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${isBiometricEnabled ? 'translate-x-6' : ''}`}></div>
+            </div>
+          </div>
+          
+          <div className="flex flex-col items-center">
+            <p className="text-sm text-gray-400 dark:text-slate-500 mb-3 font-semibold uppercase tracking-wider text-center">Lainnya</p>
           <div className="flex gap-4">
              <button 
                onClick={handleLogout}

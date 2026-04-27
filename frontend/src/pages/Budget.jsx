@@ -8,7 +8,6 @@ import { motion } from 'framer-motion';
 import { Plus, Target, Calendar } from 'lucide-react';
 import CurrencyInput from '../components/ui/CurrencyInput';
 import { setIndonesianValidity } from '../utils/validation';
-import { CategoryIcon, CATEGORY_VECTORS } from '../components/ui/CategoryIcon';
 
 const Budget = () => {
   const [budgets, setBudgets] = useState([]);
@@ -16,7 +15,7 @@ const Budget = () => {
   const [title, setTitle] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
   const [deadline, setDeadline] = useState('');
-  const [icon, setIcon] = useState('ic-plane');
+  const [icon, setIcon] = useState('🎯');
   const [budgetToDelete, setBudgetToDelete] = useState(null);
 
   const { showToast } = useToast();
@@ -48,7 +47,7 @@ const Budget = () => {
       setTitle('');
       setTargetAmount('');
       setDeadline('');
-      setIcon('ic-plane');
+      setIcon('🎯');
       fetchBudgets();
     } catch (err) {
       showToast(err.response?.data?.message || 'Terjadi kesalahan', 'error');
@@ -103,8 +102,8 @@ const Budget = () => {
                   </div>
                 </div>
                  <div className="flex items-center gap-2">
-                    <div className="flex items-center justify-center w-10 h-10 bg-pink-100 dark:bg-rose-900/30 text-rose-500 rounded-xl shadow-sm">
-                      <CategoryIcon name={budget.icon || '🎯'} size={24} />
+                    <div className="flex items-center justify-center w-10 h-10 bg-pink-100 dark:bg-rose-900/30 text-2xl rounded-xl shadow-sm">
+                      {budget.icon || '🎯'}
                     </div>
                     <button onClick={() => setBudgetToDelete(budget)} className="flex items-center justify-center w-10 h-10 text-rose-400 dark:text-rose-500 hover:text-rose-600 hover:bg-rose-100 dark:hover:bg-slate-700 transition-colors bg-rose-50 dark:bg-slate-800 rounded-xl shadow-sm" title="Hapus Target ini beserta saldonya">
                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
@@ -156,11 +155,11 @@ const Budget = () => {
             />
           </div>
           <div>
-             <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Pilih Ikon</label>
+             <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Pilih Ikon (Emoji)</label>
              <div className="flex gap-2 text-2xl flex-wrap">
-               {CATEGORY_VECTORS.map(em => (
-                 <button type="button" key={em} onClick={() => setIcon(em)} className={`p-3 rounded-xl transition-all ${icon === em ? 'bg-pink-100 dark:bg-rose-900/40 scale-110 shadow-sm border border-pink-200 dark:border-rose-800 text-rose-600 dark:text-rose-400' : 'bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 opacity-70 hover:opacity-100'}`}>
-                   <CategoryIcon name={em} size={24} />
+               {['🎯', '✈️', '🏠', '💍', '🚗', '🎓', '🏥', '🎉', '💻', '💵'].map(em => (
+                 <button type="button" key={em} onClick={() => setIcon(em)} className={`p-2 rounded-xl transition-all ${icon === em ? 'bg-pink-100 dark:bg-rose-900/40 scale-110 shadow-sm border border-pink-200 dark:border-rose-800' : 'bg-gray-50 dark:bg-slate-800 opacity-50 hover:opacity-100'}`}>
+                   {em}
                  </button>
                ))}
              </div>
