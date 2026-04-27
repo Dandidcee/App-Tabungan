@@ -24,7 +24,7 @@ export const ThemeProvider = ({ children }) => {
         if (Capacitor.isNativePlatform()) {
           try {
             await StatusBar.setOverlaysWebView({ overlay: false });
-            await StatusBar.setStyle({ style: Style.Default });
+            await StatusBar.setStyle({ style: Style.Dark }); // Light text for dark backgrounds
             await StatusBar.setBackgroundColor({ color: '#0f172a' }); // slate-950
           } catch (e) { console.log(e); }
         }
@@ -33,7 +33,7 @@ export const ThemeProvider = ({ children }) => {
         if (Capacitor.isNativePlatform()) {
           try {
             await StatusBar.setOverlaysWebView({ overlay: false });
-            await StatusBar.setStyle({ style: Style.Default });
+            await StatusBar.setStyle({ style: Style.Light }); // Dark text for light backgrounds
             await StatusBar.setBackgroundColor({ color: '#ffffff' }); // white
           } catch (e) { console.log(e); }
         }

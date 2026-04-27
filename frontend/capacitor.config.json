@@ -2,6 +2,7 @@
   "appId": "com.tabunganbersama.app",
   "appName": "TabunganBersama",
   "webDir": "dist",
+  "backgroundColor": "#0f172a",
   "server": {
     "cleartext": true,
     "androidScheme": "http"
