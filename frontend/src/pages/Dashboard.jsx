@@ -26,7 +26,7 @@ const WEALTH_QUOTES = [
   "Uang adalah hamba yang baik, namun tuan yang buruk."
 ];
 
-const CATEGORY_EMOJIS = ['💼', '💰', '🏷️', '🛒', '☕', '🍔', '🛵', '💄', '🧴', '💅', '💍', '🎮', '💊', '🎁', '✈️', '🐶', '👶'];
+const CATEGORY_EMOJIS = ['💼', '💰', '🏷️', '🛒', '☕', '🍔', '🛵', '💄', '🧴', '💅', '🪞', '🧽', '🎀', '✨', '💍', '🎮', '💊', '🎁', '✈️', '🐶', '👶'];
 
 
 const Dashboard = () => {
