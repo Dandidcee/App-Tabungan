@@ -286,9 +286,14 @@ const Account = () => {
             {/* Custom Toggle Switch */}
             <div 
               onClick={handleToggleBiometric}
-              className={`w-12 h-6 flex items-center bg-gray-300 dark:bg-slate-600 rounded-full p-1 cursor-pointer transition-colors duration-300 ${isBiometricEnabled ? 'bg-emerald-500 dark:bg-emerald-500' : ''}`}
+              className={isBiometricEnabled
+                ? 'w-12 h-6 flex items-center bg-emerald-500 rounded-full p-1 cursor-pointer transition-colors duration-300'
+                : 'w-12 h-6 flex items-center bg-gray-300 dark:bg-slate-600 rounded-full p-1 cursor-pointer transition-colors duration-300'}
             >
-              <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${isBiometricEnabled ? 'translate-x-6' : ''}`}></div>
+              <div className={isBiometricEnabled
+                ? 'bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 translate-x-6'
+                : 'bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 translate-x-0'}
+              ></div>
             </div>
           </div>
           
