@@ -8,7 +8,7 @@ import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import CurrencyInput from '../components/ui/CurrencyInput';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ArrowDownToLine, ArrowUpFromLine, PlusCircle, Activity, ChevronDown, Image as ImageIcon, X, ArrowRight, Settings, Wallet, ShoppingBag, Coffee, Plus, AlertTriangle, RefreshCcw, Calculator, Pencil } from 'lucide-react';
+import { Heart, ArrowDownToLine, ArrowUpFromLine, PlusCircle, Activity, ChevronDown, Image as ImageIcon, X, ArrowRight, Settings, Wallet, ShoppingBag, Coffee, Plus, AlertTriangle, RefreshCcw, Calculator, Pencil, CreditCard, ChevronRight, Trash2 } from 'lucide-react';
 import { setIndonesianValidity } from '../utils/validation';
 import CalculatorModal from '../components/ui/CalculatorModal';
 
@@ -58,6 +58,9 @@ const Dashboard = () => {
   const [categoryToDelete, setCategoryToDelete] = useState(null);
   // Category Edit State
   const [categoryToEdit, setCategoryToEdit] = useState(null); // { _id, name, icon } atau 'gaji'
+  
+  // Active Category (for bottom sheet actions)
+  const [activeCategory, setActiveCategory] = useState(null);
   const [editName, setEditName] = useState('');
   const [editIcon, setEditIcon] = useState('');
   const [editBalance, setEditBalance] = useState('');
@@ -402,116 +405,207 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-indigo-100 via-purple-50 to-purple-200 dark:from-slate-800 dark:via-slate-900 dark:to-indigo-950/40 backdrop-blur-xl rounded-3xl shadow-lg border-2 border-white/80 dark:border-slate-800 overflow-hidden relative transition-colors duration-300">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-300/30 dark:bg-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-        <div className="bg-white/50 dark:bg-slate-900/60 backdrop-blur-md border-b border-white/60 dark:border-slate-800 px-5 py-4 flex items-center justify-between relative z-10 flex-wrap gap-3">
-          <h3 className="text-lg font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
-            <Wallet className="text-indigo-500 dark:text-indigo-400" size={20} /> Budget Bulanan
-          </h3>
-          <button onClick={() => setIsCategoryModalOpen(true)} className="btn-pill btn-pill-sm bg-indigo-100 hover:bg-indigo-200 text-indigo-700 dark:bg-indigo-500/20 dark:hover:bg-indigo-500/30 dark:text-indigo-300 shadow-none border border-indigo-200/50 dark:border-indigo-500/20">
-            <Plus size={14} /> Kategori Baru
+      <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-lg border border-gray-100 dark:border-slate-800 overflow-hidden relative transition-colors duration-300">
+        {/* Header */}
+        <div className="px-5 py-4 flex items-center justify-between border-b border-gray-100 dark:border-slate-800">
+          <div>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
+              <Wallet className="text-indigo-500" size={20} /> Amplop Saya
+            </h3>
+            <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">Ketuk amplop untuk kelola dana</p>
+          </div>
+          <button onClick={() => setIsCategoryModalOpen(true)} className="w-9 h-9 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-200 dark:shadow-indigo-900/40 transition-all active:scale-95">
+            <Plus size={18} />
           </button>
         </div>
 
-        <div className="p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 relative z-10">
-          {/* MASTER POOL: DOMPET GAJI */}
-          <div className="md:col-span-1 border-r-0 md:border-r border-indigo-100/50 pr-0 md:pr-5 mb-4 md:mb-0">
-            <div className="flex flex-col h-full items-center p-5 bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600 rounded-2xl shadow-md text-white/90 relative overflow-hidden group">
-              <Heart size={150} className="absolute -right-8 -bottom-8 text-white/10 pointer-events-none" />
-              {/* Tombol edit Dompet Gaji */}
+        <div className="p-4 space-y-3">
+          {/* MASTER POOL: DOMPET GAJI — full width hero card */}
+          <div
+            onClick={() => setActiveCategory({ _id: 'gaji', name: gajiName, icon: gajiIcon, bal: gajiBalance, isGaji: true })}
+            className="relative flex items-center p-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 rounded-2xl shadow-md overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+          >
+            <Heart size={120} className="absolute -right-6 -bottom-6 text-white/10 pointer-events-none" />
+            <div className="flex-1 z-10">
+              <span className="text-white/70 text-[10px] font-bold uppercase tracking-widest">Sumber Dana</span>
+              <p className="text-white font-bold text-base mt-0.5">{gajiName}</p>
+              <p className="text-white font-extrabold text-2xl tracking-tight">Rp {gajiBalance.toLocaleString('id-ID')}</p>
+            </div>
+            <div className="z-10 flex flex-col items-center gap-2">
+              <span className="text-4xl drop-shadow-md">{gajiIcon}</span>
               <button
-                onClick={() => openEditModal({ _id: 'gaji', name: gajiName, icon: gajiIcon })}
-                className="absolute top-2 left-2 z-20 p-1.5 bg-white/20 hover:bg-white/40 text-white rounded-xl transition-all"
-                title="Edit nama Dompet Gaji"
+                onClick={(e) => { e.stopPropagation(); openEditModal({ _id: 'gaji', name: gajiName, icon: gajiIcon }); }}
+                className="p-1.5 bg-white/20 hover:bg-white/40 rounded-xl transition-all"
               >
-                <Pencil size={13} />
+                <Pencil size={12} className="text-white" />
               </button>
-              <div className="relative z-10 text-center flex flex-col items-center h-full w-full">
-                <div className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-3 py-0.5 rounded-full mb-3 shadow-inner">SUMBER DANA</div>
-                <div className="text-4xl mb-2 opacity-90 drop-shadow-sm">{gajiIcon}</div>
-                <p className="text-rose-100 text-xs font-medium uppercase tracking-widest mt-1">{gajiName}</p>
-                <h4 className="font-extrabold text-2xl tracking-tight text-white mt-1 mb-auto">Rp {gajiBalance.toLocaleString('id-ID')}</h4>
-
-                <div className="w-full mt-4 flex gap-2.5">
-                  <button onClick={() => openTransactionModal('deposit', 'gaji')} className="flex-1 py-2.5 bg-white/25 hover:bg-white/35 backdrop-blur-md text-white font-bold rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-white/40 transition-all text-sm flex items-center justify-center gap-1.5 active:scale-95">
-                    <ArrowDownToLine size={16} /> Tambah
-                  </button>
-                  <button onClick={() => openTransactionModal('withdrawal', 'gaji')} className="flex-1 py-2.5 bg-black/15 hover:bg-black/25 backdrop-blur-md text-white font-bold rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-black/10 transition-all text-sm flex items-center justify-center gap-1.5 active:scale-95">
-                    <ArrowUpFromLine size={16} /> Pakai
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
 
-          {/* DYNAMIC ENVELOPES */}
-          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {categories.length === 0 && (
-              <div className="col-span-full border-2 border-dashed border-indigo-200/50 dark:border-slate-700 rounded-2xl p-6 flex flex-col items-center justify-center text-indigo-400 dark:text-indigo-500/60 group cursor-pointer hover:bg-indigo-50/30 dark:hover:bg-slate-800/30 transition-colors" onClick={() => setIsCategoryModalOpen(true)}>
-                <PlusCircle size={30} className="mb-2 opacity-50 group-hover:opacity-100 transition-opacity" />
-                <p className="text-sm font-semibold">Buat Amplop Kategori</p>
-                <p className="text-[10px] opacity-70 mt-1">Misal: Keperluan, Belanja, Cicilan Motor</p>
-              </div>
-            )}
+          {/* DYNAMIC ENVELOPES — 2-column grid of horizontal cards */}
+          {categories.length === 0 && (
+            <div
+              className="border-2 border-dashed border-indigo-200/60 dark:border-slate-700 rounded-2xl p-6 flex flex-col items-center justify-center text-indigo-400 dark:text-indigo-500/60 cursor-pointer hover:bg-indigo-50/30 dark:hover:bg-slate-800/30 transition-colors"
+              onClick={() => setIsCategoryModalOpen(true)}
+            >
+              <PlusCircle size={28} className="mb-2 opacity-60" />
+              <p className="text-sm font-semibold">Buat Amplop Kategori</p>
+              <p className="text-[11px] opacity-70 mt-0.5">Misal: Makan, Bensin, Cicilan</p>
+            </div>
+          )}
 
+          <div className="grid grid-cols-2 gap-3">
             {categories.map(cat => {
               const bal = getEnvelopeBalance(cat._id);
-              // Total income ever received by this category
               const catTxs = budgetTransactions.filter(t => t.fundSource === cat._id);
               const totalIncome = catTxs.filter(t => t.type === 'income' || t.type === 'deposit').reduce((s, t) => s + t.amount, 0);
-              const pct = totalIncome > 0 ? Math.max(bal, 0) / totalIncome : 0;
-              const circumference = 2 * Math.PI * 28;
-              const dash = pct * circumference;
-              const gap = circumference - dash;
-              return (
-                <div key={cat._id} className="flex flex-col items-center p-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-white dark:border-slate-700 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
-                  {/* Tombol Edit Amplop */}
-                  <button onClick={() => openEditModal(cat)} className="absolute top-2 left-2 text-indigo-300 dark:text-indigo-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-1" title="Edit Amplop ini">
-                    <Pencil size={14} />
-                  </button>
-                  {/* Tombol Hapus Amplop */}
-                  <button onClick={() => promptDeleteCategory(cat._id, cat.name)} className="absolute top-2 right-2 text-rose-300 dark:text-rose-900/50 hover:text-rose-600 dark:hover:text-rose-400 transition-colors p-1" title="Reset/Hapus Budget ini">
-                    <X size={15} />
-                  </button>
+              const pct = totalIncome > 0 ? Math.min(Math.max(bal, 0) / totalIncome, 1) : 0;
+              const isLow = bal >= 0 && totalIncome > 0 && pct < 0.2;
+              const isEmpty = bal <= 0;
 
-                  {/* Donut Chart */}
-                  <div className="relative flex items-center justify-center my-2">
-                    <svg width="72" height="72" viewBox="0 0 72 72">
-                      <circle cx="36" cy="36" r="28" fill="none" stroke="#e0e7ff" strokeWidth="8" className="dark:stroke-slate-700" />
-                      <circle
-                        cx="36" cy="36" r="28" fill="none"
-                        stroke={bal <= 0 ? '#fca5a5' : '#818cf8'}
-                        strokeWidth="8"
-                        strokeDasharray={`${dash} ${gap}`}
-                        strokeLinecap="round"
-                        transform="rotate(-90 36 36)"
-                        style={{ transition: 'stroke-dasharray 0.5s ease' }}
-                      />
-                    </svg>
-                    <span className="absolute text-2xl group-hover:scale-110 transition-transform">{cat.icon}</span>
+              // Pick a card accent color based on index
+              const accents = [
+                'from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 border-indigo-100 dark:border-indigo-800/50',
+                'from-teal-50 to-emerald-50 dark:from-teal-900/20 dark:to-emerald-900/20 border-teal-100 dark:border-teal-800/50',
+                'from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-100 dark:border-amber-800/50',
+                'from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-100 dark:border-purple-800/50',
+                'from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20 border-rose-100 dark:border-rose-800/50',
+                'from-cyan-50 to-sky-50 dark:from-cyan-900/20 dark:to-sky-900/20 border-cyan-100 dark:border-cyan-800/50',
+              ];
+              const accentIdx = categories.indexOf(cat) % accents.length;
+
+              return (
+                <div
+                  key={cat._id}
+                  onClick={() => setActiveCategory({ ...cat, bal, totalIncome, pct, isGaji: false })}
+                  className={`relative flex flex-col justify-between p-4 rounded-2xl border bg-gradient-to-br ${accents[accentIdx]} cursor-pointer active:scale-[0.97] transition-all shadow-sm hover:shadow-md overflow-hidden min-h-[120px]`}
+                >
+                  {/* Progress bar at bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/5 dark:bg-white/5 rounded-b-2xl overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ${isEmpty ? 'bg-rose-400' : isLow ? 'bg-amber-400' : 'bg-indigo-400'}`}
+                      style={{ width: `${Math.round(pct * 100)}%` }}
+                    />
                   </div>
 
-                  <p className="text-gray-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-widest">{cat.name}</p>
-                  <h4 className={`font-extrabold text-xl tracking-tight mt-1 ${bal < 0 ? 'text-rose-500' : 'text-gray-800 dark:text-slate-100'}`}>
-                    Rp {bal.toLocaleString('id-ID')}
-                  </h4>
-                  <p className="text-[10px] text-indigo-400 dark:text-indigo-500/80 font-semibold mt-0.5 mb-1">
-                    {totalIncome > 0 ? `${Math.round(pct * 100)}% sisa` : '—'}
-                  </p>
+                  <div className="flex items-start justify-between">
+                    <span className="text-3xl leading-none drop-shadow">{cat.icon}</span>
+                    <ChevronRight size={15} className="text-gray-300 dark:text-slate-600 mt-1" />
+                  </div>
 
-                  <div className="w-full mt-2 flex gap-1.5 pt-3 border-t border-indigo-50/50 dark:border-slate-700/50">
-                    <button onClick={() => openTransactionModal('allocation', 'gaji', cat._id)} className="btn-pill btn-pill-indigo btn-pill-sm flex-1 flex-col gap-0.5 py-2" style={{ borderRadius: '0.75rem' }}>
-                      <ArrowDownToLine size={13} /> Tambah Budget
-                    </button>
-                    <button onClick={() => openTransactionModal('withdrawal', cat._id)} className="btn-pill btn-pill-rose btn-pill-sm flex-1 flex-col gap-0.5 py-2" style={{ borderRadius: '0.75rem' }}>
-                      <ArrowUpFromLine size={13} /> Pakai
-                    </button>
+                  <div className="mt-3">
+                    <p className="text-gray-500 dark:text-slate-400 text-[11px] font-semibold truncate">{cat.name}</p>
+                    <p className={`font-extrabold text-base tracking-tight ${isEmpty ? 'text-rose-500' : 'text-gray-800 dark:text-slate-100'}`}>
+                      Rp {bal.toLocaleString('id-ID')}
+                    </p>
+                    <p className={`text-[10px] font-semibold mt-0.5 ${isEmpty ? 'text-rose-400' : isLow ? 'text-amber-500' : 'text-gray-400 dark:text-slate-500'}`}>
+                      {totalIncome > 0 ? `${Math.round(pct * 100)}% sisa` : 'Amplop Kosong'}
+                    </p>
                   </div>
                 </div>
               );
             })}
           </div>
         </div>
+
+        {/* ACTION BOTTOM SHEET for active category */}
+        <AnimatePresence>
+          {activeCategory && (
+            <>
+              <motion.div
+                key="cat-backdrop"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+                onClick={() => setActiveCategory(null)}
+              />
+              <motion.div
+                key="cat-sheet"
+                initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+                transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+                className="fixed left-0 right-0 bottom-0 z-50 bg-white dark:bg-slate-900 rounded-t-[2rem] shadow-2xl border-t border-gray-100 dark:border-slate-800 max-w-lg mx-auto"
+              >
+                <div className="p-6 pb-8">
+                  {/* Pill handle */}
+                  <div className="w-12 h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full mx-auto mb-5" />
+
+                  {/* Header */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-3xl shadow-sm">
+                      {activeCategory.icon}
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 dark:text-slate-500 font-semibold uppercase tracking-widest">{activeCategory.isGaji ? 'Sumber Dana' : 'Amplop'}</p>
+                      <p className="text-lg font-bold text-gray-800 dark:text-slate-100">{activeCategory.name}</p>
+                      <p className={`text-xl font-extrabold ${activeCategory.bal < 0 ? 'text-rose-500' : 'text-indigo-600 dark:text-indigo-400'}`}>
+                        Rp {activeCategory.bal.toLocaleString('id-ID')}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {activeCategory.isGaji ? (
+                      <>
+                        <button
+                          onClick={() => { setActiveCategory(null); openTransactionModal('deposit', 'gaji'); }}
+                          className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 transition-all active:scale-95"
+                        >
+                          <ArrowDownToLine size={22} />
+                          <span className="text-sm font-bold">Tambah Saldo</span>
+                        </button>
+                        <button
+                          onClick={() => { setActiveCategory(null); openTransactionModal('withdrawal', 'gaji'); }}
+                          className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 text-rose-500 transition-all active:scale-95"
+                        >
+                          <ArrowUpFromLine size={22} />
+                          <span className="text-sm font-bold">Pakai Dana</span>
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setActiveCategory(null); openEditModal({ _id: 'gaji', name: activeCategory.name, icon: activeCategory.icon }); }}
+                          className="col-span-2 flex items-center justify-center gap-2 p-3 rounded-2xl bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-slate-400 transition-all active:scale-95"
+                        >
+                          <Pencil size={16} />
+                          <span className="text-sm font-semibold">Edit Nama & Ikon</span>
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => { setActiveCategory(null); openTransactionModal('allocation', 'gaji', activeCategory._id); }}
+                          className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 transition-all active:scale-95"
+                        >
+                          <ArrowDownToLine size={22} />
+                          <span className="text-sm font-bold">Isi Amplop</span>
+                        </button>
+                        <button
+                          onClick={() => { setActiveCategory(null); openTransactionModal('withdrawal', activeCategory._id); }}
+                          className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 text-rose-500 transition-all active:scale-95"
+                        >
+                          <ArrowUpFromLine size={22} />
+                          <span className="text-sm font-bold">Pakai Dana</span>
+                        </button>
+                        <button
+                          onClick={() => { setActiveCategory(null); openEditModal(activeCategory); }}
+                          className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-slate-400 transition-all active:scale-95"
+                        >
+                          <Pencil size={20} />
+                          <span className="text-sm font-semibold">Edit</span>
+                        </button>
+                        <button
+                          onClick={() => { setActiveCategory(null); promptDeleteCategory(activeCategory._id, activeCategory.name); }}
+                          className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 text-rose-500 transition-all active:scale-95"
+                        >
+                          <Trash2 size={20} />
+                          <span className="text-sm font-semibold">Hapus</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
         <div className="bg-gradient-to-br from-rose-100 via-pink-50 to-pink-200 dark:from-slate-800 dark:via-slate-900 dark:to-rose-950/40 backdrop-blur-xl rounded-3xl shadow-lg border-2 border-white/80 dark:border-slate-800 overflow-hidden relative transition-colors duration-300">
           <div className="absolute top-0 right-0 w-64 h-64 bg-pink-300/30 dark:bg-rose-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
           <div className="bg-white/50 dark:bg-slate-900/60 backdrop-blur-md border-b border-white/60 dark:border-slate-800 px-5 py-4 flex items-center justify-between relative z-10 flex-wrap gap-2">
