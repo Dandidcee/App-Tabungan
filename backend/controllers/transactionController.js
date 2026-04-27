@@ -145,7 +145,8 @@ export const createTransaction = async (req, res) => {
         amount,
         type: 'withdrawal',
         notes: notes || 'Alokasi ke Kategori',
-        fundSource: fundSource || 'gaji'
+        fundSource: fundSource || 'gaji',
+        isTransfer: true
       });
       await withdrawalTx.save();
 
@@ -154,7 +155,8 @@ export const createTransaction = async (req, res) => {
         amount,
         type: 'income',
         notes: notes || 'Penerimaan Alokasi',
-        fundSource: toCategory
+        fundSource: toCategory,
+        isTransfer: true
       });
       const createdAllocation = await incomeTx.save();
       

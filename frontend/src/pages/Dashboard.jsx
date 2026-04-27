@@ -585,24 +585,29 @@ const Dashboard = () => {
                     <p className="text-xs text-gray-400 dark:text-slate-500">Coba tambah budget atau pakai dari amplop 🗂️</p>
                   </div>
                 )}
-                {budgetTransactions.slice(0, 5).map((trx) => (
-                  <div key={trx._id} className="flex items-center gap-3 py-3 px-1 border-b border-indigo-50/50 dark:border-slate-800/50 last:border-0 hover:bg-indigo-50/30 dark:hover:bg-slate-800/40 transition-colors rounded-xl mx-[-4px] px-2">
-                    <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border border-white dark:border-slate-700 ${trx.type === 'income' ? 'bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-900/30 dark:to-indigo-800/30 text-indigo-500'
-                        : 'bg-gradient-to-br from-rose-100 to-rose-50 dark:from-rose-900/30 dark:to-rose-800/30 text-rose-500'
-                      }`}>
-                      {trx.type === 'income' ? <ArrowDownToLine size={15} /> : <ArrowUpFromLine size={15} />}
+                {budgetTransactions.slice(0, 5).map((trx) => {
+                  const isTransfer = trx.isTransfer || (trx.notes && trx.notes.includes('Alokasi'));
+                  return (
+                    <div key={trx._id} className="flex items-center gap-3 py-3 px-1 border-b border-indigo-50/50 dark:border-slate-800/50 last:border-0 hover:bg-indigo-50/30 dark:hover:bg-slate-800/40 transition-colors rounded-xl mx-[-4px] px-2">
+                      <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border border-white dark:border-slate-700 ${
+                          isTransfer ? 'bg-gray-100 dark:bg-slate-800 text-gray-500' :
+                          trx.type === 'income' ? 'bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-900/30 dark:to-indigo-800/30 text-indigo-500'
+                          : 'bg-gradient-to-br from-rose-100 to-rose-50 dark:from-rose-900/30 dark:to-rose-800/30 text-rose-500'
+                        }`}>
+                        {isTransfer ? <RefreshCcw size={15} /> : trx.type === 'income' ? <ArrowDownToLine size={15} /> : <ArrowUpFromLine size={15} />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-800 dark:text-slate-200 text-sm truncate">
+                          {isTransfer ? (trx.type === 'income' ? 'Pindah (Masuk)' : 'Pindah (Keluar)') : trx.type === 'income' ? '↓ Masuk' : '↑ Keluar'} {trx.notes ? `• ${trx.notes}` : ''}
+                        </p>
+                        <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-1">{new Date(trx.createdAt).toLocaleString('id-ID', { day: 'numeric', month: 'short' })}</p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className={`font-extrabold text-sm ${isTransfer ? 'text-gray-500 font-medium' : trx.type === 'withdrawal' ? 'text-rose-500' : 'text-indigo-500'}`}>{trx.type === 'withdrawal' ? '−' : '+'} Rp {trx.amount.toLocaleString('id-ID')}</p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-800 dark:text-slate-200 text-sm truncate">
-                        {trx.type === 'income' ? '↓ Masuk' : '↑ Keluar'} {trx.notes ? `• ${trx.notes}` : ''}
-                      </p>
-                      <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-1">{new Date(trx.createdAt).toLocaleString('id-ID', { day: 'numeric', month: 'short' })}</p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className={`font-extrabold text-sm ${trx.type === 'withdrawal' ? 'text-rose-500' : 'text-indigo-500'}`}>{trx.type === 'withdrawal' ? '−' : '+'} Rp {trx.amount.toLocaleString('id-ID')}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </>
             )}
           </div>

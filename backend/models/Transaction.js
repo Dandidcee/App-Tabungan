@@ -7,7 +7,8 @@ const transactionSchema = new mongoose.Schema({
   proofOfTransfer: { type: String }, // URL relative or absolute to the uploaded file
   notes: { type: String },
   budgetId: { type: mongoose.Schema.Types.ObjectId, ref: 'Budget' },
-  fundSource: { type: String, default: 'tabungan_utama' } // string can be "tabungan_utama", "gaji", or category ID
+  fundSource: { type: String, default: 'tabungan_utama' }, // string can be "tabungan_utama", "gaji", or category ID
+  isTransfer: { type: Boolean, default: false } // Flag to identify internal transfers
 }, { timestamps: true });
 
 export default mongoose.model('Transaction', transactionSchema);

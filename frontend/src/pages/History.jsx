@@ -62,7 +62,10 @@ const History = () => {
     ? budgetTransactions
     : budgetTransactions.filter(t => t.categoryName === filterCategory);
 
+  const isTransfer = (trx) => trx.isTransfer || (trx.notes && trx.notes.includes('Alokasi'));
+
   const getBudgetIcon = (trx) => {
+    if (isTransfer(trx)) return <RefreshCcw size={16} />;
     if (trx.fundSource === 'gaji') {
       return trx.type === 'withdrawal'
         ? <ArrowUpFromLine size={16} />
@@ -74,18 +77,25 @@ const History = () => {
   };
 
   const getBudgetColor = (trx) => {
+    if (isTransfer(trx)) return 'bg-gray-100 dark:bg-slate-800 text-gray-500';
     if (trx.type === 'income') return 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400';
     if (trx.type === 'withdrawal') return 'bg-rose-100 dark:bg-rose-900/30 text-rose-500';
     return 'bg-gray-100 dark:bg-slate-800 text-gray-500';
   };
 
   const getBudgetAmountColor = (trx) => {
+    if (isTransfer(trx)) return 'text-gray-500 font-medium';
     if (trx.type === 'income') return 'text-indigo-500';
     if (trx.type === 'withdrawal') return 'text-rose-500';
     return 'text-gray-500';
   };
 
   const getBudgetLabel = (trx) => {
+    if (isTransfer(trx)) {
+      if (trx.type === 'withdrawal') return 'Pindah Dana (Keluar)';
+      if (trx.type === 'income') return 'Pindah Dana (Masuk)';
+      return 'Transfer Internal';
+    }
     if (trx.fundSource === 'gaji' && trx.type === 'withdrawal') return 'Keluar dari Gaji';
     if (trx.type === 'income') return `Masuk → ${trx.categoryIcon} ${trx.categoryName}`;
     if (trx.type === 'withdrawal') return `Pakai dari ${trx.categoryIcon} ${trx.categoryName}`;
