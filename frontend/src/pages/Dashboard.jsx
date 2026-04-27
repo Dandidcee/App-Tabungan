@@ -32,15 +32,21 @@ const CATEGORY_EMOJIS = ['💼', '💰', '🏷️', '🛒', '☕', '🍔', '🛵
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [budgets, setBudgets] = useState([]);
-  const [transactions, setTransactions] = useState([]);
-  const [totalTabungan, setTotalTabungan] = useState(0);
-  const [uangKeluar, setUangKeluar] = useState(0);
+
+  // --- Batch all server data into one state to prevent multiple re-renders (flicker) ---
+  const [serverData, setServerData] = useState({
+    budgets: [],
+    transactions: [],
+    totalTabungan: 0,
+    uangKeluar: 0,
+    categories: [],
+    budgetTransactions: [],
+  });
+  const { budgets, transactions, totalTabungan, uangKeluar, categories, budgetTransactions } = serverData;
+
   const [imageModal, setImageModal] = useState(null);
 
-  // Auto Budgeting State (Envelope)
-  const [categories, setCategories] = useState([]);
-  const [budgetTransactions, setBudgetTransactions] = useState([]);
+  // Auto Budgeting State (Envelope — UI-only, not from server batch)
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categoryName, setCategoryName] = useState('');
   const [categoryIcon, setCategoryIcon] = useState('🏷️');
@@ -110,13 +116,15 @@ const Dashboard = () => {
       const deposits = allTx.filter(t => !t.isTransfer && (t.type === 'deposit' || t.type === 'income') && !t.budgetId).reduce((a, c) => a + c.amount, 0);
       const withdrawals = allTx.filter(t => !t.isTransfer && t.type === 'withdrawal' && !t.budgetId).reduce((a, c) => a + c.amount, 0);
 
-      setTotalTabungan(deposits - withdrawals);
-      setUangKeluar(withdrawals);
-      setBudgets(budgetsRes.data);
-      setTransactions(allTx.reverse().slice(0, 5));
-
-      setCategories(catsRes.data);
-      setBudgetTransactions(budgetTxRes.data);
+      // Single setState call = single render, no flicker
+      setServerData({
+        totalTabungan: deposits - withdrawals,
+        uangKeluar: withdrawals,
+        budgets: budgetsRes.data,
+        transactions: allTx.reverse().slice(0, 5),
+        categories: catsRes.data,
+        budgetTransactions: budgetTxRes.data,
+      });
     } catch (error) {
       console.error(error);
     }

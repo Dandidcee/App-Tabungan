@@ -112,11 +112,36 @@ const App = () => {
   
   const currentDirection = directionRef.current;
 
-  const slideVariants = {
-    initial: (dir) => ({ x: dir * 30, opacity: 0 }),
-    animate: { x: 0, opacity: 1 },
-    exit: (dir) => ({ x: dir * -30, opacity: 0 })
-  };
+  // Simple CSS transition approach — no AnimatePresence layout recalculations
+  // This eliminates Android WebView flicker caused by popLayout mode
+  const [displayPath, setDisplayPath] = useState(location.pathname);
+  const [slideStyle, setSlideStyle] = useState({ transform: 'translateX(0)', opacity: 1, transition: 'none' });
+  const isTransitioning = useRef(false);
+
+  useEffect(() => {
+    if (location.pathname === displayPath) return;
+    if (isTransitioning.current) return;
+
+    isTransitioning.current = true;
+    const dir = currentDirection; // 1 = going right (new page slides in from right), -1 = left
+
+    // Step 1: slide current page out instantly (no transition)
+    setSlideStyle({ transform: `translateX(${dir * -30}px)`, opacity: 0, transition: 'transform 0.25s ease, opacity 0.25s ease' });
+
+    setTimeout(() => {
+      // Step 2: update the page content, set it off-screen instantly
+      setDisplayPath(location.pathname);
+      setSlideStyle({ transform: `translateX(${dir * 30}px)`, opacity: 0, transition: 'none' });
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          // Step 3: animate in
+          setSlideStyle({ transform: 'translateX(0)', opacity: 1, transition: 'transform 0.25s ease, opacity 0.25s ease' });
+          setTimeout(() => { isTransitioning.current = false; }, 260);
+        });
+      });
+    }, 260);
+  }, [location.pathname]);
 
   if (loading) {
     return (
@@ -128,12 +153,26 @@ const App = () => {
     );
   }
 
+  const handleSwipeEnd = (e, { offset, velocity }) => {
+    const swipe = offset.x;
+    const swipeVelocity = velocity.x;
+    const currIndex = ROUTES.indexOf(location.pathname);
+    if (currIndex === -1) return;
+    if (swipe < -80 || swipeVelocity < -500) {
+      const nextIndex = Math.min(currIndex + 1, ROUTES.length - 1);
+      if (nextIndex !== currIndex) navigate(ROUTES[nextIndex]);
+    } else if (swipe > 80 || swipeVelocity > 500) {
+      const prevIndex = Math.max(currIndex - 1, 0);
+      if (prevIndex !== currIndex) navigate(ROUTES[prevIndex]);
+    }
+  };
+
   return (
     <div className="min-h-screen font-sans pb-16 md:pb-0 relative overflow-x-hidden text-gray-800 dark:text-dark-text transition-colors duration-300">
       
-      {/* Biometric Lock Screen Overlay — CSS only, no framer-motion to avoid flicker conflict with page transitions */}
+      {/* Biometric Lock Screen Overlay — CSS only */}
       <div
-        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-6 bg-white dark:bg-slate-900 pointer-events-none"
+        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-6 bg-white dark:bg-slate-900"
         style={{
           opacity: isLocked ? 1 : 0,
           pointerEvents: isLocked ? 'all' : 'none',
@@ -165,49 +204,25 @@ const App = () => {
         className="max-w-5xl mx-auto p-4 md:p-8 md:pt-8"
         style={{ paddingTop: 'calc(env(safe-area-inset-top) + 4.5rem)' }}
       >
-          <AnimatePresence mode="popLayout" custom={currentDirection}>
-            <motion.div
-              key={location.pathname}
-              custom={currentDirection}
-              variants={{
-                initial: (dir) => ({ x: dir === 1 ? '100%' : '-100%', opacity: 1 }),
-                animate: { x: 0, opacity: 1 },
-                exit: (dir) => ({ x: dir === 1 ? '-100%' : '100%', opacity: 1 })
-              }}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              drag={user ? "x" : false}
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.8}
-              dragDirectionLock={true}
-              onDragEnd={(e, { offset, velocity }) => {
-                const swipe = offset.x;
-                const swipeVelocity = velocity.x;
-                const currIndex = ROUTES.indexOf(location.pathname);
-                if (currIndex === -1) return;
-
-                if (swipe < -80 || swipeVelocity < -500) {
-                  const nextIndex = Math.min(currIndex + 1, ROUTES.length - 1);
-                  if (nextIndex !== currIndex) navigate(ROUTES[nextIndex]);
-                } else if (swipe > 80 || swipeVelocity > 500) {
-                  const prevIndex = Math.max(currIndex - 1, 0);
-                  if (prevIndex !== currIndex) navigate(ROUTES[prevIndex]);
-                }
-              }}
-            >
-              <Routes location={location}>
-                <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-                <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
-                <Route path="/budget" element={user ? <Budget /> : <Navigate to="/login" />} />
-                <Route path="/history" element={user ? <History /> : <Navigate to="/login" />} />
-                <Route path="/rekap" element={user ? <Recap /> : <Navigate to="/login" />} />
-                <Route path="/account" element={user ? <Account /> : <Navigate to="/login" />} />
-                <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
-              </Routes>
-            </motion.div>
-          </AnimatePresence>
+        <motion.div
+          key={displayPath}
+          drag={user ? "x" : false}
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.8}
+          dragDirectionLock={true}
+          onDragEnd={handleSwipeEnd}
+          style={{ ...slideStyle, willChange: 'transform, opacity' }}
+        >
+          <Routes location={{ ...location, pathname: displayPath }}>
+            <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
+            <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
+            <Route path="/budget" element={user ? <Budget /> : <Navigate to="/login" />} />
+            <Route path="/history" element={user ? <History /> : <Navigate to="/login" />} />
+            <Route path="/rekap" element={user ? <Recap /> : <Navigate to="/login" />} />
+            <Route path="/account" element={user ? <Account /> : <Navigate to="/login" />} />
+            <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
+          </Routes>
+        </motion.div>
       </div>
     </div>
   );
