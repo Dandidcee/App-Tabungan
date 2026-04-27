@@ -10,10 +10,20 @@ const Recap = () => {
   const [filterMode, setFilterMode] = useState('1_month'); // '1_month', '3_months', 'custom'
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
+  const [showChart, setShowChart] = useState(false);
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Trigger chart animation every time data finishes loading/changing
+  useEffect(() => {
+    setShowChart(false);
+    if (!loading) {
+      const t = setTimeout(() => setShowChart(true), 150);
+      return () => clearTimeout(t);
+    }
+  }, [loading, filterMode, customStart, customEnd]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -89,7 +99,7 @@ const Recap = () => {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-500">
+        <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-500 hover:scale-110 transition-transform">
           <PieChartIcon size={24} />
         </div>
         <div>
@@ -122,7 +132,7 @@ const Recap = () => {
           </div>
 
           {filterMode === 'custom' && (
-            <div className="flex items-center w-full gap-2 md:ml-auto md:w-auto">
+            <div className="flex items-center w-full gap-2 md:ml-auto md:w-auto animate-in slide-in-from-right-4 fade-in">
               <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} className="w-full md:w-36 text-sm px-3 py-2 border dark:border-slate-700 rounded-lg dark:bg-slate-800" />
               <span className="text-gray-400">-</span>
               <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} className="w-full md:w-36 text-sm px-3 py-2 border dark:border-slate-700 rounded-lg dark:bg-slate-800" />
@@ -135,21 +145,25 @@ const Recap = () => {
           {/* SVG Donut */}
           <div className="relative w-48 h-48 md:w-64 md:h-64 shrink-0">
             <svg viewBox="0 0 42 42" className="w-full h-full transform -rotate-90">
-              <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="#f1f5f9" strokeWidth="6" className="dark:stroke-slate-800" />
+              <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="#f1f5f9" strokeWidth="6" className="dark:stroke-slate-800 transition-all duration-700" />
               {total > 0 && (
                 <>
                   <circle
                     cx="21" cy="21" r="15.9155" fill="transparent" stroke="#10b981" strokeWidth="6"
-                    strokeDasharray={incomeDasharray} strokeDashoffset="0" className="transition-all duration-1000 ease-out"
+                    strokeDasharray={showChart ? incomeDasharray : `0 ${circumference}`} 
+                    strokeDashoffset="0" 
+                    className="transition-all duration-[1500ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
                   />
                   <circle
                     cx="21" cy="21" r="15.9155" fill="transparent" stroke="#f43f5e" strokeWidth="6"
-                    strokeDasharray={expenseDasharray} strokeDashoffset={expenseOffset} className="transition-all duration-1000 ease-out"
+                    strokeDasharray={showChart ? expenseDasharray : `0 ${circumference}`} 
+                    strokeDashoffset={showChart ? expenseOffset : 0} 
+                    className="transition-all duration-[1500ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
                   />
                 </>
               )}
             </svg>
-            <div className="absolute inset-0 flex items-center justify-center flex-col text-center rotate-0">
+            <div className={`absolute inset-0 flex items-center justify-center flex-col text-center rotate-0 transition-all duration-700 delay-300 ${showChart ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
                {total > 0 ? (
                  <>
                   <span className="text-3xl font-extrabold text-gray-800 dark:text-slate-100">{totalIncome > totalExpense ? '📈' : '📉'}</span>
