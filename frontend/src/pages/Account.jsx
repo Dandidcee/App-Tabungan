@@ -15,7 +15,10 @@ const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
 const getImageUrl = (path) => {
   if (!path) return null;
   if (path.startsWith('http')) return path;
-  return `${getApiUrl()}${path}`;
+  const normalizedPath = path.replace(/\\/g, '/');
+  const baseUrl = getApiUrl().replace(/\/$/, '');
+  const cleanPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
+  return `${baseUrl}${cleanPath}`;
 };
 
 const Account = () => {
@@ -38,6 +41,7 @@ const Account = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -46,6 +50,7 @@ const Account = () => {
       setEmail(user.email || '');
       setEmoji(user.emoji || '👋');
       setProfilePicture(user.profilePicture || '');
+      setImageError(false);
     }
   }, [user]);
 
@@ -91,6 +96,24 @@ const Account = () => {
     }
   };
 
+  const handleRemovePhoto = async () => {
+    setIsUpdating(true);
+    try {
+      // Create a payload that only changes the profilePicture to empty string
+      // But we must include existing name, email, emoji because the backend might expect them? 
+      // Actually backend only updates provided fields.
+      const payload = { profilePicture: '' };
+      const res = await api.put('/api/auth/profile', payload);
+      setProfilePicture('');
+      updateUser(res.data);
+      showToast('Foto berhasil dihapus dari server!', 'success');
+    } catch (err) {
+      showToast('Gagal menghapus foto', 'error');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const handleResetData = async () => {
     setIsResetting(true);
     try {
@@ -119,8 +142,13 @@ const Account = () => {
         {/* Avatar Section */}
         <div className="flex flex-col items-center mb-8 relative">
           <div className="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-white dark:border-slate-800 shadow-lg overflow-hidden bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-slate-800 dark:to-slate-900 relative group">
-            {profilePicture ? (
-              <img src={getImageUrl(profilePicture)} alt="Profile Avatar" className="w-full h-full object-cover" />
+            {profilePicture && !imageError ? (
+              <img 
+                src={getImageUrl(profilePicture)} 
+                alt="Profile Avatar" 
+                className="w-full h-full object-cover" 
+                onError={() => setImageError(true)}
+              />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 dark:text-slate-700">
                 <User size={40} />
@@ -139,7 +167,8 @@ const Account = () => {
           {profilePicture && (
             <button 
               type="button" 
-              onClick={() => setProfilePicture('')} 
+              onClick={handleRemovePhoto} 
+              disabled={isUpdating}
               className="mt-2 text-xs text-rose-500 hover:text-rose-700 flex items-center gap-1 font-semibold"
             >
               <CameraOff size={12} /> Hapus Foto
@@ -212,9 +241,9 @@ const Account = () => {
             </div>
           </div>
 
-          <Button type="submit" disabled={isUpdating} className="w-full mt-6 py-4 bg-indigo-600 hover:bg-indigo-700 shadow-md flex justify-center items-center gap-2 font-bold text-lg rounded-xl">
+          <button type="submit" disabled={isUpdating} className="btn-pill btn-pill-indigo w-full mt-6 py-4 text-lg flex justify-center items-center gap-2">
              {isUpdating ? 'Menyimpan...' : <><Save size={20} /> Simpan Perubahan</>}
-          </Button>
+          </button>
         </form>
 
         <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-800 flex flex-col items-center">
@@ -229,7 +258,7 @@ const Account = () => {
              </button>
              <button 
                onClick={() => setIsResetModalOpen(true)}
-               className="btn-pill" style={{background:'linear-gradient(135deg,#ef4444,#dc2626)',color:'#fff',boxShadow:'0 4px 15px rgba(239,68,68,0.4)'}}
+               className="btn-pill btn-pill-rose"
              >
                <AlertTriangle size={18} />
                Reset Database

@@ -15,12 +15,14 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
-        <!-- Edge-to-edge: transparent status bar -->
+        <!-- Fullscreen edge-to-edge: transparent status bar, content goes under it -->
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">#f43f5e</item>
-        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentStatus">false</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <!-- White icons (jam/baterai) agar terlihat di background terang -->
+        <!-- Support notch / display cutout -->
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <!-- White icons (jam/baterai) agar terlihat di background -->
         <item name="android:windowLightStatusBar">false</item>
     </style>
 

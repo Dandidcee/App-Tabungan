@@ -1,5 +1,23 @@
 import PrivateCategory from '../models/PrivateCategory.js';
 
+export const updateCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, icon } = req.body;
+
+    const category = await PrivateCategory.findOne({ _id: id, user: req.user._id });
+    if (!category) return res.status(404).json({ message: 'Kategori tidak ditemukan' });
+
+    if (name) category.name = name;
+    if (icon) category.icon = icon;
+    const updated = await category.save();
+
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const getCategories = async (req, res) => {
   try {
     const categories = await PrivateCategory.find({ user: req.user._id });

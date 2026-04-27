@@ -18,8 +18,7 @@
 
 body {
   margin: 0;
-  /* Safe area for edge-to-edge Android display */
-  padding-top: env(safe-area-inset-top);
+  /* Fullscreen edge-to-edge: NO padding-top so content goes under status bar */
   padding-bottom: env(safe-area-inset-bottom);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -70,113 +69,84 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* ─── Action Button — GPU Accelerated ─── */
+/* ─── Action Button — Modern Professional UI ─── */
 .btn-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  padding: 0.55rem 1.2rem;
-  border-radius: 14px;
-  font-weight: 700;
-  font-size: 0.8125rem;
-  line-height: 1.25;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: 9999px; /* Pill shape is very modern */
+  font-weight: 600;
+  font-size: 0.875rem;
   cursor: pointer;
   user-select: none;
   border: none;
   outline: none;
-  /* GPU-accelerated: hanya animasikan transform, bukan top/layout */
-  transition: transform 0.08s ease-out, filter 0.08s ease-out;
-  letter-spacing: 0.01em;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
-  transform: translateZ(0); /* Force GPU layer */
 }
 
-/* Tenggelam 4px saat ditekan — GPU accelerated */
+/* Natural scale-down when pressed */
 .btn-pill:active {
-  transform: translateY(4px) translateZ(0);
-  box-shadow: none !important;
+  transform: scale(0.95);
 }
 
 .btn-pill:hover {
-  filter: brightness(1.06);
+  filter: brightness(1.05);
 }
 
 /* ── Rose/Pink — Nabung, primary actions ── */
 .btn-pill-rose {
-  background: #f43f5e;
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
   color: #fff;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.25),
-    0 5px 0 #9f1239,
-    0 7px 14px rgba(225, 29, 72, 0.25);
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
 }
-.btn-pill-rose:active {
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.15),
-    0 0px 0 #9f1239 !important;
+.btn-pill-rose:hover {
+  box-shadow: 0 6px 20px rgba(225, 29, 72, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 
 /* ── Emerald/Green — Pemasukan, positive actions ── */
 .btn-pill-emerald {
-  background: #10b981;
+  background: linear-gradient(135deg, #10b981, #059669);
   color: #fff;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.25),
-    0 5px 0 #065f46,
-    0 7px 14px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
 }
-.btn-pill-emerald:active {
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.15),
-    0 0px 0 #065f46 !important;
+.btn-pill-emerald:hover {
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 
 /* ── Indigo/Purple — Budget, Kategori ── */
 .btn-pill-indigo {
-  background: #6366f1;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
   color: #fff;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.25),
-    0 5px 0 #3730a3,
-    0 7px 14px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
 }
-.btn-pill-indigo:active {
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.15),
-    0 0px 0 #3730a3 !important;
+.btn-pill-indigo:hover {
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 
 /* ── Blue — Income actions ── */
 .btn-pill-blue {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: #fff;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.25),
-    0 5px 0 #1e40af,
-    0 7px 14px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
 }
-.btn-pill-blue:active {
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.15),
-    0 0px 0 #1e40af !important;
+.btn-pill-blue:hover {
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 
 /* ── Ghost/outline — cancel/secondary ── */
 .btn-pill-ghost {
   background: #fff;
   color: #e11d48;
-  border: 2px solid #fda4af;
-  box-shadow:
-    0 4px 0 rgba(225, 29, 72, 0.2),
-    0 6px 12px rgba(225, 29, 72, 0.1);
+  border: 1.5px solid #ffe4e6;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
 }
 .btn-pill-ghost:hover {
   background: #fff1f2;
-}
-.btn-pill-ghost:active {
-  box-shadow:
-    0 0px 0 rgba(225, 29, 72, 0.15) !important;
+  border-color: #fecdd3;
+  box-shadow: 0 4px 10px rgba(225, 29, 72, 0.08);
 }
 
 /* Small variant modifier */
@@ -205,7 +175,7 @@ body {
 }
 
 .btn-circle:active {
-  transform: translateY(3px) translateZ(0);
+  transform: scale(0.92);
 }
 
 

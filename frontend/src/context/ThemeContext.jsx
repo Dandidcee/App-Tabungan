@@ -1,4 +1,6 @@
 import { createContext, useState, useEffect, useContext } from 'react';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Capacitor } from '@capacitor/core';
 
 const ThemeContext = createContext();
 
@@ -15,11 +17,28 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('isDarkMode', JSON.stringify(isDarkMode));
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    
+    const applyTheme = async () => {
+      if (isDarkMode) {
+        document.documentElement.classList.add('dark');
+        if (Capacitor.isNativePlatform()) {
+          try {
+            await StatusBar.setStyle({ style: Style.Dark }); // Light text untuk dark mode
+            await StatusBar.setBackgroundColor({ color: '#0f172a' }); // slate-950
+          } catch (e) { console.log(e); }
+        }
+      } else {
+        document.documentElement.classList.remove('dark');
+        if (Capacitor.isNativePlatform()) {
+          try {
+            await StatusBar.setStyle({ style: Style.Light }); // Dark text untuk light mode
+            await StatusBar.setBackgroundColor({ color: '#ffffff' });
+          } catch (e) { console.log(e); }
+        }
+      }
+    };
+    
+    applyTheme();
   }, [isDarkMode]);
 
   const toggleDarkMode = () => setIsDarkMode(prev => !prev);

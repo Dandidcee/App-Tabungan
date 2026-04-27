@@ -8,7 +8,7 @@ import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import CurrencyInput from '../components/ui/CurrencyInput';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ArrowDownToLine, ArrowUpFromLine, PlusCircle, Activity, ChevronDown, Image as ImageIcon, X, ArrowRight, Settings, Wallet, ShoppingBag, Coffee, Plus, AlertTriangle, RefreshCcw, Calculator } from 'lucide-react';
+import { Heart, ArrowDownToLine, ArrowUpFromLine, PlusCircle, Activity, ChevronDown, Image as ImageIcon, X, ArrowRight, Settings, Wallet, ShoppingBag, Coffee, Plus, AlertTriangle, RefreshCcw, Calculator, Pencil } from 'lucide-react';
 import { setIndonesianValidity } from '../utils/validation';
 import CalculatorModal from '../components/ui/CalculatorModal';
 
@@ -16,8 +16,24 @@ const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
 const getImageUrl = (path) => {
   if (!path) return null;
   if (path.startsWith('http')) return path;
-  return `${getApiUrl()}${path}`;
+  const normalizedPath = path.replace(/\\/g, '/');
+  const baseUrl = getApiUrl().replace(/\/$/, '');
+  const cleanPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
+  return `${baseUrl}${cleanPath}`;
 };
+
+const WEALTH_QUOTES = [
+  "Sedikit demi sedikit, lama-lama menjadi bukit.",
+  "Investasi terbaik adalah pada diri sendiri.",
+  "Hemat pangkal kaya.",
+  "Kekayaan bukan seberapa banyak yang dihasilkan, tapi yang disimpan.",
+  "Waktu lebih berharga daripada uang.",
+  "Kekayaan sejati adalah merasa cukup.",
+  "Kebebasan finansial dimulai dari langkah kecil hari ini.",
+  "Bukan seberapa besar pendapatan, tapi pintarnya kelola pengeluaran.",
+  "Jangan menabung sisanya, belanjalah dari sisa tabunganmu.",
+  "Uang adalah hamba yang baik, namun tuan yang buruk."
+];
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
@@ -27,7 +43,7 @@ const Dashboard = () => {
   const [totalTabungan, setTotalTabungan] = useState(0);
   const [uangKeluar, setUangKeluar] = useState(0);
   const [imageModal, setImageModal] = useState(null);
-  
+
   // Auto Budgeting State (Envelope)
   const [categories, setCategories] = useState([]);
   const [budgetTransactions, setBudgetTransactions] = useState([]);
@@ -49,15 +65,29 @@ const Dashboard = () => {
 
   // Category Deletion State
   const [categoryToDelete, setCategoryToDelete] = useState(null);
+  // Category Edit State
+  const [categoryToEdit, setCategoryToEdit] = useState(null); // { _id, name, icon } atau 'gaji'
+  const [editName, setEditName] = useState('');
+  const [editIcon, setEditIcon] = useState('');
+  const [editBalance, setEditBalance] = useState('');
+  const [originalBalance, setOriginalBalance] = useState(0);
+
+  // Local state untuk Dompet Gaji (karena bukan dari DB)
+  const [gajiName, setGajiName] = useState(() => localStorage.getItem('gajiName') || 'Dompet Gaji');
+  const [gajiIcon, setGajiIcon] = useState(() => localStorage.getItem('gajiIcon') || '💼');
   // Recent transactions tab
   const [recentTab, setRecentTab] = useState('public');
   // Source mode for deposit/income: 'external' (manual input) | 'internal' (deduct from balance)
   const [sourceMode, setSourceMode] = useState('external');
-  // Calculator State
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [randomQuote, setRandomQuote] = useState(WEALTH_QUOTES[0]);
 
   const { showToast } = useToast();
   const prevDataRef = useRef(null);
+
+  useEffect(() => {
+    setRandomQuote(WEALTH_QUOTES[Math.floor(Math.random() * WEALTH_QUOTES.length)]);
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -82,12 +112,12 @@ const Dashboard = () => {
 
       const deposits = allTx.filter(t => (t.type === 'deposit' || t.type === 'income') && !t.budgetId).reduce((a, c) => a + c.amount, 0);
       const withdrawals = allTx.filter(t => t.type === 'withdrawal' && !t.budgetId).reduce((a, c) => a + c.amount, 0);
-      
+
       setTotalTabungan(deposits - withdrawals);
       setUangKeluar(withdrawals);
       setBudgets(budgetsRes.data);
       setTransactions(allTx.reverse().slice(0, 5));
-      
+
       setCategories(catsRes.data);
       setBudgetTransactions(budgetTxRes.data);
     } catch (error) {
@@ -112,7 +142,7 @@ const Dashboard = () => {
 
   const handleTransactionSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validasi saldo sebelum lanjut
     if (type === 'allocation' || type === 'withdrawal') {
       const spendAmount = Number(amount);
@@ -138,7 +168,7 @@ const Dashboard = () => {
       if (file) {
         const formData = new FormData();
         formData.append('proof', file);
-        const uploadRes = await api.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' }});
+        const uploadRes = await api.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
         proofOfTransfer = uploadRes.data.filePath;
       }
 
@@ -147,14 +177,14 @@ const Dashboard = () => {
       // - type stays 'income' to just add to balance without deducting from anywhere else
       const finalFundSource = (type === 'deposit' || type === 'income')
         ? (sourceMode === 'external'
-            ? (toCategory || fundSource)  // destination chosen by user
-            : fundSource)                 // internal: deduct from fundSource
+          ? (toCategory || fundSource)  // destination chosen by user
+          : fundSource)                 // internal: deduct from fundSource
         : fundSource;
 
       const finalType = (type === 'deposit' || type === 'income')
         ? (sourceMode === 'internal'
-            ? 'allocation' // treat as allocation: deduct from source, add to destination
-            : type)        // external: just add (deposit or income)
+          ? 'allocation' // treat as allocation: deduct from source, add to destination
+          : type)        // external: just add (deposit or income)
         : type;
 
       // Helper: resolve readable name from fundSource/category/budget ID
@@ -197,7 +227,7 @@ const Dashboard = () => {
         proofOfTransfer
       });
 
-      const msg = type === 'deposit' ? 'Berhasil nabung.' : type === 'income' ? 'Pemasukan dicatat!' : type === 'allocation' ? 'Alokasi berhasil disedot.' : 'Pinjaman dicatat.';
+      const msg = type === 'deposit' ? 'Berhasil nabung.' : type === 'income' ? 'Pemasukan dicatat!' : type === 'allocation' ? 'Alokasi berhasil ditambahkan.' : 'Pinjaman dicatat.';
       showToast(msg, 'success');
       setIsModalOpen(false);
       setAmount(''); setNotes(''); setBudgetId(''); setFundSource('tabungan_utama'); setToCategory(''); setFile(null); setIsSelectOpen(false); setSourceMode('external');
@@ -235,6 +265,62 @@ const Dashboard = () => {
       fetchData();
     } catch (err) {
       showToast('Gagal menghapus budget', 'error');
+    }
+  };
+
+  const openEditModal = (cat) => {
+    setCategoryToEdit(cat);
+    setEditName(cat.name);
+    setEditIcon(cat.icon);
+    
+    // Hitung saldo saat ini
+    const envTxs = budgetTransactions.filter(t => t.fundSource === cat._id);
+    const currentBal = envTxs.reduce((acc, t) => {
+      if (t.type === 'deposit' || t.type === 'income') return acc + t.amount;
+      if (t.type === 'withdrawal' || t.type === 'allocation') return acc - t.amount;
+      return acc;
+    }, 0);
+    
+    setOriginalBalance(currentBal);
+    setEditBalance(currentBal.toString());
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!categoryToEdit) return;
+
+    try {
+      if (categoryToEdit._id === 'gaji') {
+        localStorage.setItem('gajiName', editName);
+        localStorage.setItem('gajiIcon', editIcon);
+        setGajiName(editName);
+        setGajiIcon(editIcon);
+        showToast(`Dompet Gaji berhasil diperbarui!`, 'success');
+      } else {
+        await api.put(`/api/budgeting/categories/${categoryToEdit._id}`, {
+          name: editName,
+          icon: editIcon,
+        });
+        showToast(`Amplop ${editName} berhasil diperbarui!`, 'success');
+      }
+
+      // Tangani perubahan saldo (Adjustment Transaction)
+      const diff = Number(editBalance) - originalBalance;
+      if (diff !== 0) {
+        const type = diff > 0 ? 'income' : 'withdrawal';
+        const amount = Math.abs(diff);
+        await api.post('/api/transactions', {
+          type,
+          amount,
+          fundSource: categoryToEdit._id,
+          notes: 'Penyesuaian Saldo Manual',
+        });
+      }
+
+      setCategoryToEdit(null);
+      fetchData();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Gagal memperbarui data', 'error');
     }
   };
 
@@ -283,7 +369,7 @@ const Dashboard = () => {
                 <p className="text-xs text-pink-100 font-medium">Uang di Pinjam atau di Luar</p>
                 <p className="text-lg font-bold">Rp {uangKeluar.toLocaleString('id-ID')}</p>
               </div>
-              <p className="text-sm text-pink-100 italic">"Satu langkah lebih dekat."</p>
+              <p className="text-xs md:text-sm text-pink-100/90 italic max-w-[50%] text-right font-medium">"{randomQuote}"</p>
             </div>
           </div>
           <Heart size={200} className="absolute -right-10 -bottom-10 text-white/10" />
@@ -292,34 +378,34 @@ const Dashboard = () => {
         {/* Quick Actions */}
         <div className="col-span-1 flex flex-col gap-3">
           <div className="flex flex-row gap-3 flex-1">
-            <button onClick={() => openTransactionModal('deposit')} className="btn-pill btn-pill-emerald flex-1 py-3 md:py-4 flex-col h-full rounded-3xl" style={{borderRadius:'1.5rem'}}>
-                <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center mb-1.5">
-                    <ArrowDownToLine size={22} />
-                </div>
-                <span className="text-sm font-bold tracking-wide">Nabung</span>
+            <button onClick={() => openTransactionModal('deposit')} className="btn-pill btn-pill-emerald flex-1 py-3 md:py-4 flex-col h-full rounded-3xl" style={{ borderRadius: '1.5rem' }}>
+              <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center mb-1.5">
+                <ArrowDownToLine size={22} />
+              </div>
+              <span className="text-sm font-bold tracking-wide">Nabung</span>
             </button>
- 
-            <button onClick={() => openTransactionModal('withdrawal')} className="btn-pill btn-pill-rose flex-1 py-3 md:py-4 flex-col h-full rounded-3xl" style={{borderRadius:'1.5rem'}}>
-                <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center mb-1.5">
-                    <ArrowUpFromLine size={22} />
-                </div>
-                <span className="text-sm font-bold tracking-wide">Pinjam</span>
+
+            <button onClick={() => openTransactionModal('withdrawal')} className="btn-pill btn-pill-rose flex-1 py-3 md:py-4 flex-col h-full rounded-3xl" style={{ borderRadius: '1.5rem' }}>
+              <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center mb-1.5">
+                <ArrowUpFromLine size={22} />
+              </div>
+              <span className="text-sm font-bold tracking-wide">Pinjam</span>
             </button>
           </div>
 
           <div className="flex flex-row gap-3 flex-1">
-            <button onClick={() => openTransactionModal('income')} className="btn-pill btn-pill-blue flex-1 py-3 md:py-4 flex-col h-full rounded-3xl" style={{borderRadius:'1.5rem'}}>
-                <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center mb-1.5">
-                    <PlusCircle size={22} />
-                </div>
-                <span className="text-sm font-bold tracking-wide">Pemasukan</span>
+            <button onClick={() => openTransactionModal('income')} className="btn-pill btn-pill-blue flex-1 py-3 md:py-4 flex-col h-full rounded-3xl" style={{ borderRadius: '1.5rem' }}>
+              <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center mb-1.5">
+                <PlusCircle size={22} />
+              </div>
+              <span className="text-sm font-bold tracking-wide">Pemasukan</span>
             </button>
 
-            <button onClick={() => setIsCalculatorOpen(true)} className="btn-pill btn-pill-indigo flex-1 py-3 md:py-4 flex-col h-full rounded-3xl" style={{borderRadius:'1.5rem'}}>
-                <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center mb-1.5">
-                    <Calculator size={22} />
-                </div>
-                <span className="text-sm font-bold tracking-wide">Kalkulator</span>
+            <button onClick={() => setIsCalculatorOpen(true)} className="btn-pill btn-pill-indigo flex-1 py-3 md:py-4 flex-col h-full rounded-3xl" style={{ borderRadius: '1.5rem' }}>
+              <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center mb-1.5">
+                <Calculator size={22} />
+              </div>
+              <span className="text-sm font-bold tracking-wide">Kalkulator</span>
             </button>
           </div>
         </div>
@@ -331,212 +417,222 @@ const Dashboard = () => {
           <h3 className="text-lg font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
             <Wallet className="text-indigo-500 dark:text-indigo-400" size={20} /> Budget Bulanan
           </h3>
-          <button onClick={() => setIsCategoryModalOpen(true)} className="btn-pill btn-pill-indigo btn-pill-sm">
+          <button onClick={() => setIsCategoryModalOpen(true)} className="btn-pill btn-pill-sm bg-indigo-100 hover:bg-indigo-200 text-indigo-700 dark:bg-indigo-500/20 dark:hover:bg-indigo-500/30 dark:text-indigo-300 shadow-none border border-indigo-200/50 dark:border-indigo-500/20">
             <Plus size={14} /> Kategori Baru
           </button>
         </div>
-        
+
         <div className="p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 relative z-10">
           {/* MASTER POOL: DOMPET GAJI */}
           <div className="md:col-span-1 border-r-0 md:border-r border-indigo-100/50 pr-0 md:pr-5 mb-4 md:mb-0">
-             <div className="flex flex-col h-full items-center p-5 bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600 rounded-2xl shadow-md text-white/90 relative overflow-hidden group">
-                <Heart size={150} className="absolute -right-8 -bottom-8 text-white/10 pointer-events-none" />
-                <div className="relative z-10 text-center flex flex-col items-center h-full w-full">
-                  <div className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-3 py-0.5 rounded-full mb-3 shadow-inner">SUMBER DANA</div>
-                  <Wallet size={40} className="mb-2 opacity-90 text-white" />
-                  <p className="text-rose-100 text-xs font-medium uppercase tracking-widest mt-1">Dompet Gaji</p>
-                  <h4 className="font-extrabold text-2xl tracking-tight text-white mt-1 mb-auto">Rp {gajiBalance.toLocaleString('id-ID')}</h4>
-                  
-                  <div className="w-full mt-4 flex gap-2">
-                     <button onClick={() => openTransactionModal('deposit', 'gaji')} className="btn-pill btn-pill-sm flex-1 text-white font-bold" style={{background:'rgba(255,255,255,0.22)',boxShadow:'0 2px 8px rgba(0,0,0,0.15)'}}>
-                        + Tambah
-                     </button>
-                     <button onClick={() => openTransactionModal('withdrawal', 'gaji')} className="btn-pill btn-pill-sm flex-1 text-white font-bold" style={{background:'rgba(0,0,0,0.15)',boxShadow:'0 2px 8px rgba(0,0,0,0.10)'}}>
-                        - Pakai
-                     </button>
-                  </div>
+            <div className="flex flex-col h-full items-center p-5 bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600 rounded-2xl shadow-md text-white/90 relative overflow-hidden group">
+              <Heart size={150} className="absolute -right-8 -bottom-8 text-white/10 pointer-events-none" />
+              {/* Tombol edit Dompet Gaji */}
+              <button
+                onClick={() => openEditModal({ _id: 'gaji', name: gajiName, icon: gajiIcon })}
+                className="absolute top-2 left-2 z-20 p-1.5 bg-white/20 hover:bg-white/40 text-white rounded-xl transition-all"
+                title="Edit nama Dompet Gaji"
+              >
+                <Pencil size={13} />
+              </button>
+              <div className="relative z-10 text-center flex flex-col items-center h-full w-full">
+                <div className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-3 py-0.5 rounded-full mb-3 shadow-inner">SUMBER DANA</div>
+                <div className="text-4xl mb-2 opacity-90 drop-shadow-sm">{gajiIcon}</div>
+                <p className="text-rose-100 text-xs font-medium uppercase tracking-widest mt-1">{gajiName}</p>
+                <h4 className="font-extrabold text-2xl tracking-tight text-white mt-1 mb-auto">Rp {gajiBalance.toLocaleString('id-ID')}</h4>
+
+                <div className="w-full mt-4 flex gap-2.5">
+                  <button onClick={() => openTransactionModal('deposit', 'gaji')} className="flex-1 py-2.5 bg-white/25 hover:bg-white/35 backdrop-blur-md text-white font-bold rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-white/40 transition-all text-sm flex items-center justify-center gap-1.5 active:scale-95">
+                    <ArrowDownToLine size={16} /> Tambah
+                  </button>
+                  <button onClick={() => openTransactionModal('withdrawal', 'gaji')} className="flex-1 py-2.5 bg-black/15 hover:bg-black/25 backdrop-blur-md text-white font-bold rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-black/10 transition-all text-sm flex items-center justify-center gap-1.5 active:scale-95">
+                    <ArrowUpFromLine size={16} /> Pakai
+                  </button>
                 </div>
-             </div>
+              </div>
+            </div>
           </div>
 
           {/* DYNAMIC ENVELOPES */}
           <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-             {categories.length === 0 && (
-                <div className="col-span-full border-2 border-dashed border-indigo-200/50 dark:border-slate-700 rounded-2xl p-6 flex flex-col items-center justify-center text-indigo-400 dark:text-indigo-500/60 group cursor-pointer hover:bg-indigo-50/30 dark:hover:bg-slate-800/30 transition-colors" onClick={() => setIsCategoryModalOpen(true)}>
-                   <PlusCircle size={30} className="mb-2 opacity-50 group-hover:opacity-100 transition-opacity" />
-                   <p className="text-sm font-semibold">Buat Amplop Kategori</p>
-                   <p className="text-[10px] opacity-70 mt-1">Misal: Keperluan, Belanja, Cicilan Motor</p>
-                </div>
-             )}
+            {categories.length === 0 && (
+              <div className="col-span-full border-2 border-dashed border-indigo-200/50 dark:border-slate-700 rounded-2xl p-6 flex flex-col items-center justify-center text-indigo-400 dark:text-indigo-500/60 group cursor-pointer hover:bg-indigo-50/30 dark:hover:bg-slate-800/30 transition-colors" onClick={() => setIsCategoryModalOpen(true)}>
+                <PlusCircle size={30} className="mb-2 opacity-50 group-hover:opacity-100 transition-opacity" />
+                <p className="text-sm font-semibold">Buat Amplop Kategori</p>
+                <p className="text-[10px] opacity-70 mt-1">Misal: Keperluan, Belanja, Cicilan Motor</p>
+              </div>
+            )}
 
-             {categories.map(cat => {
-               const bal = getEnvelopeBalance(cat._id);
-               // Total income ever received by this category
-               const catTxs = budgetTransactions.filter(t => t.fundSource === cat._id);
-               const totalIncome = catTxs.filter(t => t.type === 'income' || t.type === 'deposit').reduce((s, t) => s + t.amount, 0);
-               const pct = totalIncome > 0 ? Math.max(bal, 0) / totalIncome : 0;
-               const circumference = 2 * Math.PI * 28;
-               const dash = pct * circumference;
-               const gap = circumference - dash;
-               return (
-                 <div key={cat._id} className="flex flex-col items-center p-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-white dark:border-slate-700 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
-                    <button onClick={() => promptDeleteCategory(cat._id, cat.name)} className="absolute top-2 right-2 text-rose-300 dark:text-rose-900/50 hover:text-rose-600 dark:hover:text-rose-400 transition-colors p-1" title="Reset/Hapus Budget ini">
-                      <X size={15} />
+            {categories.map(cat => {
+              const bal = getEnvelopeBalance(cat._id);
+              // Total income ever received by this category
+              const catTxs = budgetTransactions.filter(t => t.fundSource === cat._id);
+              const totalIncome = catTxs.filter(t => t.type === 'income' || t.type === 'deposit').reduce((s, t) => s + t.amount, 0);
+              const pct = totalIncome > 0 ? Math.max(bal, 0) / totalIncome : 0;
+              const circumference = 2 * Math.PI * 28;
+              const dash = pct * circumference;
+              const gap = circumference - dash;
+              return (
+                <div key={cat._id} className="flex flex-col items-center p-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-white dark:border-slate-700 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                  {/* Tombol Edit Amplop */}
+                  <button onClick={() => openEditModal(cat)} className="absolute top-2 left-2 text-indigo-300 dark:text-indigo-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-1" title="Edit Amplop ini">
+                    <Pencil size={14} />
+                  </button>
+                  {/* Tombol Hapus Amplop */}
+                  <button onClick={() => promptDeleteCategory(cat._id, cat.name)} className="absolute top-2 right-2 text-rose-300 dark:text-rose-900/50 hover:text-rose-600 dark:hover:text-rose-400 transition-colors p-1" title="Reset/Hapus Budget ini">
+                    <X size={15} />
+                  </button>
+
+                  {/* Donut Chart */}
+                  <div className="relative flex items-center justify-center my-2">
+                    <svg width="72" height="72" viewBox="0 0 72 72">
+                      <circle cx="36" cy="36" r="28" fill="none" stroke="#e0e7ff" strokeWidth="8" className="dark:stroke-slate-700" />
+                      <circle
+                        cx="36" cy="36" r="28" fill="none"
+                        stroke={bal <= 0 ? '#fca5a5' : '#818cf8'}
+                        strokeWidth="8"
+                        strokeDasharray={`${dash} ${gap}`}
+                        strokeLinecap="round"
+                        transform="rotate(-90 36 36)"
+                        style={{ transition: 'stroke-dasharray 0.5s ease' }}
+                      />
+                    </svg>
+                    <span className="absolute text-2xl group-hover:scale-110 transition-transform">{cat.icon}</span>
+                  </div>
+
+                  <p className="text-gray-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-widest">{cat.name}</p>
+                  <h4 className={`font-extrabold text-xl tracking-tight mt-1 ${bal < 0 ? 'text-rose-500' : 'text-gray-800 dark:text-slate-100'}`}>
+                    Rp {bal.toLocaleString('id-ID')}
+                  </h4>
+                  <p className="text-[10px] text-indigo-400 dark:text-indigo-500/80 font-semibold mt-0.5 mb-1">
+                    {totalIncome > 0 ? `${Math.round(pct * 100)}% sisa` : '—'}
+                  </p>
+
+                  <div className="w-full mt-2 flex gap-1.5 pt-3 border-t border-indigo-50/50 dark:border-slate-700/50">
+                    <button onClick={() => openTransactionModal('allocation', 'gaji', cat._id)} className="btn-pill btn-pill-indigo btn-pill-sm flex-1 flex-col gap-0.5 py-2" style={{ borderRadius: '0.75rem' }}>
+                      <ArrowDownToLine size={13} /> Tambah Budget
                     </button>
-
-                    {/* Donut Chart */}
-                    <div className="relative flex items-center justify-center my-2">
-                      <svg width="72" height="72" viewBox="0 0 72 72">
-                        <circle cx="36" cy="36" r="28" fill="none" stroke="#e0e7ff" strokeWidth="8" className="dark:stroke-slate-700" />
-                        <circle
-                          cx="36" cy="36" r="28" fill="none"
-                          stroke={bal <= 0 ? '#fca5a5' : '#818cf8'}
-                          strokeWidth="8"
-                          strokeDasharray={`${dash} ${gap}`}
-                          strokeLinecap="round"
-                          transform="rotate(-90 36 36)"
-                          style={{ transition: 'stroke-dasharray 0.5s ease' }}
-                        />
-                      </svg>
-                      <span className="absolute text-2xl group-hover:scale-110 transition-transform">{cat.icon}</span>
-                    </div>
-
-                    <p className="text-gray-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-widest">{cat.name}</p>
-                    <h4 className={`font-extrabold text-xl tracking-tight mt-1 ${bal < 0 ? 'text-rose-500' : 'text-gray-800 dark:text-slate-100'}`}>
-                      Rp {bal.toLocaleString('id-ID')}
-                    </h4>
-                    <p className="text-[10px] text-indigo-400 dark:text-indigo-500/80 font-semibold mt-0.5 mb-1">
-                      {totalIncome > 0 ? `${Math.round(pct * 100)}% sisa` : '—'}
-                    </p>
-                    
-                    <div className="w-full mt-2 flex gap-1.5 pt-3 border-t border-indigo-50/50 dark:border-slate-700/50">
-                       <button onClick={() => openTransactionModal('allocation', 'gaji', cat._id)} className="btn-pill btn-pill-indigo btn-pill-sm flex-1 flex-col gap-0.5 py-2" style={{borderRadius:'0.75rem'}}>
-                          <ArrowDownToLine size={13} /> Sedot Gaji
-                       </button>
-                       <button onClick={() => openTransactionModal('withdrawal', cat._id)} className="btn-pill btn-pill-rose btn-pill-sm flex-1 flex-col gap-0.5 py-2" style={{borderRadius:'0.75rem'}}>
-                          <ArrowUpFromLine size={13} /> Pakai
-                       </button>
-                    </div>
-                 </div>
-               );
-             })}
+                    <button onClick={() => openTransactionModal('withdrawal', cat._id)} className="btn-pill btn-pill-rose btn-pill-sm flex-1 flex-col gap-0.5 py-2" style={{ borderRadius: '0.75rem' }}>
+                      <ArrowUpFromLine size={13} /> Pakai
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
-          <div className="bg-gradient-to-br from-rose-100 via-pink-50 to-pink-200 dark:from-slate-800 dark:via-slate-900 dark:to-rose-950/40 backdrop-blur-xl rounded-3xl shadow-lg border-2 border-white/80 dark:border-slate-800 overflow-hidden relative transition-colors duration-300">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-pink-300/30 dark:bg-rose-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-        <div className="bg-white/50 dark:bg-slate-900/60 backdrop-blur-md border-b border-white/60 dark:border-slate-800 px-5 py-4 flex items-center justify-between relative z-10 flex-wrap gap-2">
-          <h3 className="text-lg font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
-            <Activity className="text-rose-400" size={20} /> Riwayat Terbaru
-          </h3>
-          <div className="flex items-center gap-2">
-            {/* Tab switcher */}
-            <div className="flex gap-1 bg-gray-100 dark:bg-slate-800 p-0.5 rounded-xl">
-              <button
-                onClick={() => setRecentTab('public')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                  recentTab === 'public'
-                    ? 'bg-white dark:bg-slate-700 text-rose-500 shadow-sm'
-                    : 'text-gray-500 dark:text-slate-400'
-                }`}
-              >
-                🌟 Umum
-              </button>
-              <button
-                onClick={() => setRecentTab('budget')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                  recentTab === 'budget'
-                    ? 'bg-white dark:bg-slate-700 text-indigo-500 shadow-sm'
-                    : 'text-gray-500 dark:text-slate-400'
-                }`}
-              >
-                📂 Budget
+        <div className="bg-gradient-to-br from-rose-100 via-pink-50 to-pink-200 dark:from-slate-800 dark:via-slate-900 dark:to-rose-950/40 backdrop-blur-xl rounded-3xl shadow-lg border-2 border-white/80 dark:border-slate-800 overflow-hidden relative transition-colors duration-300">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-pink-300/30 dark:bg-rose-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+          <div className="bg-white/50 dark:bg-slate-900/60 backdrop-blur-md border-b border-white/60 dark:border-slate-800 px-5 py-4 flex items-center justify-between relative z-10 flex-wrap gap-2">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
+              <Activity className="text-rose-400" size={20} /> Riwayat Terbaru
+            </h3>
+            <div className="flex items-center gap-2">
+              {/* Tab switcher */}
+              <div className="flex gap-1 bg-gray-100 dark:bg-slate-800 p-0.5 rounded-xl">
+                <button
+                  onClick={() => setRecentTab('public')}
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${recentTab === 'public'
+                      ? 'bg-white dark:bg-slate-700 text-rose-500 shadow-sm'
+                      : 'text-gray-500 dark:text-slate-400'
+                    }`}
+                >
+                  🌟 Umum
+                </button>
+                <button
+                  onClick={() => setRecentTab('budget')}
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${recentTab === 'budget'
+                      ? 'bg-white dark:bg-slate-700 text-indigo-500 shadow-sm'
+                      : 'text-gray-500 dark:text-slate-400'
+                    }`}
+                >
+                  📂 Budget
+                </button>
+              </div>
+              <button onClick={() => navigate('/history')} className="btn-pill btn-pill-rose btn-pill-sm">
+                Lihat Semua <ArrowRight size={13} />
               </button>
             </div>
-            <button onClick={() => navigate('/history')} className="btn-pill btn-pill-rose btn-pill-sm">
-              Lihat Semua <ArrowRight size={13} />
-            </button>
+          </div>
+
+          <div className="px-5 py-2 relative z-10">
+            {/* PUBLIC TAB */}
+            {recentTab === 'public' && (
+              <>
+                {transactions.length === 0 && (
+                  <div className="text-center py-10 flex flex-col items-center gap-2">
+                    <span className="text-6xl">📋</span>
+                    <p className="font-bold text-gray-500 dark:text-slate-400">Belum ada transaksi</p>
+                    <p className="text-xs text-gray-400 dark:text-slate-500">Mulai nabung untuk melihat riwayat ✨</p>
+                  </div>
+                )}
+                {transactions.map((trx) => (
+                  <div key={trx._id} className="flex items-center gap-3 py-3 px-1 border-b border-rose-50/50 dark:border-slate-800/50 last:border-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors rounded-xl mx-[-4px] px-2">
+                    <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border border-white dark:border-slate-700 ${trx.type === 'deposit' ? 'bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-900/30 dark:to-emerald-800/30 text-emerald-600' : trx.type === 'income' ? 'bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/30 text-blue-500' : 'bg-gradient-to-br from-rose-100 to-rose-50 dark:from-rose-900/30 dark:to-rose-800/30 text-rose-500'}`}>
+                      {trx.type === 'deposit' ? <ArrowDownToLine size={15} /> : trx.type === 'income' ? <PlusCircle size={15} /> : <ArrowUpFromLine size={15} />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-800 dark:text-slate-200 text-sm truncate">{trx.user.name} <span className="ml-1.5 text-[11px] font-bold uppercase">{trx.type}</span></p>
+                      <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-1">{new Date(trx.createdAt).toLocaleString('id-ID', { day: 'numeric', month: 'short' })} {trx.notes && `• ${trx.notes}`}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className={`font-extrabold text-sm ${trx.type === 'withdrawal' ? 'text-rose-500' : 'text-emerald-500'}`}>{trx.type === 'withdrawal' ? '−' : '+'} Rp {trx.amount.toLocaleString('id-ID')}</p>
+                      {trx.proofOfTransfer && <button onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))} className="mt-1 flex items-center justify-end gap-1 w-full text-[10px] text-gray-400 dark:text-slate-500"><ImageIcon size={10} /> bukti</button>}
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* BUDGET TAB */}
+            {recentTab === 'budget' && (
+              <>
+                {budgetTransactions.length === 0 && (
+                  <div className="text-center py-10 flex flex-col items-center gap-2">
+                    <span className="text-6xl">📂</span>
+                    <p className="font-bold text-gray-500 dark:text-slate-400">Belum ada transaksi budget</p>
+                    <p className="text-xs text-gray-400 dark:text-slate-500">Coba tambah budget atau pakai dari amplop 🗂️</p>
+                  </div>
+                )}
+                {budgetTransactions.slice(0, 5).map((trx) => (
+                  <div key={trx._id} className="flex items-center gap-3 py-3 px-1 border-b border-indigo-50/50 dark:border-slate-800/50 last:border-0 hover:bg-indigo-50/30 dark:hover:bg-slate-800/40 transition-colors rounded-xl mx-[-4px] px-2">
+                    <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border border-white dark:border-slate-700 ${trx.type === 'income' ? 'bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-900/30 dark:to-indigo-800/30 text-indigo-500'
+                        : 'bg-gradient-to-br from-rose-100 to-rose-50 dark:from-rose-900/30 dark:to-rose-800/30 text-rose-500'
+                      }`}>
+                      {trx.type === 'income' ? <ArrowDownToLine size={15} /> : <ArrowUpFromLine size={15} />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-800 dark:text-slate-200 text-sm truncate">
+                        {trx.type === 'income' ? '↓ Masuk' : '↑ Keluar'} {trx.notes ? `• ${trx.notes}` : ''}
+                      </p>
+                      <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-1">{new Date(trx.createdAt).toLocaleString('id-ID', { day: 'numeric', month: 'short' })}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className={`font-extrabold text-sm ${trx.type === 'withdrawal' ? 'text-rose-500' : 'text-indigo-500'}`}>{trx.type === 'withdrawal' ? '−' : '+'} Rp {trx.amount.toLocaleString('id-ID')}</p>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         </div>
-
-        <div className="px-5 py-2 relative z-10">
-          {/* PUBLIC TAB */}
-          {recentTab === 'public' && (
-            <>
-              {transactions.length === 0 && (
-                <div className="text-center py-10 flex flex-col items-center gap-2">
-                  <span className="text-6xl">📋</span>
-                  <p className="font-bold text-gray-500 dark:text-slate-400">Belum ada transaksi</p>
-                  <p className="text-xs text-gray-400 dark:text-slate-500">Mulai nabung untuk melihat riwayat ✨</p>
-                </div>
-              )}
-              {transactions.map((trx) => (
-                <div key={trx._id} className="flex items-center gap-3 py-3 px-1 border-b border-rose-50/50 dark:border-slate-800/50 last:border-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors rounded-xl mx-[-4px] px-2">
-                  <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border border-white dark:border-slate-700 ${trx.type === 'deposit' ? 'bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-900/30 dark:to-emerald-800/30 text-emerald-600' : trx.type === 'income' ? 'bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/30 text-blue-500' : 'bg-gradient-to-br from-rose-100 to-rose-50 dark:from-rose-900/30 dark:to-rose-800/30 text-rose-500'}`}>
-                    {trx.type === 'deposit' ? <ArrowDownToLine size={15} /> : trx.type === 'income' ? <PlusCircle size={15} /> : <ArrowUpFromLine size={15} />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-800 dark:text-slate-200 text-sm truncate">{trx.user.name} <span className="ml-1.5 text-[11px] font-bold uppercase">{trx.type}</span></p>
-                    <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-1">{new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric', month:'short'})} {trx.notes && `• ${trx.notes}`}</p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className={`font-extrabold text-sm ${trx.type === 'withdrawal' ? 'text-rose-500' : 'text-emerald-500'}`}>{trx.type === 'withdrawal' ? '−' : '+'} Rp {trx.amount.toLocaleString('id-ID')}</p>
-                    {trx.proofOfTransfer && <button onClick={() => setImageModal(getImageUrl(trx.proofOfTransfer))} className="mt-1 flex items-center justify-end gap-1 w-full text-[10px] text-gray-400 dark:text-slate-500"><ImageIcon size={10} /> bukti</button>}
-                  </div>
-                </div>
-              ))}
-            </>
-          )}
-
-          {/* BUDGET TAB */}
-          {recentTab === 'budget' && (
-            <>
-              {budgetTransactions.length === 0 && (
-                <div className="text-center py-10 flex flex-col items-center gap-2">
-                  <span className="text-6xl">📂</span>
-                  <p className="font-bold text-gray-500 dark:text-slate-400">Belum ada transaksi budget</p>
-                  <p className="text-xs text-gray-400 dark:text-slate-500">Coba sedot gaji atau pakai dari amplop 🗂️</p>
-                </div>
-              )}
-              {budgetTransactions.slice(0, 5).map((trx) => (
-                <div key={trx._id} className="flex items-center gap-3 py-3 px-1 border-b border-indigo-50/50 dark:border-slate-800/50 last:border-0 hover:bg-indigo-50/30 dark:hover:bg-slate-800/40 transition-colors rounded-xl mx-[-4px] px-2">
-                  <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border border-white dark:border-slate-700 ${
-                    trx.type === 'income' ? 'bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-900/30 dark:to-indigo-800/30 text-indigo-500'
-                    : 'bg-gradient-to-br from-rose-100 to-rose-50 dark:from-rose-900/30 dark:to-rose-800/30 text-rose-500'
-                  }`}>
-                    {trx.type === 'income' ? <ArrowDownToLine size={15} /> : <ArrowUpFromLine size={15} />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-800 dark:text-slate-200 text-sm truncate">
-                      {trx.type === 'income' ? '↓ Masuk' : '↑ Keluar'} {trx.notes ? `• ${trx.notes}` : ''}
-                    </p>
-                    <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-1">{new Date(trx.createdAt).toLocaleString('id-ID', {day:'numeric', month:'short'})}</p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className={`font-extrabold text-sm ${trx.type === 'withdrawal' ? 'text-rose-500' : 'text-indigo-500'}`}>{trx.type === 'withdrawal' ? '−' : '+'} Rp {trx.amount.toLocaleString('id-ID')}</p>
-                  </div>
-                </div>
-              ))}
-            </>
-          )}
-        </div>
-      </div>
 
       </div>
 
       <AnimatePresence>
         {uploading && (
-           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40">
-             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl flex flex-col items-center justify-center shadow-2xl">
-               <Activity size={32} className="text-rose-500 animate-pulse mb-4" />
-               <h3 className="font-bold relative z-10 dark:text-slate-200">Menyimpan...</h3>
-             </motion.div>
-           </div>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl flex flex-col items-center justify-center shadow-2xl">
+              <Activity size={32} className="text-rose-500 animate-pulse mb-4" />
+              <h3 className="font-bold relative z-10 dark:text-slate-200">Menyimpan...</h3>
+            </motion.div>
+          </div>
         )}
         {imageModal && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80" onClick={() => setImageModal(null)}>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} className="relative max-w-3xl w-full bg-white dark:bg-slate-800 rounded-2xl overflow-hidden p-2" onClick={e => e.stopPropagation()}>
-               <button onClick={() => setImageModal(null)} className="btn-circle absolute top-4 right-4 bg-rose-500 hover:bg-rose-600 text-white p-1.5"><X size={18} /></button>
-               <img src={imageModal} className="w-full max-h-[80vh] object-contain rounded-xl" />
+              <button onClick={() => setImageModal(null)} className="btn-circle absolute top-4 right-4 bg-rose-500 hover:bg-rose-600 text-white p-1.5"><X size={18} /></button>
+              <img src={imageModal} className="w-full max-h-[80vh] object-contain rounded-xl" />
             </motion.div>
           </div>
         )}
@@ -544,53 +640,92 @@ const Dashboard = () => {
 
       {/* Delete Category Confirmation Modal */}
       <Modal isOpen={!!categoryToDelete} onClose={() => setCategoryToDelete(null)} title="Hapus Kategori">
-         <div className="text-center p-2 space-y-4">
-             <AlertTriangle size={60} className="mx-auto text-rose-500 animate-pulse" />
-             <p className="text-sm font-semibold text-gray-700">Apakah anda Yakin ingin menghapus Kategori Ini?</p>
-             <p className="text-xs text-gray-500 bg-rose-50 p-3 rounded-xl border border-rose-100">Semua Riwayat yang ada di Kategori ini akan di hapus, dan balance sisa akan di kembalikan Ke Gaji</p>
-             
-             <div className="flex gap-3 mt-6">
-                <Button onClick={() => setCategoryToDelete(null)} variant="outline" className="flex-1 py-3 bg-gray-50 border-0">Batal</Button>
-                <Button onClick={confirmDeleteCategory} className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-200">
-                   Lanjutkan
-                </Button>
-             </div>
-         </div>
+        <div className="text-center p-2 space-y-4">
+          <AlertTriangle size={60} className="mx-auto text-rose-500 animate-pulse" />
+          <p className="text-sm font-semibold text-gray-700">Apakah anda Yakin ingin menghapus Kategori Ini?</p>
+          <p className="text-xs text-gray-500 bg-rose-50 p-3 rounded-xl border border-rose-100">Semua Riwayat yang ada di Kategori ini akan di hapus, dan balance sisa akan di kembalikan Ke Gaji</p>
+
+          <div className="flex gap-3 mt-6">
+            <Button onClick={() => setCategoryToDelete(null)} variant="outline" className="flex-1 py-3 bg-gray-50 border-0">Batal</Button>
+            <Button onClick={confirmDeleteCategory} className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-200">
+              Lanjutkan
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       {/* Add New Category Custom (Envelope) Modal */}
       <Modal isOpen={isCategoryModalOpen} onClose={() => setIsCategoryModalOpen(false)} title="Buat Budget Baru ✉️">
-         <form onSubmit={handleCategorySubmit} className="space-y-4 text-left">
-           <div>
-             <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Nama Kategori</label>
-             <input type="text"
-                    required 
-                    value={categoryName} 
-                    onChange={(e) => setCategoryName(e.target.value)} 
-                    onInvalid={setIndonesianValidity}
-                    onInput={setIndonesianValidity}
-                    className="w-full px-4 py-3 border border-indigo-100 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-300 outline-none bg-indigo-50/30 dark:bg-slate-800 text-indigo-900 dark:text-slate-100 font-semibold placeholder:text-gray-400 dark:placeholder:text-slate-500" 
-                    placeholder="Contoh: Belanja Bulanan" />
-           </div>
-           <div>
-             <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Pilih Ikon (Emoji)</label>
-             <div className="flex gap-2 text-2xl flex-wrap">
-               {['🏷️', '🛒', '☕', '🍔', '🛵', '💄', '💍', '🎮', '💊', '🎁'].map(em => (
-                 <button type="button" key={em} onClick={() => setCategoryIcon(em)} className={`p-2 rounded-xl transition-all ${categoryIcon === em ? 'bg-indigo-100 dark:bg-indigo-900/40 scale-110 shadow-sm border border-indigo-200 dark:border-indigo-800' : 'bg-gray-50 dark:bg-slate-800 opacity-50 hover:opacity-100'}`}>
-                   {em}
-                 </button>
-               ))}
-             </div>
-           </div>
-           <Button type="submit" variant="primary" className="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-lg rounded-xl shadow-[0_8px_20px_rgb(79,70,229,0.2)]" disabled={!categoryName}>
-             Tambah Kategori {categoryIcon}
-           </Button>
-         </form>
+        <form onSubmit={handleCategorySubmit} className="space-y-4 text-left">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Nama Kategori</label>
+            <input type="text"
+              required
+              value={categoryName}
+              onChange={(e) => setCategoryName(e.target.value)}
+              onInvalid={setIndonesianValidity}
+              onInput={setIndonesianValidity}
+              className="w-full px-4 py-3 border border-indigo-100 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-300 outline-none bg-indigo-50/30 dark:bg-slate-800 text-indigo-900 dark:text-slate-100 font-semibold placeholder:text-gray-400 dark:placeholder:text-slate-500"
+              placeholder="Contoh: Belanja Bulanan" />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Pilih Ikon (Emoji)</label>
+            <div className="flex gap-2 text-2xl flex-wrap">
+              {['🏷️', '🛒', '☕', '🍔', '🛵', '💄', '💍', '🎮', '💊', '🎁'].map(em => (
+                <button type="button" key={em} onClick={() => setCategoryIcon(em)} className={`p-2 rounded-xl transition-all ${categoryIcon === em ? 'bg-indigo-100 dark:bg-indigo-900/40 scale-110 shadow-sm border border-indigo-200 dark:border-indigo-800' : 'bg-gray-50 dark:bg-slate-800 opacity-50 hover:opacity-100'}`}>
+                  {em}
+                </button>
+              ))}
+            </div>
+          </div>
+          <Button type="submit" variant="primary" className="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-lg rounded-xl shadow-[0_8px_20px_rgb(79,70,229,0.2)]" disabled={!categoryName}>
+            Tambah Kategori {categoryIcon}
+          </Button>
+        </form>
+      </Modal>
+
+      {/* Edit Category Modal */}
+      <Modal isOpen={!!categoryToEdit} onClose={() => setCategoryToEdit(null)} title={`Edit ${categoryToEdit?._id === 'gaji' ? 'Dompet' : 'Budget'} ✏️`}>
+        <form onSubmit={handleEditSubmit} className="space-y-4 text-left">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Nama Kategori</label>
+            <input type="text"
+              required
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              onInvalid={setIndonesianValidity}
+              onInput={setIndonesianValidity}
+              className="w-full px-4 py-3 border border-indigo-100 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-300 outline-none bg-indigo-50/30 dark:bg-slate-800 text-indigo-900 dark:text-slate-100 font-semibold placeholder:text-gray-400 dark:placeholder:text-slate-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Pilih Ikon (Emoji)</label>
+            <div className="flex gap-2 text-2xl flex-wrap">
+              {['💼', '💰', '🏷️', '🛒', '☕', '🍔', '🛵', '💄', '💍', '🎮', '💊', '🎁', '✈️', '🐶', '👶'].map(em => (
+                <button type="button" key={em} onClick={() => setEditIcon(em)} className={`p-2 rounded-xl transition-all ${editIcon === em ? 'bg-indigo-100 dark:bg-indigo-900/40 scale-110 shadow-sm border border-indigo-200 dark:border-indigo-800' : 'bg-gray-50 dark:bg-slate-800 opacity-50 hover:opacity-100'}`}>
+                  {em}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Edit Saldo</label>
+            <CurrencyInput
+              value={editBalance}
+              onChange={(val) => setEditBalance(val)}
+              className="w-full px-4 py-3 border border-indigo-100 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-300 outline-none bg-indigo-50/30 dark:bg-slate-800 text-indigo-900 dark:text-slate-100 font-bold font-mono placeholder:text-gray-400 dark:placeholder:text-slate-500"
+              placeholder="0"
+            />
+            <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-1">*Jika nominal diubah, histori penyesuaian akan otomatis dicatat</p>
+          </div>
+          <Button type="submit" variant="primary" className="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-lg rounded-xl shadow-[0_8px_20px_rgb(79,70,229,0.2)]" disabled={!editName || editBalance === ''}>
+            Simpan Perubahan {editIcon}
+          </Button>
+        </form>
       </Modal>
 
       {/* Transaction Modal */}
       <Modal isOpen={isModalOpen} onClose={() => !uploading && setIsModalOpen(false)} title={
-        type === 'deposit' ? 'Nabung 💖' : type === 'income' ? 'Catat Pemasukan 🎉' : type === 'allocation' ? 'Sedot dari Gaji 💧' : 'Catat Pemakaian 💸'
+        type === 'deposit' ? 'Nabung 💖' : type === 'income' ? 'Catat Pemasukan 🎉' : type === 'allocation' ? 'Tambah Budget 💧' : 'Catat Pemakaian 💸'
       }>
         <form onSubmit={handleTransactionSubmit} className="space-y-4 text-left">
 
@@ -602,11 +737,10 @@ const Dashboard = () => {
                 <button
                   type="button"
                   onClick={() => { setSourceMode('external'); setFundSource('tabungan_utama'); setToCategory(''); }}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all text-sm font-semibold ${
-                    sourceMode === 'external'
+                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all text-sm font-semibold ${sourceMode === 'external'
                       ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
                       : 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400'
-                  }`}
+                    }`}
                 >
                   <span className="text-2xl">💵</span>
                   <span>Dari Luar</span>
@@ -615,11 +749,10 @@ const Dashboard = () => {
                 <button
                   type="button"
                   onClick={() => { setSourceMode('internal'); setFundSource('gaji'); setToCategory(''); }}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all text-sm font-semibold ${
-                    sourceMode === 'internal'
+                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all text-sm font-semibold ${sourceMode === 'internal'
                       ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400'
                       : 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400'
-                  }`}
+                    }`}
                 >
                   <span className="text-2xl">🔄</span>
                   <span>Dari Internal</span>
@@ -638,7 +771,7 @@ const Dashboard = () => {
                   <span className="font-medium text-indigo-900 dark:text-indigo-300">
                     {fundSource === 'gaji' ? '💼 Dompet Gaji'
                       : fundSource === 'tabungan_utama' ? '🌟 Tabungan Bersama'
-                      : categories.find(c => c._id === fundSource)?.name || 'Pilih...'}
+                        : categories.find(c => c._id === fundSource)?.name || 'Pilih...'}
                   </span>
                   <ChevronDown size={16} className="text-indigo-400" />
                 </div>
@@ -666,15 +799,15 @@ const Dashboard = () => {
                   <span className="font-medium text-gray-800 dark:text-slate-100 truncate">
                     {sourceMode === 'internal'
                       ? (toCategory
-                          ? (categories.find(c => c._id === toCategory)?.name
-                            || budgets.find(b => b._id === toCategory)?.title
-                            || 'Pilih tujuan...')
-                          : 'Pilih tujuan...')
+                        ? (categories.find(c => c._id === toCategory)?.name
+                          || budgets.find(b => b._id === toCategory)?.title
+                          || 'Pilih tujuan...')
+                        : 'Pilih tujuan...')
                       : (fundSource === 'tabungan_utama' && budgetId
-                          ? `🎯 ${budgets.find(b => b._id === budgetId)?.title || 'Target'}`
-                          : fundSource === 'tabungan_utama' ? '🌟 Tabungan Bersama'
+                        ? `🎯 ${budgets.find(b => b._id === budgetId)?.title || 'Target'}`
+                        : fundSource === 'tabungan_utama' ? '🌟 Tabungan Bersama'
                           : fundSource === 'gaji' ? '💼 Dompet Gaji'
-                          : categories.find(c => c._id === fundSource)?.name || 'Pilih tujuan...')}
+                            : categories.find(c => c._id === fundSource)?.name || 'Pilih tujuan...')}
                   </span>
                   <ChevronDown size={16} className="text-gray-400" />
                 </div>
@@ -744,9 +877,9 @@ const Dashboard = () => {
                     {type === 'allocation' ? (
                       categories.find(c => c._id === toCategory)?.name || 'Pilih Amplop...'
                     ) : fundSource === 'tabungan_utama' && budgetId ? budgets.find(b => b._id === budgetId)?.title
-                     : fundSource === 'tabungan_utama' ? '🌟 Tabungan Bersama'
-                     : fundSource === 'gaji' ? '💼 Dompet Gaji'
-                     : categories.find(c => c._id === fundSource)?.name || '...'}
+                      : fundSource === 'tabungan_utama' ? '🌟 Tabungan Bersama'
+                        : fundSource === 'gaji' ? '💼 Dompet Gaji'
+                          : categories.find(c => c._id === fundSource)?.name || '...'}
                   </span>
                   <ChevronDown size={18} className="text-gray-400 dark:text-slate-500" />
                 </div>
@@ -773,7 +906,7 @@ const Dashboard = () => {
               </div>
             </div>
           )}
- 
+
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nominal (Rp)</label>
             <CurrencyInput
@@ -784,16 +917,16 @@ const Dashboard = () => {
               placeholder="1.000.000"
             />
           </div>
- 
+
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Keterangan Singkat</label>
             <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 outline-none bg-gray-50 dark:bg-slate-800 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500" placeholder={type === 'allocation' ? 'Sisihkan gaji buat...' : 'Keterangan'} />
           </div>
- 
+
           {type !== 'allocation' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Bukti Gambar (Opsional)</label>
-              <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 text-sm dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rose-50 dark:file:bg-rose-900/30 file:text-rose-600 dark:file:text-rose-400"/>
+              <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 text-sm dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rose-50 dark:file:bg-rose-900/30 file:text-rose-600 dark:file:text-rose-400" />
             </div>
           )}
 

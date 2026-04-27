@@ -7,19 +7,20 @@ const MODAL_TRANSITION = { duration: 0.18, ease: [0.32, 0.72, 0, 1] };
 export const Modal = ({ isOpen, onClose, title, children }) => {
   return (
     <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop — hanya opacity, tidak ada blur (blur mahal di GPU) */}
+      {isOpen && [
+          /* Backdrop */
           <motion.div
+            key="backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             onClick={onClose}
             className="fixed inset-0 bg-black/40 z-40"
-          />
-          {/* Modal panel — slide up dari bawah */}
+          />,
+          /* Modal panel */
           <motion.div
+            key="modal-panel"
             initial={{ opacity: 0, y: '100%' }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: '100%' }}
@@ -34,8 +35,7 @@ export const Modal = ({ isOpen, onClose, title, children }) => {
             </div>
             {children}
           </motion.div>
-        </>
-      )}
+      ]}
     </AnimatePresence>
   );
 };
