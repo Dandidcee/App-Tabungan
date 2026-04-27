@@ -410,9 +410,9 @@ const Dashboard = () => {
         <div className="px-5 py-4 flex items-center justify-between border-b border-gray-100 dark:border-slate-800">
           <div>
             <h3 className="text-lg font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
-              <Wallet className="text-indigo-500" size={20} /> Amplop Saya
+              <Wallet className="text-indigo-500" size={20} /> Budget Bulanan
             </h3>
-            <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">Ketuk amplop untuk kelola dana</p>
+            <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">Ketuk kartu untuk kelola dana</p>
           </div>
           <button onClick={() => setIsCategoryModalOpen(true)} className="w-9 h-9 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-200 dark:shadow-indigo-900/40 transition-all active:scale-95">
             <Plus size={18} />
@@ -522,11 +522,17 @@ const Dashboard = () => {
                 key="cat-sheet"
                 initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
                 transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+                drag="y"
+                dragConstraints={{ top: 0, bottom: 0 }}
+                dragElastic={{ top: 0, bottom: 0.8 }}
+                onDragEnd={(_, info) => {
+                  if (info.offset.y > 100 || info.velocity.y > 400) setActiveCategory(null);
+                }}
                 className="fixed left-0 right-0 bottom-0 z-50 bg-white dark:bg-slate-900 rounded-t-[2rem] shadow-2xl border-t border-gray-100 dark:border-slate-800 max-w-lg mx-auto"
               >
                 <div className="p-6 pb-8">
-                  {/* Pill handle */}
-                  <div className="w-12 h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full mx-auto mb-5" />
+                  {/* Pill handle — touch area for drag-to-dismiss */}
+                  <div className="w-12 h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full mx-auto mb-5 cursor-grab active:cursor-grabbing" />
 
                   {/* Header */}
                   <div className="flex items-center gap-3 mb-6">
