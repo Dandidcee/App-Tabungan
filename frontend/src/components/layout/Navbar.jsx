@@ -5,15 +5,7 @@ import { Heart, Bell, Home, Target, Clock, BarChart3, CircleUserRound } from 'lu
 import { useToast } from '../../context/ToastContext';
 import ThemeToggle from '../ui/ThemeToggle';
 
-const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
-const getImageUrl = (path) => {
-  if (!path) return null;
-  if (path.startsWith('http')) return path;
-  const normalizedPath = path.replace(/\\/g, '/');
-  const baseUrl = getApiUrl().replace(/\/$/, '');
-  const cleanPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
-  return `${baseUrl}${cleanPath}`;
-};
+import api, { getImageUrl } from '../../services/api';
 
 export const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
@@ -69,7 +61,7 @@ export const Navbar = () => {
     { to: '/budget',  label: 'Target',  Icon: Target,           activeFill: true  },
     { to: '/history', label: 'Riwayat', Icon: Clock,            activeFill: false },
     { to: '/rekap',   label: 'Rekap',   Icon: BarChart3,        activeFill: false },
-    { to: '/account', label: 'Akun',    Icon: CircleUserRound,  activeFill: true  },
+    { to: '/account', label: 'Akun',    Icon: CircleUserRound,  activeFill: false  },
   ];
 
   return (
@@ -111,9 +103,10 @@ export const Navbar = () => {
 
       {/* Mobile Top Header — Solid (Gak Transparan) */}
       <div
-        className="md:hidden fixed top-0 left-0 right-0 z-40 flex justify-between items-center px-4 pb-3 bg-white dark:bg-slate-900 shadow-sm"
+        className="md:hidden fixed top-0 left-0 right-0 z-40 flex justify-between items-center px-4 pb-3 bg-white dark:bg-slate-900 shadow-sm transition-transform duration-300 ease-in-out"
         style={{
           paddingTop: 'calc(env(safe-area-inset-top) + 0.6rem)',
+          transform: navVisible ? 'translateY(0)' : 'translateY(-100%)',
         }}
       >
         <Link to="/" className="flex items-center gap-2 text-rose-500 font-bold text-lg">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import api from '../services/api';
+import api, { getImageUrl } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import { Card } from '../components/ui/Card';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,13 +20,6 @@ const History = () => {
   const [loading, setLoading] = useState(false);
 
   const { showToast } = useToast();
-
-  const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
-  const getImageUrl = (path) => {
-    if (!path) return null;
-    if (path.startsWith('http')) return path;
-    return `${getApiUrl()}${path}`;
-  };
 
   const fetchPublic = async () => {
     try {

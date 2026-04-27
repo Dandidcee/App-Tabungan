@@ -28,6 +28,7 @@ const Login = () => {
       }
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || 'Terjadi kesalahan';
+      alert(`[DEBUG] Error: ${msg} | URL: http://144.91.93.11:5050`);
       showToast(msg, 'error');
     } finally {
       setLoading(false);

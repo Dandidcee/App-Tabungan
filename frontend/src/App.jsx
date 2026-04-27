@@ -20,16 +20,19 @@ const App = () => {
   const navigate = useNavigate();
   const [direction, setDirection] = useState(1);
   const prevPath = useRef(location.pathname);
+  const directionRef = useRef(1);
 
-  useEffect(() => {
+  // Calculate direction synchronously during render to avoid 1-frame lag
+  if (prevPath.current !== location.pathname) {
     const prevIndex = ROUTES.indexOf(prevPath.current);
     const currIndex = ROUTES.indexOf(location.pathname);
-    
     if (currIndex !== -1 && prevIndex !== -1 && currIndex !== prevIndex) {
-      setDirection(currIndex > prevIndex ? 1 : -1);
+      directionRef.current = currIndex > prevIndex ? 1 : -1;
     }
     prevPath.current = location.pathname;
-  }, [location.pathname]);
+  }
+  
+  const currentDirection = directionRef.current;
 
   const slideVariants = {
     initial: (dir) => ({ x: dir * 30, opacity: 0 }),
@@ -58,27 +61,33 @@ const App = () => {
         className="max-w-5xl mx-auto p-4 md:p-8 md:pt-8"
         style={{ paddingTop: 'calc(env(safe-area-inset-top) + 4.5rem)' }}
       >
-          <AnimatePresence mode="wait" custom={direction}>
+          <AnimatePresence mode="popLayout" custom={currentDirection}>
             <motion.div
               key={location.pathname}
-              custom={direction}
-              variants={slideVariants}
+              custom={currentDirection}
+              variants={{
+                initial: (dir) => ({ x: dir === 1 ? '100%' : '-100%', opacity: 1 }),
+                animate: { x: 0, opacity: 1 },
+                exit: (dir) => ({ x: dir === 1 ? '-100%' : '100%', opacity: 1 })
+              }}
               initial="initial"
               animate="animate"
               exit="exit"
-              transition={{ duration: 0.25, ease: "easeInOut" }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
               drag={user ? "x" : false}
               dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0}
-              onDragEnd={(e, { offset }) => {
+              dragElastic={0.8}
+              dragDirectionLock={true}
+              onDragEnd={(e, { offset, velocity }) => {
                 const swipe = offset.x;
+                const swipeVelocity = velocity.x;
                 const currIndex = ROUTES.indexOf(location.pathname);
                 if (currIndex === -1) return;
 
-                if (swipe < -60) {
+                if (swipe < -80 || swipeVelocity < -500) {
                   const nextIndex = Math.min(currIndex + 1, ROUTES.length - 1);
                   if (nextIndex !== currIndex) navigate(ROUTES[nextIndex]);
-                } else if (swipe > 60) {
+                } else if (swipe > 80 || swipeVelocity > 500) {
                   const prevIndex = Math.max(currIndex - 1, 0);
                   if (prevIndex !== currIndex) navigate(ROUTES[prevIndex]);
                 }

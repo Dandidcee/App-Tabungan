@@ -1,7 +1,6 @@
 import { useState, useContext, useEffect, useRef } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, Camera, Save, CameraOff, LogOut, AlertTriangle, RefreshCcw } from 'lucide-react';
@@ -11,15 +10,7 @@ import { setIndonesianValidity } from '../utils/validation';
 
 const emojis = ['👋', '😎', '💖', '🚀', '🔥', '✨', '👑', '💸', '🤑', '⭐', '🦄', '🎉', '🌟'];
 
-const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
-const getImageUrl = (path) => {
-  if (!path) return null;
-  if (path.startsWith('http')) return path;
-  const normalizedPath = path.replace(/\\/g, '/');
-  const baseUrl = getApiUrl().replace(/\/$/, '');
-  const cleanPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
-  return `${baseUrl}${cleanPath}`;
-};
+import api, { getImageUrl } from '../services/api';
 
 const Account = () => {
   const { user, updateUser, logout } = useContext(AuthContext);
@@ -63,9 +54,7 @@ const Account = () => {
 
     setIsUploading(true);
     try {
-      const res = await api.post('/api/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await api.post('/api/upload', formData);
       setProfilePicture(res.data.filePath);
       showToast('Foto profil diunggah sementara. Jangan lupa simpan perubahan!', 'success');
     } catch (err) {

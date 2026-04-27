@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import api, { getImageUrl } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Card } from '../components/ui/Card';
@@ -12,15 +12,6 @@ import { Heart, ArrowDownToLine, ArrowUpFromLine, PlusCircle, Activity, ChevronD
 import { setIndonesianValidity } from '../utils/validation';
 import CalculatorModal from '../components/ui/CalculatorModal';
 
-const getApiUrl = () => import.meta.env.VITE_API_URL || 'http://localhost:5050';
-const getImageUrl = (path) => {
-  if (!path) return null;
-  if (path.startsWith('http')) return path;
-  const normalizedPath = path.replace(/\\/g, '/');
-  const baseUrl = getApiUrl().replace(/\/$/, '');
-  const cleanPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
-  return `${baseUrl}${cleanPath}`;
-};
 
 const WEALTH_QUOTES = [
   "Sedikit demi sedikit, lama-lama menjadi bukit.",

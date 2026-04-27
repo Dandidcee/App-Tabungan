@@ -23,7 +23,8 @@ export const ThemeProvider = ({ children }) => {
         document.documentElement.classList.add('dark');
         if (Capacitor.isNativePlatform()) {
           try {
-            await StatusBar.setStyle({ style: Style.Dark }); // Light text untuk dark mode
+            await StatusBar.setOverlaysWebView({ overlay: false });
+            await StatusBar.setStyle({ style: Style.Default });
             await StatusBar.setBackgroundColor({ color: '#0f172a' }); // slate-950
           } catch (e) { console.log(e); }
         }
@@ -31,8 +32,9 @@ export const ThemeProvider = ({ children }) => {
         document.documentElement.classList.remove('dark');
         if (Capacitor.isNativePlatform()) {
           try {
-            await StatusBar.setStyle({ style: Style.Light }); // Dark text untuk light mode
-            await StatusBar.setBackgroundColor({ color: '#ffffff' });
+            await StatusBar.setOverlaysWebView({ overlay: false });
+            await StatusBar.setStyle({ style: Style.Default });
+            await StatusBar.setBackgroundColor({ color: '#ffffff' }); // white
           } catch (e) { console.log(e); }
         }
       }
