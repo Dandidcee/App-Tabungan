@@ -26,6 +26,9 @@ const WEALTH_QUOTES = [
   "Uang adalah hamba yang baik, namun tuan yang buruk."
 ];
 
+const CATEGORY_EMOJIS = ['💼', '💰', '🏷️', '🛒', '☕', '🍔', '🛵', '💄', '🧴', '💅', '💍', '🎮', '💊', '🎁', '✈️', '🐶', '👶'];
+
+
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -581,7 +584,7 @@ const Dashboard = () => {
                           className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 transition-all active:scale-95"
                         >
                           <ArrowDownToLine size={22} />
-                          <span className="text-sm font-bold">Isi Amplop</span>
+                          <span className="text-sm font-bold">Tambah Dana</span>
                         </button>
                         <button
                           onClick={() => { setActiveCategory(null); openTransactionModal('withdrawal', activeCategory._id); }}
@@ -767,7 +770,7 @@ const Dashboard = () => {
           <div>
             <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Pilih Ikon (Emoji)</label>
             <div className="flex gap-2 text-2xl flex-wrap">
-              {['🏷️', '🛒', '☕', '🍔', '🛵', '💄', '💍', '🎮', '💊', '🎁'].map(em => (
+              {CATEGORY_EMOJIS.map(em => (
                 <button type="button" key={em} onClick={() => setCategoryIcon(em)} className={`p-2 rounded-xl transition-all ${categoryIcon === em ? 'bg-indigo-100 dark:bg-indigo-900/40 scale-110 shadow-sm border border-indigo-200 dark:border-indigo-800' : 'bg-gray-50 dark:bg-slate-800 opacity-50 hover:opacity-100'}`}>
                   {em}
                 </button>
@@ -796,7 +799,7 @@ const Dashboard = () => {
           <div>
             <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Pilih Ikon (Emoji)</label>
             <div className="flex gap-2 text-2xl flex-wrap">
-              {['💼', '💰', '🏷️', '🛒', '☕', '🍔', '🛵', '💄', '💍', '🎮', '💊', '🎁', '✈️', '🐶', '👶'].map(em => (
+              {CATEGORY_EMOJIS.map(em => (
                 <button type="button" key={em} onClick={() => setEditIcon(em)} className={`p-2 rounded-xl transition-all ${editIcon === em ? 'bg-indigo-100 dark:bg-indigo-900/40 scale-110 shadow-sm border border-indigo-200 dark:border-indigo-800' : 'bg-gray-50 dark:bg-slate-800 opacity-50 hover:opacity-100'}`}>
                   {em}
                 </button>
