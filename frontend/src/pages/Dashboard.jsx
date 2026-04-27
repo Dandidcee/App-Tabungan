@@ -26,7 +26,9 @@ const WEALTH_QUOTES = [
   "Uang adalah hamba yang baik, namun tuan yang buruk."
 ];
 
-const CATEGORY_EMOJIS = ['💼', '💰', '🏷️', '🛒', '☕', '🍔', '🛵', '💄', '🧴', '💅', '🪞', '🧽', '🎀', '✨', '💍', '🎮', '💊', '🎁', '✈️', '🐶', '👶'];
+
+import { CategoryIcon, CATEGORY_VECTORS } from '../components/ui/CategoryIcon';
+
 
 
 const Dashboard = () => {
@@ -43,7 +45,7 @@ const Dashboard = () => {
   const [budgetTransactions, setBudgetTransactions] = useState([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categoryName, setCategoryName] = useState('');
-  const [categoryIcon, setCategoryIcon] = useState('🏷️');
+  const [categoryIcon, setCategoryIcon] = useState('ic-tag');
 
   // Transaction Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -71,7 +73,7 @@ const Dashboard = () => {
 
   // Local state untuk Dompet Gaji (karena bukan dari DB)
   const [gajiName, setGajiName] = useState(() => localStorage.getItem('gajiName') || 'Dompet Gaji');
-  const [gajiIcon, setGajiIcon] = useState(() => localStorage.getItem('gajiIcon') || '💼');
+  const [gajiIcon, setGajiIcon] = useState(() => localStorage.getItem('gajiIcon') || 'ic-briefcase');
   // Recent transactions tab
   const [recentTab, setRecentTab] = useState('public');
   // Source mode for deposit/income: 'external' (manual input) | 'internal' (deduct from balance)
@@ -431,18 +433,23 @@ const Dashboard = () => {
             <Heart size={120} className="absolute -right-6 -bottom-6 text-white/10 pointer-events-none" />
             <div className="flex-1 z-10">
               <span className="text-white/70 text-[10px] font-bold uppercase tracking-widest">Sumber Dana</span>
-              <p className="text-white font-bold text-base mt-0.5">{gajiName}</p>
-              <p className="text-white font-extrabold text-2xl tracking-tight">Rp {gajiBalance.toLocaleString('id-ID')}</p>
+              <div className="flex items-end justify-between mt-1">
+                <div>
+                  <h4 className="text-2xl font-black text-white">{gajiName}</h4>
+                  <p className="text-rose-100 font-semibold mt-1">Rp {gajiBalance.toLocaleString('id-ID')}</p>
+                </div>
+                <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md border border-white/30 shadow-inner flex items-center justify-center">
+                  <CategoryIcon name={gajiIcon} size={36} className="text-white drop-shadow-md" />
+                </div>
+              </div>
             </div>
-            <div className="z-10 flex flex-col items-center gap-2">
-              <span className="text-4xl drop-shadow-md">{gajiIcon}</span>
-              <button
-                onClick={(e) => { e.stopPropagation(); openEditModal({ _id: 'gaji', name: gajiName, icon: gajiIcon }); }}
-                className="p-1.5 bg-white/20 hover:bg-white/40 rounded-xl transition-all"
-              >
-                <Pencil size={12} className="text-white" />
-              </button>
-            </div>
+            {/* Edit button absolutely positioned */}
+            <button
+              onClick={(e) => { e.stopPropagation(); openEditModal({ _id: 'gaji', name: gajiName, icon: gajiIcon }); }}
+              className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/10 hover:bg-black/20 flex items-center justify-center text-white/90 backdrop-blur-md transition-colors"
+            >
+              <Pencil size={14} />
+            </button>
           </div>
 
           {/* DYNAMIC ENVELOPES — 2-column grid of horizontal cards */}
@@ -492,7 +499,9 @@ const Dashboard = () => {
                   </div>
 
                   <div className="flex items-start justify-between">
-                    <span className="text-3xl leading-none drop-shadow">{cat.icon}</span>
+                    <div className={`p-2 rounded-xl bg-white/50 dark:bg-slate-900/20 shadow-sm border border-white/50`}>
+                      <CategoryIcon name={cat.icon} size={20} />
+                    </div>
                     <ChevronRight size={15} className="text-gray-300 dark:text-slate-600 mt-1" />
                   </div>
 
@@ -539,8 +548,8 @@ const Dashboard = () => {
 
                   {/* Header */}
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-3xl shadow-sm">
-                      {activeCategory.icon}
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-500">
+                      <CategoryIcon name={activeCategory.icon} size={32} />
                     </div>
                     <div>
                       <p className="text-xs text-gray-400 dark:text-slate-500 font-semibold uppercase tracking-widest">{activeCategory.isGaji ? 'Sumber Dana' : 'Amplop'}</p>
@@ -770,15 +779,15 @@ const Dashboard = () => {
           <div>
             <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Pilih Ikon (Emoji)</label>
             <div className="flex gap-2 text-2xl flex-wrap">
-              {CATEGORY_EMOJIS.map(em => (
-                <button type="button" key={em} onClick={() => setCategoryIcon(em)} className={`p-2 rounded-xl transition-all ${categoryIcon === em ? 'bg-indigo-100 dark:bg-indigo-900/40 scale-110 shadow-sm border border-indigo-200 dark:border-indigo-800' : 'bg-gray-50 dark:bg-slate-800 opacity-50 hover:opacity-100'}`}>
-                  {em}
+              {CATEGORY_VECTORS.map(em => (
+                <button type="button" key={em} onClick={() => setCategoryIcon(em)} className={`p-3 rounded-xl transition-all ${categoryIcon === em ? 'bg-indigo-100 dark:bg-indigo-900/40 scale-110 shadow-sm border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400' : 'bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 opacity-70 hover:opacity-100'}`}>
+                  <CategoryIcon name={em} size={24} />
                 </button>
               ))}
             </div>
           </div>
-          <Button type="submit" variant="primary" className="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-lg rounded-xl shadow-[0_8px_20px_rgb(79,70,229,0.2)]" disabled={!categoryName}>
-            Tambah Kategori {categoryIcon}
+          <Button type="submit" variant="primary" className="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-lg rounded-xl shadow-[0_8px_20px_rgb(79,70,229,0.2)] flex items-center justify-center gap-2" disabled={!categoryName}>
+            Tambah Kategori <CategoryIcon name={categoryIcon} size={20} />
           </Button>
         </form>
       </Modal>
@@ -799,9 +808,9 @@ const Dashboard = () => {
           <div>
             <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Pilih Ikon (Emoji)</label>
             <div className="flex gap-2 text-2xl flex-wrap">
-              {CATEGORY_EMOJIS.map(em => (
-                <button type="button" key={em} onClick={() => setEditIcon(em)} className={`p-2 rounded-xl transition-all ${editIcon === em ? 'bg-indigo-100 dark:bg-indigo-900/40 scale-110 shadow-sm border border-indigo-200 dark:border-indigo-800' : 'bg-gray-50 dark:bg-slate-800 opacity-50 hover:opacity-100'}`}>
-                  {em}
+              {CATEGORY_VECTORS.map(em => (
+                <button type="button" key={em} onClick={() => setEditIcon(em)} className={`p-3 rounded-xl transition-all ${editIcon === em ? 'bg-indigo-100 dark:bg-indigo-900/40 scale-110 shadow-sm border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400' : 'bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 opacity-70 hover:opacity-100'}`}>
+                  <CategoryIcon name={em} size={24} />
                 </button>
               ))}
             </div>
@@ -816,8 +825,8 @@ const Dashboard = () => {
             />
             <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-1">*Jika nominal diubah, histori penyesuaian akan otomatis dicatat</p>
           </div>
-          <Button type="submit" variant="primary" className="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-lg rounded-xl shadow-[0_8px_20px_rgb(79,70,229,0.2)]" disabled={!editName || editBalance === ''}>
-            Simpan Perubahan {editIcon}
+          <Button type="submit" variant="primary" className="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-lg rounded-xl shadow-[0_8px_20px_rgb(79,70,229,0.2)] flex items-center justify-center gap-2" disabled={!editName || editBalance === ''}>
+            Simpan Perubahan <CategoryIcon name={editIcon} size={20} />
           </Button>
         </form>
       </Modal>
@@ -879,7 +888,7 @@ const Dashboard = () => {
                     <div onClick={() => { setFundSource('gaji'); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-emerald-700 dark:text-emerald-400 border-b border-gray-50 dark:border-slate-700">💼 Dompet Gaji (Rp {gajiBalance.toLocaleString('id-ID')})</div>
                     <div onClick={() => { setFundSource('tabungan_utama'); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-indigo-700 dark:text-indigo-400 border-b border-gray-50 dark:border-slate-700">🌟 Tabungan Bersama (Rp {totalTabungan.toLocaleString('id-ID')})</div>
                     {categories.map(c => (
-                      <div key={c._id} onClick={() => { setFundSource(c._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400 pl-8">{c.icon} {c.name} (Rp {getEnvelopeBalance(c._id).toLocaleString('id-ID')})</div>
+                      <div key={c._id} onClick={() => { setFundSource(c._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400 pl-8 flex items-center gap-2"><CategoryIcon name={c.icon} size={16} /> {c.name} (Rp {getEnvelopeBalance(c._id).toLocaleString('id-ID')})</div>
                     ))}
                   </div>
                 )}
@@ -919,7 +928,7 @@ const Dashboard = () => {
                           <>
                             <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Budget Bulanan</div>
                             {categories.map(c => (
-                              <div key={c._id} onClick={() => { setToCategory(c._id); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400 border-b border-gray-50 dark:border-slate-700">{c.icon} {c.name}</div>
+                              <div key={c._id} onClick={() => { setToCategory(c._id); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400 border-b border-gray-50 dark:border-slate-700 flex items-center gap-2"><CategoryIcon name={c.icon} size={16} /> {c.name}</div>
                             ))}
                           </>
                         )}
@@ -952,7 +961,7 @@ const Dashboard = () => {
                           <>
                             <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2 bg-gray-50 dark:bg-slate-900/50">Budget Bulanan</div>
                             {categories.map(c => (
-                              <div key={c._id} onClick={() => { setFundSource(c._id); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400 pl-8">{c.icon} {c.name}</div>
+                              <div key={c._id} onClick={() => { setFundSource(c._id); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400 pl-8 flex items-center gap-2"><CategoryIcon name={c.icon} size={16} /> {c.name}</div>
                             ))}
                           </>
                         )}
@@ -988,7 +997,7 @@ const Dashboard = () => {
                       <div className="py-2">
                         <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-4 py-1">Pilih Amplop Penerima</div>
                         {categories.map(c => (
-                          <div key={c._id} onClick={() => { setToCategory(c._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-indigo-700 dark:text-indigo-400 font-semibold">{c.icon} {c.name}</div>
+                          <div key={c._id} onClick={() => { setToCategory(c._id); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-indigo-700 dark:text-indigo-400 font-semibold flex items-center gap-2"><CategoryIcon name={c.icon} size={16} /> {c.name}</div>
                         ))}
                       </div>
                     ) : (
@@ -996,7 +1005,7 @@ const Dashboard = () => {
                         <div onClick={() => { setFundSource('tabungan_utama'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-emerald-600 dark:text-emerald-400 font-bold transition-colors">🌟 Tabungan Bersama</div>
                         <div onClick={() => { setFundSource('gaji'); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 cursor-pointer border-b border-emerald-100 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50/30 dark:bg-emerald-900/20">💼 Dompet Gaji</div>
                         {categories.map(c => (
-                          <div key={c._id} onClick={() => { setFundSource(c._id); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-indigo-700 dark:text-indigo-400 font-semibold truncate pl-8">{c.icon} {c.name}</div>
+                          <div key={c._id} onClick={() => { setFundSource(c._id); setBudgetId(''); setIsSelectOpen(false); }} className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 cursor-pointer border-b border-gray-50 dark:border-slate-900/50 text-indigo-700 dark:text-indigo-400 font-semibold truncate pl-8 flex items-center gap-2"><CategoryIcon name={c.icon} size={16} /> {c.name}</div>
                         ))}
                       </>
                     )}
