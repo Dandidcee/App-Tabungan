@@ -137,7 +137,12 @@ const App = () => {
         requestAnimationFrame(() => {
           // Step 3: animate in
           setSlideStyle({ transform: 'translateX(0)', opacity: 1, transition: 'transform 0.25s ease, opacity 0.25s ease' });
-          setTimeout(() => { isTransitioning.current = false; }, 260);
+          setTimeout(() => { 
+            isTransitioning.current = false; 
+            // CRITICAL: Remove transform and willChange after animation finishes
+            // otherwise it creates a containing block that breaks position: fixed for all Modals and Bottom Sheets!
+            setSlideStyle({ transform: 'none', opacity: 1, transition: 'none' });
+          }, 260);
         });
       });
     }, 260);
@@ -211,7 +216,7 @@ const App = () => {
           dragElastic={0.8}
           dragDirectionLock={true}
           onDragEnd={handleSwipeEnd}
-          style={{ ...slideStyle, willChange: 'transform, opacity' }}
+          style={{ ...slideStyle, willChange: slideStyle.transform === 'none' ? 'auto' : 'transform, opacity' }}
         >
           <Routes location={{ ...location, pathname: displayPath }}>
             <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
