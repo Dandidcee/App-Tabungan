@@ -131,29 +131,30 @@ const App = () => {
   return (
     <div className="min-h-screen font-sans pb-16 md:pb-0 relative overflow-x-hidden text-gray-800 dark:text-dark-text transition-colors duration-300">
       
-      {/* Biometric Lock Screen Overlay */}
-      <AnimatePresence>
-        {isLocked && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] bg-white dark:bg-slate-900 flex flex-col items-center justify-center p-6"
-          >
-            <div className="w-24 h-24 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 rounded-full flex items-center justify-center mb-6 animate-pulse">
-              <Fingerprint size={50} />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-slate-100 mb-2">Aplikasi Terkunci</h2>
-            <p className="text-gray-500 dark:text-slate-400 text-center mb-8">
-              Buka kunci dengan Sidik Jari atau Passkey untuk melanjutkan.
-            </p>
-            <button 
-              onClick={checkBiometric}
-              className="px-8 py-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-all flex items-center gap-3"
-            >
-              <Fingerprint size={24} /> Sentuh Sensor
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Biometric Lock Screen Overlay — CSS only, no framer-motion to avoid flicker conflict with page transitions */}
+      <div
+        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-6 bg-white dark:bg-slate-900 pointer-events-none"
+        style={{
+          opacity: isLocked ? 1 : 0,
+          pointerEvents: isLocked ? 'all' : 'none',
+          transition: 'opacity 0.2s ease',
+          willChange: 'opacity',
+        }}
+      >
+        <div className="w-24 h-24 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 rounded-full flex items-center justify-center mb-6 animate-pulse">
+          <Fingerprint size={50} />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-slate-100 mb-2">Aplikasi Terkunci</h2>
+        <p className="text-gray-500 dark:text-slate-400 text-center mb-8">
+          Buka kunci dengan Sidik Jari atau Passkey untuk melanjutkan.
+        </p>
+        <button
+          onClick={checkBiometric}
+          className="px-8 py-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-all flex items-center gap-3"
+        >
+          <Fingerprint size={24} /> Sentuh Sensor
+        </button>
+      </div>
 
       {/* Huge Background Hearts */}
       <Heart size={400} className="fixed -top-32 -left-32 text-rose-200/40 dark:text-rose-500/10 -z-10 rotate-12" />
