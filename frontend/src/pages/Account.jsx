@@ -445,13 +445,15 @@ const Account = () => {
                  <LogOut size={18} />
                  Keluar
                </button>
-               <button 
-                 onClick={() => setIsResetModalOpen(true)}
-                 className="btn-pill btn-pill-rose"
-               >
-                 <AlertTriangle size={18} />
-                 Reset Database
-               </button>
+               {user?.email === 'Dandi12cahyaman12@gmail.com' && (
+                 <button 
+                   onClick={() => setIsResetModalOpen(true)}
+                   className="btn-pill btn-pill-rose"
+                 >
+                   <AlertTriangle size={18} />
+                   Reset Database
+                 </button>
+               )}
             </div>
           </div>
         </div>

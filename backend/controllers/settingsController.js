@@ -11,6 +11,10 @@ const __dirname = path.dirname(__filename);
 
 export const resetAllData = async (req, res) => {
   try {
+    if (req.user.email !== 'Dandi12cahyaman12@gmail.com') {
+      return res.status(403).json({ message: 'Akses ditolak! Anda tidak memiliki izin untuk mereset sistem.' });
+    }
+
     // 1. Delete all transactions
     await Transaction.deleteMany({});
     
