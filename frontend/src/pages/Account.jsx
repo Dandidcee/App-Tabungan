@@ -3,7 +3,7 @@ import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Mail, Lock, Camera, Save, CameraOff, LogOut, AlertTriangle, RefreshCcw, Fingerprint, ShieldCheck } from 'lucide-react';
+import { User, Mail, Lock, Camera, Save, CameraOff, LogOut, AlertTriangle, RefreshCcw, Fingerprint, ShieldCheck, Download } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { setIndonesianValidity } from '../utils/validation';
@@ -12,6 +12,7 @@ const emojis = ['👋', '😎', '💖', '🚀', '🔥', '✨', '👑', '💸', '
 
 import api, { getImageUrl } from '../services/api';
 import { NativeBiometric } from '@capgo/capacitor-native-biometric';
+import { Capacitor } from '@capacitor/core';
 
 const Account = () => {
   const { user, updateUser, logout } = useContext(AuthContext);
@@ -270,35 +271,51 @@ const Account = () => {
         </form>
 
         <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-800">
-          <p className="text-sm text-gray-400 dark:text-slate-500 mb-4 font-semibold uppercase tracking-wider text-center">Keamanan & Akses</p>
-          
-          <div className="bg-gray-50 dark:bg-slate-800/50 rounded-2xl p-4 flex items-center justify-between border border-gray-100 dark:border-slate-700 mb-6">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-xl ${isBiometricEnabled ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-200 text-gray-500 dark:bg-slate-700 dark:text-slate-400'}`}>
-                <Fingerprint size={24} />
+          {Capacitor.isNativePlatform() && (
+            <>
+              <p className="text-sm text-gray-400 dark:text-slate-500 mb-4 font-semibold uppercase tracking-wider text-center">Keamanan & Akses</p>
+              
+              <div className="bg-gray-50 dark:bg-slate-800/50 rounded-2xl p-4 flex items-center justify-between border border-gray-100 dark:border-slate-700 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-xl ${isBiometricEnabled ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-200 text-gray-500 dark:bg-slate-700 dark:text-slate-400'}`}>
+                    <Fingerprint size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-800 dark:text-slate-200">Passkey / Sidik Jari</h3>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">Kunci aplikasi saat diminimize</p>
+                  </div>
+                </div>
+                
+                {/* Custom Toggle Switch */}
+                <div 
+                  onClick={handleToggleBiometric}
+                  className={isBiometricEnabled
+                    ? 'w-12 h-6 flex items-center bg-emerald-500 rounded-full p-1 cursor-pointer transition-colors duration-300'
+                    : 'w-12 h-6 flex items-center bg-gray-300 dark:bg-slate-600 rounded-full p-1 cursor-pointer transition-colors duration-300'}
+                >
+                  <div className={isBiometricEnabled
+                    ? 'bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 translate-x-6'
+                    : 'bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 translate-x-0'}
+                  ></div>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-gray-800 dark:text-slate-200">Passkey / Sidik Jari</h3>
-                <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">Kunci aplikasi saat diminimize</p>
-              </div>
-            </div>
-            
-            {/* Custom Toggle Switch */}
-            <div 
-              onClick={handleToggleBiometric}
-              className={isBiometricEnabled
-                ? 'w-12 h-6 flex items-center bg-emerald-500 rounded-full p-1 cursor-pointer transition-colors duration-300'
-                : 'w-12 h-6 flex items-center bg-gray-300 dark:bg-slate-600 rounded-full p-1 cursor-pointer transition-colors duration-300'}
-            >
-              <div className={isBiometricEnabled
-                ? 'bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 translate-x-6'
-                : 'bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 translate-x-0'}
-              ></div>
-            </div>
-          </div>
+            </>
+          )}
           
           <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-800 flex flex-col items-center">
             <p className="text-sm text-gray-400 dark:text-slate-500 mb-3 font-semibold uppercase tracking-wider text-center">Lainnya</p>
+            
+            {!Capacitor.isNativePlatform() && (
+              <a 
+                href="/Tabungan-Bersama.apk" 
+                download="Tabungan-Bersama.apk"
+                className="w-full btn-pill btn-pill-indigo mb-6 py-3.5 flex justify-center items-center gap-2"
+              >
+                <Download size={20} />
+                Download Aplikasi Android
+              </a>
+            )}
+            
             <div className="flex gap-4">
                <button 
                  onClick={handleLogout}

@@ -13,6 +13,7 @@ import { Heart, Loader2, Fingerprint } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { App as CapacitorApp } from '@capacitor/app';
 import { NativeBiometric } from '@capgo/capacitor-native-biometric';
+import { Capacitor } from '@capacitor/core';
 
 const ROUTES = ['/', '/budget', '/history', '/rekap', '/account'];
 
@@ -64,6 +65,10 @@ const App = () => {
 
   useEffect(() => {
     if (!user) return;
+    
+    // Check if we are on a native mobile device
+    const isNative = Capacitor.isNativePlatform();
+    if (!isNative) return;
 
     // Check biometric on initial load if enabled
     const biometricEnabled = localStorage.getItem('isBiometricEnabled') === 'true';
@@ -115,7 +120,7 @@ const App = () => {
   // Simple CSS transition approach — no AnimatePresence layout recalculations
   // This eliminates Android WebView flicker caused by popLayout mode
   const [displayPath, setDisplayPath] = useState(location.pathname);
-  const [slideStyle, setSlideStyle] = useState({ transform: 'translateX(0)', opacity: 1, transition: 'none' });
+  const [slideStyle, setSlideStyle] = useState({ transform: 'none', opacity: 1, transition: 'none' });
   const isTransitioning = useRef(false);
 
   useEffect(() => {
@@ -228,6 +233,11 @@ const App = () => {
             <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
           </Routes>
         </motion.div>
+        
+        {/* Footer */}
+        <footer className="text-center mt-12 py-6 text-sm text-gray-500 dark:text-slate-400">
+          Built by <a href="https://dandidcee.xyz" target="_blank" rel="noopener noreferrer" className="font-bold text-indigo-500 hover:text-indigo-600 transition-colors">dandidcee</a>
+        </footer>
       </div>
     </div>
   );

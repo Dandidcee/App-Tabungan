@@ -2,8 +2,9 @@ import { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Download } from 'lucide-react';
 import { setIndonesianValidity } from '../utils/validation';
+import { Capacitor } from '@capacitor/core';
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -142,6 +143,19 @@ const Login = () => {
               {isLogin ? 'Daftar di sini' : 'Masuk di sini'}
             </button>
           </div>
+          
+          {!Capacitor.isNativePlatform() && (
+            <div className="pt-4 mt-4 border-t border-gray-100 dark:border-slate-800">
+              <a 
+                href="/Tabungan-Bersama.apk" 
+                download="Tabungan-Bersama.apk"
+                className="w-full flex justify-center items-center gap-2 py-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+              >
+                <Download size={18} />
+                Download Aplikasi Android
+              </a>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>
