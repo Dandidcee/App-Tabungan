@@ -330,15 +330,15 @@ const Account = () => {
               ))}
             </div>
 
-            <form onSubmit={handleInvite} className="flex gap-2">
+            <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-2 mt-4">
               <input 
                 type="email" 
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
                 placeholder="Email pasangan..."
-                className="flex-1 px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-1 focus:ring-indigo-300 dark:text-slate-100 outline-none"
+                className="flex-1 w-full min-w-0 px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-1 focus:ring-indigo-300 dark:text-slate-100 outline-none"
               />
-              <button disabled={isInviting || !inviteEmail} type="submit" className="px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-sm font-semibold flex items-center gap-1 transition-colors disabled:opacity-50">
+              <button disabled={isInviting || !inviteEmail} type="submit" className="w-full sm:w-auto px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-1 transition-colors disabled:opacity-50 whitespace-nowrap shrink-0">
                  {isInviting ? '...' : <><UserPlus size={16} /> Undang</>}
               </button>
             </form>
