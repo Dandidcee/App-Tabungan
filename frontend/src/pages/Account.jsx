@@ -351,45 +351,6 @@ const Account = () => {
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-800">
-          <p className="text-sm text-gray-400 dark:text-slate-500 mb-4 font-semibold uppercase tracking-wider text-center">Grup Tabungan Bersama</p>
-          
-          <div className="bg-gray-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-gray-100 dark:border-slate-700 mb-6">
-            <p className="text-xs text-gray-500 dark:text-slate-400 mb-3 text-center">Anggota yang berbagi saldo & transaksi Tabungan Utama</p>
-            
-            <div className="flex -space-x-3 justify-center mb-4">
-              {groupMembers.map((member) => (
-                <div key={member._id} title={member.name} className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 bg-indigo-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
-                  {member.profilePicture ? (
-                    <img src={getImageUrl(member.profilePicture)} alt={member.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-indigo-600 dark:text-slate-300 text-xs font-bold">{member.name.charAt(0)}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <form onSubmit={handleInvite} className="flex gap-2">
-              <input 
-                type="email" 
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="Email pasangan/teman..."
-                className="flex-1 px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-1 focus:ring-indigo-300 dark:text-slate-100 outline-none"
-              />
-              <button disabled={isInviting || !inviteEmail} type="submit" className="px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-sm font-semibold flex items-center gap-1 transition-colors">
-                 {isInviting ? '...' : <><UserPlus size={16} /> Undang</>}
-              </button>
-            </form>
-            
-            {groupMembers.length > 1 && (
-               <button onClick={handleLeaveGroup} className="w-full mt-3 text-xs text-rose-500 hover:text-rose-600 font-semibold flex justify-center items-center gap-1">
-                 <LeaveIcon size={14} /> Keluar dari Grup
-               </button>
-            )}
-          </div>
-        </div>
-
 
         <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-800">
           {Capacitor.isNativePlatform() && (
