@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://144.91.93.11:5050';
+const BASE_URL = 'https://tabungan.dandidcee.xyz';
 
 const api = axios.create({
   baseURL: BASE_URL,
