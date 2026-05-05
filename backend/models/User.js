@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   emoji: { type: String, default: '👋' },
   profilePicture: { type: String, default: '' },
+  tabunganGroupId: { type: String, default: null },
 }, { timestamps: true });
 
 userSchema.pre('save', async function () {

@@ -57,11 +57,9 @@ export const clearAll = async (req, res) => {
   }
 };
 
-// Internal helper - called from other controllers to create a notification
-export const createNotification = async ({ userId, triggeredBy, type, message, linkTo, transactionId, amount }) => {
+export const createNotification = async ({ userId, triggeredBy, type, message, linkTo, transactionId, amount, targetGroupIds }) => {
   try {
-    await Notification.create({
-      userId: userId || null,
+    const basePayload = {
       triggeredBy,
       type,
       message,
@@ -69,7 +67,20 @@ export const createNotification = async ({ userId, triggeredBy, type, message, l
       transactionId: transactionId || null,
       amount: amount || null,
       readBy: triggeredBy ? [triggeredBy] : [], // Auto-mark as read for the person who triggered it
-    });
+    };
+
+    if (targetGroupIds && Array.isArray(targetGroupIds)) {
+      const payloads = targetGroupIds.map(id => ({
+        ...basePayload,
+        userId: id
+      }));
+      await Notification.insertMany(payloads);
+    } else {
+      await Notification.create({
+        ...basePayload,
+        userId: userId || null,
+      });
+    }
   } catch (err) {
     console.error('Failed to create notification:', err.message);
   }

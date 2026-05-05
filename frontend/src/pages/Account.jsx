@@ -3,7 +3,7 @@ import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Mail, Lock, Camera, Save, CameraOff, LogOut, AlertTriangle, RefreshCcw, Fingerprint, ShieldCheck, Download } from 'lucide-react';
+import { User, Mail, Lock, Camera, Save, CameraOff, LogOut, AlertTriangle, RefreshCcw, Fingerprint, ShieldCheck, Download, Users, UserPlus, LogOut as LeaveIcon } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { setIndonesianValidity } from '../utils/validation';
@@ -36,6 +36,20 @@ const Account = () => {
   const [isResetting, setIsResetting] = useState(false);
   const [imageError, setImageError] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Group state
+  const [groupMembers, setGroupMembers] = useState([]);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [isInviting, setIsInviting] = useState(false);
+
+  const fetchGroupMembers = async () => {
+    try {
+      const { data } = await api.get('/api/settings/group');
+      setGroupMembers(data);
+    } catch (err) {
+      console.error('Gagal mengambil data grup', err);
+    }
+  };
 
   const [isBiometricEnabled, setIsBiometricEnabled] = useState(() => localStorage.getItem('isBiometricEnabled') === 'true');
 
@@ -77,6 +91,7 @@ const Account = () => {
       setEmoji(user.emoji || '👋');
       setProfilePicture(user.profilePicture || '');
       setImageError(false);
+      fetchGroupMembers();
     }
   }, [user]);
 
@@ -150,6 +165,33 @@ const Account = () => {
       showToast(err.response?.data?.message || 'Gagal mereset data', 'error');
     } finally {
       setIsResetting(false);
+    }
+  };
+
+  const handleInvite = async (e) => {
+    e.preventDefault();
+    if(!inviteEmail) return;
+    setIsInviting(true);
+    try {
+      const { data } = await api.post('/api/settings/invite', { email: inviteEmail });
+      showToast(data.message, 'success');
+      setInviteEmail('');
+      fetchGroupMembers();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Gagal mengundang user', 'error');
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
+  const handleLeaveGroup = async () => {
+    if(!window.confirm("Yakin ingin mereset/keluar dari Grup Tabungan Bersama? Transaksi lama mungkin tidak akan muncul lagi di akun Anda.")) return;
+    try {
+      await api.post('/api/settings/leave-group');
+      showToast('Berhasil keluar grup', 'success');
+      fetchGroupMembers();
+    } catch (err) {
+      showToast('Gagal keluar grup', 'error');
     }
   };
 
@@ -265,10 +307,89 @@ const Account = () => {
             </div>
           </div>
 
-         <button type="submit" disabled={isUpdating} className="btn-pill btn-pill-indigo w-full mt-6 py-4 text-lg flex justify-center items-center gap-2">
+           <button type="submit" disabled={isUpdating} className="btn-pill btn-pill-indigo w-full mt-6 py-4 text-lg flex justify-center items-center gap-2">
              {isUpdating ? 'Menyimpan...' : <><Save size={20} /> Simpan Perubahan</>}
           </button>
         </form>
+
+        <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-800">
+          <p className="text-sm text-gray-400 dark:text-slate-500 mb-4 font-semibold uppercase tracking-wider text-center">Grup Tabungan Bersama</p>
+          
+          <div className="bg-gray-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-gray-100 dark:border-slate-700 mb-6">
+            <p className="text-xs text-gray-500 dark:text-slate-400 mb-3 text-center">Anggota yang berbagi saldo & transaksi Tabungan Utama</p>
+            
+            <div className="flex -space-x-3 justify-center mb-4">
+              {groupMembers.map((member) => (
+                <div key={member._id} title={member.name} className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 bg-indigo-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden z-10 hover:z-20 transition-all shadow-sm">
+                  {member.profilePicture ? (
+                    <img src={getImageUrl(member.profilePicture)} alt={member.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-indigo-600 dark:text-slate-300 text-xs font-bold">{member.name.charAt(0).toUpperCase()}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <form onSubmit={handleInvite} className="flex gap-2">
+              <input 
+                type="email" 
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder="Email pasangan..."
+                className="flex-1 px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-1 focus:ring-indigo-300 dark:text-slate-100 outline-none"
+              />
+              <button disabled={isInviting || !inviteEmail} type="submit" className="px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-sm font-semibold flex items-center gap-1 transition-colors disabled:opacity-50">
+                 {isInviting ? '...' : <><UserPlus size={16} /> Undang</>}
+              </button>
+            </form>
+            
+            {groupMembers.length > 1 && (
+               <button onClick={handleLeaveGroup} className="w-full mt-3 text-xs text-rose-500 hover:text-rose-600 font-semibold flex justify-center items-center gap-1 p-2 bg-rose-50 dark:bg-rose-900/10 rounded-lg">
+                 <LeaveIcon size={14} /> Keluar dari Grup
+               </button>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-800">
+          <p className="text-sm text-gray-400 dark:text-slate-500 mb-4 font-semibold uppercase tracking-wider text-center">Grup Tabungan Bersama</p>
+          
+          <div className="bg-gray-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-gray-100 dark:border-slate-700 mb-6">
+            <p className="text-xs text-gray-500 dark:text-slate-400 mb-3 text-center">Anggota yang berbagi saldo & transaksi Tabungan Utama</p>
+            
+            <div className="flex -space-x-3 justify-center mb-4">
+              {groupMembers.map((member) => (
+                <div key={member._id} title={member.name} className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 bg-indigo-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
+                  {member.profilePicture ? (
+                    <img src={getImageUrl(member.profilePicture)} alt={member.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-indigo-600 dark:text-slate-300 text-xs font-bold">{member.name.charAt(0)}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <form onSubmit={handleInvite} className="flex gap-2">
+              <input 
+                type="email" 
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder="Email pasangan/teman..."
+                className="flex-1 px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-1 focus:ring-indigo-300 dark:text-slate-100 outline-none"
+              />
+              <button disabled={isInviting || !inviteEmail} type="submit" className="px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-sm font-semibold flex items-center gap-1 transition-colors">
+                 {isInviting ? '...' : <><UserPlus size={16} /> Undang</>}
+              </button>
+            </form>
+            
+            {groupMembers.length > 1 && (
+               <button onClick={handleLeaveGroup} className="w-full mt-3 text-xs text-rose-500 hover:text-rose-600 font-semibold flex justify-center items-center gap-1">
+                 <LeaveIcon size={14} /> Keluar dari Grup
+               </button>
+            )}
+          </div>
+        </div>
+
 
         <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-800">
           {Capacitor.isNativePlatform() && (

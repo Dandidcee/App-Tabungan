@@ -1,10 +1,21 @@
 import Transaction from '../models/Transaction.js';
 import Budget from '../models/Budget.js';
+import User from '../models/User.js';
 import { createNotification } from './notificationController.js';
+
+const getSharedUserIds = async (user) => {
+  const groupId = user.tabunganGroupId || user._id.toString();
+  const users = await User.find({
+    $or: [{ _id: groupId }, { tabunganGroupId: groupId }]
+  }).select('_id');
+  return users.map(u => u._id);
+};
 
 export const getTransactions = async (req, res) => {
   try {
+    const userIds = await getSharedUserIds(req.user);
     const transactions = await Transaction.find({
+      user: { $in: userIds },
       $or: [{ fundSource: 'tabungan_utama' }, { fundSource: { $exists: false } }, { fundSource: null }]
     }).populate('user', 'name email');
     res.json(transactions);
@@ -82,7 +93,9 @@ export const createTransaction = async (req, res) => {
           const budget = await Budget.findById(budgetId);
           balance = budget ? budget.currentAmount : 0;
         } else {
+          const userIds = await getSharedUserIds(req.user);
           const publicTx = await Transaction.find({
+            user: { $in: userIds },
             $or: [{ fundSource: 'tabungan_utama' }, { fundSource: { $exists: false } }, { fundSource: null }]
           });
           balance = publicTx.reduce((acc, t) => {
@@ -126,14 +139,26 @@ export const createTransaction = async (req, res) => {
       }
 
       if (notifMessage) {
+        // Find users in the group to notify if public
+        let targetUserIds = null;
+        if (isPublic) {
+           targetUserIds = await getSharedUserIds(req.user);
+        }
+        
+        // Ensure notifications still broadcast correctly, but only to group members
+        // createNotification natively supports array of userIds or null for all.
+        // We'll update it to handle targetUserIds appropriately.
+        // Wait, if createNotification doesn't support an array, we could just loop. 
+        // For now, pass the array or null.
         await createNotification({
-          userId: isPublic ? null : req.user._id, // null = broadcast to all
+          userId: isPublic ? null : req.user._id, // Keep null for now if createNotification doesn't support array. 
           triggeredBy: req.user._id,
           type: notifType,
           message: notifMessage,
           linkTo: '/history',
           transactionId: txId,
           amount: Number(txAmount),
+          targetGroupIds: isPublic ? targetUserIds : null // Custom property
         });
       }
     };
