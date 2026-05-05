@@ -524,13 +524,12 @@ const Dashboard = () => {
         {createPortal(
           <AnimatePresence>
             {activeCategory && (
-              <>
-                <motion.div
-                  key="cat-backdrop"
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
-                  onClick={() => setActiveCategory(null)}
-                />
+              <motion.div
+                key="cat-backdrop"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 flex items-end sm:items-center justify-center sm:p-4"
+                onClick={() => setActiveCategory(null)}
+              >
                 <motion.div
                   key="cat-sheet"
                   initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
@@ -541,7 +540,8 @@ const Dashboard = () => {
                   onDragEnd={(_, info) => {
                     if (info.offset.y > 100 || info.velocity.y > 400) setActiveCategory(null);
                   }}
-                  className="fixed left-0 right-0 bottom-0 z-50 bg-white dark:bg-slate-900 rounded-t-[2rem] shadow-2xl border-t border-gray-100 dark:border-slate-800 max-w-lg mx-auto"
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-full bg-white dark:bg-slate-900 rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl border border-gray-100 dark:border-slate-800 max-w-lg mx-auto"
                 >
                   <div className="p-6 pb-8">
                     {/* Pill handle — touch area for drag-to-dismiss */}
@@ -622,7 +622,7 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </motion.div>
-              </>
+              </motion.div>
             )}
           </AnimatePresence>,
           document.body
